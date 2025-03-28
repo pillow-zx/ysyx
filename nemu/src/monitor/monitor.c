@@ -17,23 +17,23 @@
 #include <memory/paddr.h>
 
 void init_rand();
-void init_log(const char *log_file);
+void init_log(const char* log_file);
 void init_mem();
-void init_difftest(char *ref_so_file, long img_size, int port);
+void init_difftest(char* ref_so_file, long img_size, int port);
 void init_device();
 void init_sdb();
 void init_disasm();
 
 static void welcome() {
-  Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
-  IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
+    Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
+    IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
         "to record the trace. This may lead to a large log file. "
         "If it is not necessary, you can disable it in menuconfig"));
-  Log("Build time: %s, %s", __TIME__, __DATE__);
-  printf("Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
-  printf("For help, type \"help\"\n");
-  Log("Exercise: Please remove me in the source code and compile NEMU again.");
-  assert(0);
+    Log("Build time: %s, %s", __TIME__, __DATE__);
+    printf("Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
+    printf("For help, type \"help\"\n");
+    // Log("Exercise: Please remove me in the source code and compile NEMU again.");
+    // assert(0);
 }
 
 #ifndef CONFIG_TARGET_AM
@@ -41,113 +41,114 @@ static void welcome() {
 
 void sdb_set_batch_mode();
 
-static char *log_file = NULL;
-static char *diff_so_file = NULL;
-static char *img_file = NULL;
+static char* log_file = NULL;
+static char* diff_so_file = NULL;
+static char* img_file = NULL;
 static int difftest_port = 1234;
 
 static long load_img() {
-  if (img_file == NULL) {
-    Log("No image is given. Use the default build-in image.");
-    return 4096; // built-in image size
-  }
-
-  FILE *fp = fopen(img_file, "rb");
-  Assert(fp, "Can not open '%s'", img_file);
-
-  fseek(fp, 0, SEEK_END);
-  long size = ftell(fp);
-
-  Log("The image is %s, size = %ld", img_file, size);
-
-  fseek(fp, 0, SEEK_SET);
-  int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);
-  assert(ret == 1);
-
-  fclose(fp);
-  return size;
-}
-
-static int parse_args(int argc, char *argv[]) {
-  const struct option table[] = {
-    {"batch"    , no_argument      , NULL, 'b'},
-    {"log"      , required_argument, NULL, 'l'},
-    {"diff"     , required_argument, NULL, 'd'},
-    {"port"     , required_argument, NULL, 'p'},
-    {"help"     , no_argument      , NULL, 'h'},
-    {0          , 0                , NULL,  0 },
-  };
-  int o;
-  while ( (o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {
-    switch (o) {
-      case 'b': sdb_set_batch_mode(); break;
-      case 'p': sscanf(optarg, "%d", &difftest_port); break;
-      case 'l': log_file = optarg; break;
-      case 'd': diff_so_file = optarg; break;
-      case 1: img_file = optarg; return 0;
-      default:
-        printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
-        printf("\t-b,--batch              run with batch mode\n");
-        printf("\t-l,--log=FILE           output log to FILE\n");
-        printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
-        printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
-        printf("\n");
-        exit(0);
+    if (img_file == NULL) {
+        Log("No image is given. Use the default build-in image.");
+        return 4096; // built-in image size
     }
-  }
-  return 0;
+
+    FILE* fp = fopen(img_file, "rb");
+    Assert(fp, "Can not open '%s'", img_file);
+
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
+
+    Log("The image is %s, size = %ld", img_file, size);
+
+    fseek(fp, 0, SEEK_SET);
+    int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);
+    assert(ret == 1);
+
+    fclose(fp);
+    return size;
 }
 
-void init_monitor(int argc, char *argv[]) {
-  /* Perform some global initialization. */
+static int parse_args(int argc, char* argv[]) {
+    const struct option table[] = {
+      {"batch"    , no_argument      , NULL, 'b'},
+      {"log"      , required_argument, NULL, 'l'},
+      {"diff"     , required_argument, NULL, 'd'},
+      {"port"     , required_argument, NULL, 'p'},
+      {"help"     , no_argument      , NULL, 'h'},
+      {0          , 0                , NULL,  0 },
+    };
+    int o;
+    /* 对getopt_long函数的详细说明见： file:///home/waysorry/user/NemuNote/getopt_long.md */
+    while ((o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {             // 逐个获取命令行参数并返回对应的ascii码
+        switch (o) {                                                                    // 根据对应的ascii码进行switch判断
+        case 'b': sdb_set_batch_mode(); break;
+        case 'p': sscanf(optarg, "%d", &difftest_port); break;
+        case 'l': log_file = optarg; break;
+        case 'd': diff_so_file = optarg; break;
+        case 1: img_file = optarg; return 0;
+        default:                                                                        // 处理错误参数
+            printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
+            printf("\t-b,--batch              run with batch mode\n");
+            printf("\t-l,--log=FILE           output log to FILE\n");
+            printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
+            printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
+            printf("\n");
+            exit(0);
+        }
+    }
+    return 0;
+}
 
-  /* Parse arguments. */
-  parse_args(argc, argv);
+void init_monitor(int argc, char* argv[]) {
+    /* Perform some global initialization. */
 
-  /* Set random seed. */
-  init_rand();
+    /* Parse arguments. 解析命令行参数 */
+    parse_args(argc, argv);  //parse ：解析
 
-  /* Open the log file. */
-  init_log(log_file);
+    /* Set random seed. 设置随机数种子 */
+    init_rand();
 
-  /* Initialize memory. */
-  init_mem();
+    /* Open the log file. 打开日志文件 */
+    init_log(log_file);
 
-  /* Initialize devices. */
-  IFDEF(CONFIG_DEVICE, init_device());
+    /* Initialize memory. 初始化内存 */
+    init_mem();
 
-  /* Perform ISA dependent initialization. */
-  init_isa();
+    /* Initialize devices. 初始化设备 */
+    IFDEF(CONFIG_DEVICE, init_device());
 
-  /* Load the image to memory. This will overwrite the built-in image. */
-  long img_size = load_img();
+    /* Perform ISA dependent initialization. 执行 ISA 依赖初始化 */
+    init_isa();
 
-  /* Initialize differential testing. */
-  init_difftest(diff_so_file, img_size, difftest_port);
+    /* Load the image to memory. This will overwrite the built-in image. 将图像加载到内存中。这将覆盖内置图像 */
+    long img_size = load_img();
 
-  /* Initialize the simple debugger. */
-  init_sdb();
+    /* Initialize differential testing. 初始化不同测试 */
+    init_difftest(diff_so_file, img_size, difftest_port);
 
-  IFDEF(CONFIG_ITRACE, init_disasm());
+    /* Initialize the simple debugger. 初始化简单debug */
+    init_sdb();
 
-  /* Display welcome message. */
-  welcome();
+    IFDEF(CONFIG_ITRACE, init_disasm());
+
+    /* Display welcome message. 显示欢迎信息 */
+    welcome();
 }
 #else // CONFIG_TARGET_AM
 static long load_img() {
-  extern char bin_start, bin_end;
-  size_t size = &bin_end - &bin_start;
-  Log("img size = %ld", size);
-  memcpy(guest_to_host(RESET_VECTOR), &bin_start, size);
-  return size;
+    extern char bin_start, bin_end;
+    size_t size = &bin_end - &bin_start;
+    Log("img size = %ld", size);
+    memcpy(guest_to_host(RESET_VECTOR), &bin_start, size);
+    return size;
 }
 
 void am_init_monitor() {
-  init_rand();
-  init_mem();
-  init_isa();
-  load_img();
-  IFDEF(CONFIG_DEVICE, init_device());
-  welcome();
+    init_rand();
+    init_mem();
+    init_isa();
+    load_img();
+    IFDEF(CONFIG_DEVICE, init_device());
+    welcome();
 }
 #endif

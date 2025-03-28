@@ -19,46 +19,66 @@
 #include <isa.h>
 
 #if   defined(CONFIG_PMEM_MALLOC)
-static uint8_t *pmem = NULL;
+static uint8_t* pmem = NULL;
 #else // CONFIG_PMEM_GARRAY
+// pmem 是一个大小为 CONFIG_MSIZE 的静态数组
+// PG_ALIGN 是一个属性修饰符，确保数组按页边界对齐（通常是 4KB 对齐）
+// = {} 将数组初始化为全零
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 #endif
 
+/* 这两个函数实现了 NEMU 中客户机物理地址和主机虚拟地址之间的转换，是虚拟机内存模拟的核心组件。*/
 uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
-paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
+// 将客户机（模拟的系统）物理地址转换为主机（运行 NEMU 的系统）虚拟地址。
+// paddr_t paddr：客户机物理地址
+// uint8_t*：对应的主机虚拟地址指针
+// 主机地址 = pmem起始地址 + (客户机地址 - CONFIG_MBASE)
+paddr_t host_to_guest(uint8_t* haddr) { return haddr - pmem + CONFIG_MBASE; }
+// 将主机虚拟地址转换为客户机物理地址。
+// uint8_t* haddr：主机虚拟地址指针
+// paddr_t：对应的客户机物理地址
+// 客户机地址 = 主机地址 - pmem起始地址 + CONFIG_MBASE
+
 
 static word_t pmem_read(paddr_t addr, int len) {
-  word_t ret = host_read(guest_to_host(addr), len);
-  return ret;
+    word_t ret = host_read(guest_to_host(addr), len);
+    return ret;
 }
 
 static void pmem_write(paddr_t addr, int len, word_t data) {
-  host_write(guest_to_host(addr), len, data);
+    host_write(guest_to_host(addr), len, data);
 }
 
 static void out_of_bound(paddr_t addr) {
-  panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,
-      addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
+    panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,
+        addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
 }
 
+/* 初始化内存 */
 void init_mem() {
 #if   defined(CONFIG_PMEM_MALLOC)
-  pmem = malloc(CONFIG_MSIZE);
-  assert(pmem);
+    pmem = malloc(CONFIG_MSIZE);
+    assert(pmem);
 #endif
-  IFDEF(CONFIG_MEM_RANDOM, memset(pmem, rand(), CONFIG_MSIZE));
-  Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
+    IFDEF(CONFIG_MEM_RANDOM, memset(pmem, rand(), CONFIG_MSIZE));
+    Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 
+/* 读取物理地址的数据 */
 word_t paddr_read(paddr_t addr, int len) {
-  if (likely(in_pmem(addr))) return pmem_read(addr, len);
-  IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
-  out_of_bound(addr);
-  return 0;
+    /* 首先检查地址是否在物理内存范围内（使用 likely 提示编译器这是常见情况） */
+    /* 如果是，调用 pmem_read，如果不是且启用了设备模拟，尝试从 MMIO（内存映射 I/O）读取，如果以上都不是，报告越界错误*/
+    if (likely(in_pmem(addr))) return pmem_read(addr, len);
+    IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
+    out_of_bound(addr);
+    return 0;
 }
 
+/* 向物理地址写入数据 */
 void paddr_write(paddr_t addr, int len, word_t data) {
-  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
-  IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
-  out_of_bound(addr);
+    /* 首先检查地址是否在物理内存范围内 */
+    /* 如果是，调用 pmem_write,如果不是且启用了设备模拟，尝试写入 MMIO,如果以上都不是，报告越界错误*/
+    if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
+    IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
+    out_of_bound(addr);
 }
