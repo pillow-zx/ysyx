@@ -68,8 +68,8 @@ static long load_img() {
     return size;
 }
 
-static int parse_args(int argc, char* argv[]) {
-    const struct option table[] = {
+static int parse_args(int argc, char* argv[]) {     // 使用static修饰函数，表示该函数只能在本文件中使用
+    const struct option table[] = {                 // 使用const修饰结构体，表示该结构体的值不能被修改
       {"batch"    , no_argument      , NULL, 'b'},
       {"log"      , required_argument, NULL, 'l'},
       {"diff"     , required_argument, NULL, 'd'},
@@ -78,7 +78,7 @@ static int parse_args(int argc, char* argv[]) {
       {0          , 0                , NULL,  0 },
     };
     int o;
-    /* 对getopt_long函数的详细说明见： file:///home/waysorry/user/NemuNote/getopt_long.md */
+    /* 对getopt_long函数的详细说明见： file:///home/waysorry/user/NemuNote/function/getopt_long.md */
     while ((o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {             // 逐个获取命令行参数并返回对应的ascii码
         switch (o) {                                                                    // 根据对应的ascii码进行switch判断
         case 'b': sdb_set_batch_mode(); break;
@@ -108,7 +108,7 @@ void init_monitor(int argc, char* argv[]) {
     /* Set random seed. 设置随机数种子 */
     init_rand();
 
-    /* Open the log file. 打开日志文件 */
+    /* Open the log file. 初始化日志文件 */
     init_log(log_file);
 
     /* Initialize memory. 初始化内存 */

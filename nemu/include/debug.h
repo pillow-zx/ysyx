@@ -26,7 +26,7 @@
 
 /* 预处理器从外到内处理宏定义 */
 // 使用 MUXDEF 宏根据 CONFIG_TARGET_AM 是否定义来选择两种不同的错误输出方式：
-// 如果 CONFIG_TARGET_AM 已定义：使用 printf 直接输出到标准输出
+// 如果 CONFIG_TARGET_AM 已定义：使用 printf 直接输出fotmat到标准输出
 // 如果 CONFIG_TARGET_AM 未定义：先刷新标准输出缓冲区，然后使用 fprintf 输出到标准错误
 
 // 如果 CONFIG_TARGET_AM 未定义，则声明一个外部变量 log_fp 并刷新它。这用于在非抽象机环境下确保日志及时写入文件。

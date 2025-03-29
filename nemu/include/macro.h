@@ -48,17 +48,19 @@
 // macro: 要检测的宏名
 // a: 如果宏具有指定属性，则返回此值
 // b: 如果宏不具有指定属性，则返回此值
+// 关于此宏是如何检测运行的，详见：file:///home/waysorry/user/NemuNote/macro/mux_macro_property.md
 #define MUX_MACRO_PROPERTY(p, macro, a, b) MUX_WITH_COMMA(concat(p, macro), a, b)
 // define placeholders for some property
-#define __P_DEF_0  X,
-#define __P_DEF_1  X,
-#define __P_ONE_1  X,
-#define __P_ZERO_0 X,
+// 定义属性占位符
+#define __P_DEF_0  X,    // 已定义且值为0
+#define __P_DEF_1  X,    // 已定义且值为1
+#define __P_ONE_1  X,    // 值为1
+#define __P_ZERO_0 X,    // 值为0
 // define some selection functions based on the properties of BOOLEAN macro
-#define MUXDEF(macro, X, Y)  MUX_MACRO_PROPERTY(__P_DEF_, macro, X, Y)
-#define MUXNDEF(macro, X, Y) MUX_MACRO_PROPERTY(__P_DEF_, macro, Y, X)
-#define MUXONE(macro, X, Y)  MUX_MACRO_PROPERTY(__P_ONE_, macro, X, Y)
-#define MUXZERO(macro, X, Y) MUX_MACRO_PROPERTY(__P_ZERO_,macro, X, Y)
+#define MUXDEF(macro, X, Y)  MUX_MACRO_PROPERTY(__P_DEF_, macro, X, Y)  // 检查宏是否已定义
+#define MUXNDEF(macro, X, Y) MUX_MACRO_PROPERTY(__P_DEF_, macro, Y, X)  // 检查宏是否未定义
+#define MUXONE(macro, X, Y)  MUX_MACRO_PROPERTY(__P_ONE_, macro, X, Y)  // 检查宏是否定义为1
+#define MUXZERO(macro, X, Y) MUX_MACRO_PROPERTY(__P_ZERO_,macro, X, Y)  // 检查宏是否定义为0
 
 // test if a boolean macro is defined
 #define ISDEF(macro) MUXDEF(macro, 1, 0)
@@ -75,9 +77,10 @@
 
 // simplification for conditional compilation
 #define __IGNORE(...)
-#define __KEEP(...) __VA_ARGS__
+/* __VA_ARGS__ 是 C 预处理器中的一个特殊标识符，用于表示变参宏（Variadic Macros）中的可变参数部分。 */
+#define __KEEP(...) __VA_ARGS__     // __VA_ARGS__ 会被替换为传递给宏的所有额外参数
 // keep the code if a boolean macro is defined
-#define IFDEF(macro, ...) MUXDEF(macro, __KEEP, __IGNORE)(__VA_ARGS__)
+#define IFDEF(macro, ...) MUXDEF(macro, __KEEP, __IGNORE)(__VA_ARGS__)    // 如果宏 macro 已定义，则保留并处理 ... 中的代码，否则忽略这些代码。
 // keep the code if a boolean macro is undefined
 #define IFNDEF(macro, ...) MUXNDEF(macro, __KEEP, __IGNORE)(__VA_ARGS__)  // 如果宏 macro 未定义，则保留并处理 ... 中的代码，否则忽略这些代码。
 // keep the code if a boolean macro is defined to 1
