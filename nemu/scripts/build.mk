@@ -28,9 +28,15 @@ LDFLAGS := -O2 $(LDFLAGS)
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 
 # Compilation patterns
+# $(dir $@): 获取目标文件的目录部分
+# -o $@: 指定输出文件为目标文件
+# $<: 获取第一个依赖文件
+# $@: 获取目标文件
+# $(@:.o=.d): 将目标文件的后缀名从.o改为.d
+# $(call call_fixdep, $(@:.o=.d), $@): 生成依赖文件  call_fixdep是一个函数，用于生成依赖文件
 $(OBJ_DIR)/%.o: %.c
 	@echo + CC $<
-	@mkdir -p $(dir $@)
+	@mkdir -p $(dir $@)			
 	@$(CC) $(CFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
 

@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 #ifdef CONFIG_TARGET_AM
     am_init_monitor();
 #else
-    /* 初始化监视器 */
+    /* 将客户程序读入到客户计算机中 */
     init_monitor(argc, argv);
 #endif
 

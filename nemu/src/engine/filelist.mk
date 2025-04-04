@@ -14,4 +14,4 @@
 #**************************************************************************************/
 
 INC_PATH += $(NEMU_HOME)/src/engine/$(ENGINE)
-DIRS-y += src/engine/$(ENGINE)
+DIRS-y += src/engine/$(ENGINE)					# 参与编译的目录集合, 该目录下的所有文件都会被加入到SRCS-y中

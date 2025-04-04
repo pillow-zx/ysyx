@@ -88,10 +88,10 @@ static int parse_args(int argc, char* argv[]) {     // 使用static修饰函数�
         case 1: img_file = optarg; return 0;
         default:                                                                        // 处理错误参数
             printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
-            printf("\t-b,--batch              run with batch mode\n");
-            printf("\t-l,--log=FILE           output log to FILE\n");
-            printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
-            printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
+            printf("\t-b,--batch              run with batch mode\n");                  //  以批处理模式运行
+            printf("\t-l,--log=FILE           output log to FILE\n");                   //  输出日志到文件
+            printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");   //  运行DiffTest，使用参考实现REF_SO
+            printf("\t-p,--port=PORT          run DiffTest with port PORT\n");          //  运行DiffTest，使用端口PORT
             printf("\n");
             exit(0);
         }
@@ -117,7 +117,7 @@ void init_monitor(int argc, char* argv[]) {
     /* Initialize devices. 初始化设备 */
     IFDEF(CONFIG_DEVICE, init_device());
 
-    /* Perform ISA dependent initialization. 执行 ISA 依赖初始化 */
+    /* Perform ISA dependent initialization. 执行 ISA（即指令集架构） 依赖初始化 */
     init_isa();
 
     /* Load the image to memory. This will overwrite the built-in image. 将图像加载到内存中。这将覆盖内置图像 */

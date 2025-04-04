@@ -14,4 +14,4 @@
 #**************************************************************************************/
 
 INC_PATH += $(NEMU_HOME)/src/isa/$(GUEST_ISA)/include
-DIRS-y += src/isa/$(GUEST_ISA)
+DIRS-y += src/isa/$(GUEST_ISA)							# 参与编译的目录集合, 该目录下的所有文件都会被加入到SRCS-y中

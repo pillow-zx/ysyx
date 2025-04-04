@@ -13,7 +13,7 @@
 # See the Mulan PSL v2 for more details.
 #**************************************************************************************/
 
-DIRS-y += src/device/io
+DIRS-y += src/device/io									# 参与编译的目录集合, 该目录下的所有文件都会被加入到SRCS-y中
 SRCS-$(CONFIG_DEVICE) += src/device/device.c src/device/alarm.c src/device/intr.c
 SRCS-$(CONFIG_HAS_SERIAL) += src/device/serial.c
 SRCS-$(CONFIG_HAS_TIMER) += src/device/timer.c
@@ -23,7 +23,7 @@ SRCS-$(CONFIG_HAS_AUDIO) += src/device/audio.c
 SRCS-$(CONFIG_HAS_DISK) += src/device/disk.c
 SRCS-$(CONFIG_HAS_SDCARD) += src/device/sdcard.c
 
-SRCS-BLACKLIST-$(CONFIG_TARGET_AM) += src/device/alarm.c
+SRCS-BLACKLIST-$(CONFIG_TARGET_AM) += src/device/alarm.c	# 不参与编译的源文件的黑名单集合
 
 ifdef CONFIG_DEVICE
 ifndef CONFIG_TARGET_AM
