@@ -102,8 +102,8 @@
 #define ROUNDUP(a, sz)   ((((uintptr_t)a) + (sz) - 1) & ~((sz) - 1))
 #define ROUNDDOWN(a, sz) ((((uintptr_t)a)) & ~((sz) - 1))
 
-/* __attribute((aligned(4096))) 是一个 GCC 编译器扩展，它告诉编译器将变量或数据结构对齐到 4096 字节的边界上。*/
-// 原式为 #define PG_ALIGN __attribute((aligned(4096)))
+/* __attribute((aligned(4096))) 是一个 GCC 编译器扩展，它告诉编译器将变量或数据结构对齐到 4096 字节（4kb）的边界上。*/
+// 原式为 #define PG_ALIGN __attribute((aligned(4096))) file:///home/waysorry/user/NemuNote/macro/pg_align.md
 #define PG_ALIGN __attribute__((aligned(4096)))
 
 #if !defined(likely)

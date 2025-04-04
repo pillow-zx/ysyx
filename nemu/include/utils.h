@@ -19,13 +19,13 @@
 #include <common.h>
 
 // ----------- state -----------
-
+//          0            1          2         3           4
 enum { NEMU_RUNNING, NEMU_STOP, NEMU_END, NEMU_ABORT, NEMU_QUIT };
 
 typedef struct {
-    int state;
-    vaddr_t halt_pc;
-    uint32_t halt_ret;
+    int state;          // 表示 NEMU 模拟器的当前状态。
+    vaddr_t halt_pc;    // 表示 NEMU 模拟器在暂停时的虚拟地址。
+    uint32_t halt_ret;  // 表示 NEMU 模拟器在暂停时的返回值。
 } NEMUState;
 
 extern NEMUState nemu_state;

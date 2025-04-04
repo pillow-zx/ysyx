@@ -29,7 +29,7 @@ static void welcome() {
     IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
         "to record the trace. This may lead to a large log file. "
         "If it is not necessary, you can disable it in menuconfig"));
-    Log("Build time: %s, %s", __TIME__, __DATE__);
+    Log("Build time: %s, %s", __TIME__, __DATE__);  // __TIME__和__DATE__是预定义宏，分别表示编译时间和编译日期
     printf("Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
     printf("For help, type \"help\"\n");
     // Log("Exercise: Please remove me in the source code and compile NEMU again.");
@@ -120,7 +120,7 @@ void init_monitor(int argc, char* argv[]) {
     /* Perform ISA dependent initialization. 执行 ISA（即指令集架构） 依赖初始化 */
     init_isa();
 
-    /* Load the image to memory. This will overwrite the built-in image. 将图像加载到内存中。这将覆盖内置图像 */
+    /* Load the image to memory. This will overwrite the built-in image. 将一个有意义的客户程序从镜像文件读入到内存, 覆盖刚才的内置客户程序 */
     long img_size = load_img();
 
     /* Initialize differential testing. 初始化不同测试 */

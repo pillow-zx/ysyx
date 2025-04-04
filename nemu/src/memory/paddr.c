@@ -21,14 +21,26 @@
 #if   defined(CONFIG_PMEM_MALLOC)
 static uint8_t* pmem = NULL;
 #else // CONFIG_PMEM_GARRAY
-// pmem 是一个大小为 CONFIG_MSIZE 的静态数组
-// PG_ALIGN 是一个属性修饰符，确保数组按页边界对齐（通常是 4KB 对齐）
+// pmem 是一个大小为 CONFIG_MSIZE（大小为128MB） 的静态数组，代表物理内存
+// PG_ALIGN 是一个属性修饰符，确保数组按页边界对齐（ 4KB 对齐）
 // = {} 将数组初始化为全零
+/* 定义一个128MB大小的物理内存空间，并规定按页边界对齐，大小为4kb, 将数组内元素全部初始化为0 */
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
+// 当这个数组在内存中分配时：
+// 内存布局示意：
+// 0x0000 +-----------------+
+//        |     其他数据     |
+// 0x1000 +-----------------+ <- pmem（4KB对齐）
+//        |                 |
+//        |     物理内存     |
+//        |    (128MB)     |
+//        |                 |
+//        +-----------------+
 #endif
 
 /* 这两个函数实现了 NEMU 中客户机物理地址和主机虚拟地址之间的转换，是虚拟机内存模拟的核心组件。*/
-uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
+// 原式为： uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
+uint8_t* guest_to_host(paddr_t paddr) { return pmem + (paddr - CONFIG_MBASE); }
 // 将客户机（模拟的系统）物理地址转换为主机（运行 NEMU 的系统）虚拟地址。
 // paddr_t paddr：客户机物理地址
 // uint8_t*：对应的主机虚拟地址指针
