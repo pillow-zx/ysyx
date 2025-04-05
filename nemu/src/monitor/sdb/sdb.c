@@ -19,6 +19,9 @@
 #include <readline/history.h>
 #include "sdb.h"
 
+/* 以下为个人添加的头文件 */
+#include <memory/paddr.h>
+
 static int is_batch_mode = false;
 
 void init_regex();
@@ -53,14 +56,14 @@ static int cmd_c(char* args) {
     return 0;
 }
 
-/* 推出nemu */
+/* 退出 nemu */
 static int cmd_q(char* args) {
     return -1;
 }
 
 static int cmd_help(char* args);
 
-/* 单步调试功能 */
+/* TODO: 单步调试功能 */
 // 程序单步执行N条指令后暂停执行,当N没有给出时, 缺省为1
 static int cmd_si(char* args) {
     int n;
@@ -76,7 +79,7 @@ static int cmd_si(char* args) {
     return 0;
 }
 
-/* 显示寄存器信息 */
+/* TODO: 显示寄存器信息 */
 // "r"打印寄存器状态, "w"打印监视点信息
 static int cmd_info(char* args) {
     if (args == NULL) {
@@ -98,6 +101,41 @@ static int cmd_info(char* args) {
     return 0;
 }
 
+/* TODO: 求出指定表达式的值将结果作为起始内存，地址, 以十六进制形式输出连续的指定个4字节*/
+static int cmd_x(char* args) {
+    if (args == NULL) {
+        printf("Invalid argument: %s\n", args);
+        return -1;
+    }
+    char* temp[2] = { NULL, NULL };
+    /* 获取第一个子字符串 */
+    char* token = strtok(args, " ");
+    temp[0] = token;
+    /* 继续获取其他的子字符串 */
+    token = strtok(NULL, " ");
+    temp[1] = token;
+    int num[2];
+    /* 将第一个子字符串转换为整数 */
+    num[0] = atoi(temp[0]);
+    /* 将第二个子字符串转换为整数 */
+    if (temp[1] == NULL) {
+        printf("Invalid argument: %s\n", args);
+        return -1;
+    }
+    /* 将第二个子字符串转换为整数 */
+    num[1] = atoi(temp[1] + 2);
+    char* endptr;
+    int addr = (int)strtol(temp[1], &endptr, 16);
+    /* 打印内存 */
+    for (int i = num[1]; i < num[0] * 4 + num[1]; i += 4) {
+        /* 读取内存 */
+        uint32_t data = paddr_read(addr + i, 4);
+        /* 打印内存 */
+        printf("0x%08x: 0x%08x\n", addr + i, data);
+    }
+    return 0;
+}
+
 /* 内置指令 */
 static struct {
     const char* name;
@@ -113,8 +151,7 @@ static struct {
   /* 在此处添加更多指令 */
   { "si", "Step into the program", cmd_si },
   { "info", "Show information about registers", cmd_info },
-  //   { "x", "Examine memory", cmd_x },
-
+  { "x", "Examine memory", cmd_x },
 };
 
 #define NR_CMD ARRLEN(cmd_table)    // 计算cmd_table的长度

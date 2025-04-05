@@ -20,6 +20,7 @@
 
 word_t expr(char* e, bool* success);
 
-void display_wp();
+/* 以下为新添加的 */
+void display_wp();  // 来自watchpoint.c；
 
 #endif

@@ -67,6 +67,7 @@ void init_isa() {
     /* Load built-in image. */
     /* 读取程序 */
     /* 复制img中的内容到guest_to-host()函数返回的指针，大小为sizeof(img) */
+    /* 函数将客体程序中的客体物理地址转换为 NEMU 中的主机虚拟地址 */
     memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
 
     /* Initialize this virtual computer system. */
