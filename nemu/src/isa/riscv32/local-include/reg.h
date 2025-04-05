@@ -18,16 +18,21 @@
 
 #include <common.h>
 
+/* 检测寄存器索引是否合法 */
 static inline int check_reg_idx(int idx) {
-  IFDEF(CONFIG_RT_CHECK, assert(idx >= 0 && idx < MUXDEF(CONFIG_RVE, 16, 32)));
-  return idx;
+    /* 如果定义了CONFIG_RVE，使用16个寄存器（RV32E指令集), 否则使用32个寄存器（标准RV32I指令集）*/
+    /* assert验证idx必须大于等于0且必须小于最大寄存器数（16或32) */
+    // 如果条件不满足，程序会触发断言失败
+    // 如果检查通过，返回原始的索引值
+    IFDEF(CONFIG_RT_CHECK, assert(idx >= 0 && idx < MUXDEF(CONFIG_RVE, 16, 32)));
+    return idx;
 }
 
 #define gpr(idx) (cpu.gpr[check_reg_idx(idx)])
 
 static inline const char* reg_name(int idx) {
-  extern const char* regs[];
-  return regs[check_reg_idx(idx)];
+    extern const char* regs[];
+    return regs[check_reg_idx(idx)];
 }
 
 #endif

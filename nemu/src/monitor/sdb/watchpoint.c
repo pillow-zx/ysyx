@@ -17,17 +17,19 @@
 
 #define NR_WP 32
 
+/* 定义监视点结构体 */
 typedef struct watchpoint {
     int NO;
     struct watchpoint* next;
 
     /* TODO: Add more members if necessary */
 
-} WP;
+} WP; // 监视点结构体
 
-static WP wp_pool[NR_WP] = {};
-static WP* head = NULL, * free_ = NULL;
+static WP wp_pool[NR_WP] = {};  // 监视点池，最多有32个监视点
+static WP* head = NULL, * free_ = NULL; // 监视点链表头指针和空闲链表头指针
 
+/* 初始化工作池 */
 void init_wp_pool() {
     int i;
     for (i = 0; i < NR_WP; i++) {
@@ -40,4 +42,12 @@ void init_wp_pool() {
 }
 
 /* TODO: Implement the functionality of watchpoint */
+void display_wp() {
+    head = free_;
+    while (head) {
+        printf("Watchpoint %d\n", head->NO);
+        head = head->next;
+    }
+}
+
 

@@ -83,9 +83,11 @@ static int cmd_info(char* args) {
         printf("Invalid argument: %s\n", args);
         return -1;
     }
+    /* 打印寄存器状态信息 */
     if (strcmp(args, "r") == 0) {
         isa_reg_display();
     }
+    /* 打印监视点信息 */
     else if (strcmp(args, "w") == 0) {
         display_wp();
     }
@@ -110,6 +112,7 @@ static struct {
   /* 在此处添加更多指令 */
   { "si", "Step into the program", cmd_si },
   { "info", "Show information about registers", cmd_info },
+  //   { "x", "Examine memory", cmd_x },
 
 };
 

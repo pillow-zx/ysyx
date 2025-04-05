@@ -54,17 +54,6 @@ void reg_test() {
 }
 
 void isa_reg_display() {
-    int i;
-    for (i = 0; i < 8; i++) {
-        printf("%s\t0x%08x\n", regsl[i], reg_l(i));
-    }
-    printf("pc\t0x%08x\n", cpu.pc);
-    for (i = 0; i < 8; i++) {
-        printf("%s\t0x%04x\n", regsw[i], reg_w(i));
-    }
-    for (i = 0; i < 8; i++) {
-        printf("%s\t0x%02x\n", regsb[i], reg_b(i));
-    }
 }
 
 word_t isa_reg_str2val(const char* s, bool* success) {
