@@ -89,6 +89,7 @@ static int cmd_info(char* args) {
     }
     /* 打印监视点信息 */
     else if (strcmp(args, "w") == 0) {
+        /* 我把打印监视点的函数放到watchpoint.c下，同时在sdb.h引用他 */
         display_wp();
     }
     else {
@@ -97,7 +98,7 @@ static int cmd_info(char* args) {
     return 0;
 }
 
-/* 三个内置指令 */
+/* 内置指令 */
 static struct {
     const char* name;
     const char* description;
