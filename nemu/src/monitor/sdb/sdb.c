@@ -60,6 +60,8 @@ static int cmd_q(char* args) {
 
 static int cmd_help(char* args);
 
+/* 单步调试功能 */
+// 程序单步执行N条指令后暂停执行,当N没有给出时, 缺省为1
 static int cmd_si(char* args) {
     int n;
     if (args == NULL) {
@@ -71,6 +73,25 @@ static int cmd_si(char* args) {
     }
     n = atoi(args);
     cpu_exec(n);
+    return 0;
+}
+
+/* 显示寄存器信息 */
+// "r"打印寄存器状态, "w"打印监视点信息
+static int cmd_info(char* args) {
+    if (args == NULL) {
+        printf("Invalid argument: %s\n", args);
+        return -1;
+    }
+    if (strcmp(args, "r") == 0) {
+        isa_reg_display();
+    }
+    else if (strcmp(args, "w") == 0) {
+        display_wp();
+    }
+    else {
+        printf("Unknown command '%s'\n", args);
+    }
     return 0;
 }
 
@@ -88,6 +109,8 @@ static struct {
   /* TODO: Add more commands */
   /* 在此处添加更多指令 */
   { "si", "Step into the program", cmd_si },
+  { "info", "Show information about registers", cmd_info },
+
 };
 
 #define NR_CMD ARRLEN(cmd_table)    // 计算cmd_table的长度
