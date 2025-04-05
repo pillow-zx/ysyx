@@ -70,12 +70,12 @@ static long load_img() {
 
 static int parse_args(int argc, char* argv[]) {     // 使用static修饰函数，表示该函数只能在本文件中使用
     const struct option table[] = {                 // 使用const修饰结构体，表示该结构体的值不能被修改
-      {"batch"    , no_argument      , NULL, 'b'},
-      {"log"      , required_argument, NULL, 'l'},
-      {"diff"     , required_argument, NULL, 'd'},
-      {"port"     , required_argument, NULL, 'p'},
-      {"help"     , no_argument      , NULL, 'h'},
-      {0          , 0                , NULL,  0 },
+      {"batch"    , no_argument      , NULL, 'b'},  // 批处理模式
+      {"log"      , required_argument, NULL, 'l'},  // 日志文件
+      {"diff"     , required_argument, NULL, 'd'},  // diff文件
+      {"port"     , required_argument, NULL, 'p'},  // 端口
+      {"help"     , no_argument      , NULL, 'h'},  // 帮助
+      {0          , 0                , NULL,  0 },  // 结束标志
     };
     int o;
     /* 对getopt_long函数的详细说明见： file:///home/waysorry/user/NemuNote/function/getopt_long.md */

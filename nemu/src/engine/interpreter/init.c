@@ -19,9 +19,10 @@ void sdb_mainloop();
 
 void engine_start() {
 #ifdef CONFIG_TARGET_AM
-  cpu_exec(-1);
+    cpu_exec(-1);
 #else
-  /* Receive commands from user. */
-  sdb_mainloop();
+    /* Receive commands from user. */
+    /* 接受用户输入的命令 */
+    sdb_mainloop();
 #endif
 }

@@ -35,8 +35,14 @@
 #define PMEM64 1
 #endif
 
+// word_t: 根据ISA位宽定义的机器字类型
+// 当 CONFIG_ISA64 定义时为 64位 (uint64_t)
+// 否则为 32位 (uint32_t)
 typedef MUXDEF(CONFIG_ISA64, uint64_t, uint32_t) word_t;
+
+// sword_t: 有符号版本的机器字类型
 typedef MUXDEF(CONFIG_ISA64, int64_t, int32_t)  sword_t;
+
 #define FMT_WORD MUXDEF(CONFIG_ISA64, "0x%016" PRIx64, "0x%08" PRIx32)
 
 typedef word_t vaddr_t;
