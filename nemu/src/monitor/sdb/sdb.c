@@ -60,6 +60,20 @@ static int cmd_q(char* args) {
 
 static int cmd_help(char* args);
 
+static int cmd_si(char* args) {
+    int n;
+    if (args == NULL) {
+        n = 1;
+    }
+    else if ((n = atoi(args)) <= 0) {
+        printf("Invalid argument: %s\n", args);
+        return -1;
+    }
+    n = atoi(args);
+    cpu_exec(n);
+    return 0;
+}
+
 /* 三个内置指令 */
 static struct {
     const char* name;
@@ -73,7 +87,7 @@ static struct {
 
   /* TODO: Add more commands */
   /* 在此处添加更多指令 */
-
+  { "si", "Step into the program", cmd_si },
 };
 
 #define NR_CMD ARRLEN(cmd_table)    // 计算cmd_table的长度
