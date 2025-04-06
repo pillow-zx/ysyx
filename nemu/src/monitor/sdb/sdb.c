@@ -63,7 +63,7 @@ static int cmd_q(char* args) {
 
 static int cmd_help(char* args);
 
-/* TODO: 单步调试功能 */
+/* TODO: 单步执行->单步调试功能 */
 // 程序单步执行N条指令后暂停执行,当N没有给出时, 缺省为1
 static int cmd_si(char* args) {
     int n;
@@ -79,7 +79,7 @@ static int cmd_si(char* args) {
     return 0;
 }
 
-/* TODO: 显示寄存器信息 */
+/* TODO: 打印程序状态->显示寄存器信息 */
 // "r"打印寄存器状态, "w"打印监视点信息
 static int cmd_info(char* args) {
     if (args == NULL) {
@@ -101,7 +101,7 @@ static int cmd_info(char* args) {
     return 0;
 }
 
-/* TODO: 求出指定表达式的值将结果作为起始内存，地址, 以十六进制形式输出连续的指定个4字节*/
+/* TODO: 扫描内存(2)->求出指定表达式的值将结果作为起始内存，地址, 以十六进制形式输出连续的指定个4字节*/
 static int cmd_x(char* args) {
     if (args == NULL) {
         printf("Invalid argument: %s\n", args);
@@ -136,6 +136,19 @@ static int cmd_x(char* args) {
     return 0;
 }
 
+/*  TODO： 表达式求值：求出表达式的值 */
+static int cmd_expr(char* args) {
+    bool success = true;
+    word_t result = expr(args, &success);
+    if (success) {
+        printf("0x%08x\n", result);
+    }
+    else {
+        printf("Invalid expression: %s\n", args);
+    }
+    return 0;
+}
+
 /* 内置指令 */
 static struct {
     const char* name;
@@ -152,6 +165,7 @@ static struct {
   { "si", "Step into the program", cmd_si },
   { "info", "Show information about registers", cmd_info },
   { "x", "Examine memory", cmd_x },
+  { "p", "Evaluate expression", cmd_expr},
 };
 
 #define NR_CMD ARRLEN(cmd_table)    // 计算cmd_table的长度
