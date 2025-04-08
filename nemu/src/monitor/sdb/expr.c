@@ -13,6 +13,7 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "common.h"
 #include <isa.h>
 
 /* We use the POSIX regex functions to process regular expressions.
@@ -21,6 +22,9 @@
 #include <regex.h>
 #include <stdio.h>
 #include <string.h>
+
+ // 个人添加头文件
+#include <stdbool.h>
 
 enum {
     // 256            257
@@ -92,7 +96,6 @@ void init_regex() {
 typedef struct token {
     int type;       // 记录token类型，即rules中的token_type
     char str[32];   // 记录token字符串
-    int num;        // 个人添加：记录token数字值
 } Token;
 
 /* __attribute__((used)): 是GCC特有的属性声明
@@ -155,14 +158,14 @@ static bool make_token(char* e) {
                     break;
                 case '0': // 数字
                     // 将字符串转换为整数
-                    if ((sscanf(tokens[nr_token].str, "%d", &tokens[nr_token].num)) != 1) {
-                        printf("Invalid number format\n");
-                        return false;
-                    }
                     nr_token++;
                     break;
-                case '+': case '-': case '*': case '/': case '(': case ')':
-                    // 运算符只需记录类型，无需额外处理
+                case '+': case '-': case '*': case '/':
+                    // 运算符只需记录类型，无需额外处理 
+                    nr_token++;
+                    break;
+                case '(': case ')':
+                    // 括号只需记录类型，无需额外处理
                     nr_token++;
                     break;
                 default:
@@ -186,6 +189,107 @@ static bool make_token(char* e) {
     return true;
 }
 
+// 个人添加的辅助函数
+
+#define MAX_PRIORITY 100
+
+// 定义一个栈结构体，用于存储操作数和操作符
+typedef struct {
+    word_t value[MAX_PRIORITY];
+    int top;
+} Stack;
+
+typedef struct {
+    char op[MAX_PRIORITY];
+    int top;
+} OpStack;
+
+
+// 初始化栈
+void init_stack(Stack* num, OpStack* op) {
+    num->top = -1;
+    op->top = -1;
+}
+
+// 判断是否为运算符
+int is_operator(char op) {
+    return (op == '+' || op == '-' || op == '*' || op == '/');
+}
+
+// 判断运算符优先级
+int precedence(char op) {
+    if (op == '+' || op == '-') { return 1; }
+    if (op == '*' || op == '/') { return 2; }
+    return 0;
+}
+
+// 将操作数压入栈
+void apply_operator(Stack* num, char op) {
+    word_t b = num->value[num->top--];
+    word_t a = num->value[num->top--];
+
+    switch (op) {
+    case '+': num->value[++num->top] = a + b; break;
+    case '-': num->value[++num->top] = a - b; break;
+    case '*': num->value[++num->top] = a * b; break;
+    case '/':
+        if (b == 0) {
+            printf("Error: Division by zero\n");
+            return;
+        }
+        num->value[++num->top] = a / b;
+        break;
+    }
+}
+
+#include <ctype.h>
+
+word_t calculate_expression() {
+    Stack num;
+    OpStack op;
+    init_stack(&num, &op);
+
+    for (int i = 0; tokens[i].str[0]; i++) {
+        // 跳过空格
+        if (isspace(tokens[i].str[0])) { continue; }
+
+        if (isdigit(tokens[i].str[0])) {
+            // 如果是数字，将其压入操作数栈
+            word_t value = 0;
+            while (isdigit(tokens[i].str[0])) {
+                value = value * 10 + (tokens[i].str[0] - '0');
+                i++;
+            }
+            i--;
+            num.value[++num.top] = value;
+        }
+        else if (tokens[i].str[0] == '(') {
+            // 如果是左括号，将其压入操作符栈
+            op.op[++op.top] = tokens[i].str[0];
+        }
+        else if (tokens[i].str[0] == ')') {
+            // 如果是右括号，弹出操作符栈直到遇到左括号
+            while (op.top >= 0 && op.op[op.top] != '(') {
+                apply_operator(&num, op.op[op.top--]);
+            }
+            op.top--; // 弹出左括号
+        }
+        else if (is_operator(tokens[i].str[0])) {
+            // 如果是运算符
+            while (op.top >= 0 && precedence(op.op[op.top]) >= precedence(tokens[i].str[0])) {
+                apply_operator(&num, op.op[op.top--]);
+            }
+            op.op[++op.top] = tokens[i].str[0]; // 压入操作符栈
+        }
+    }
+    while (op.top >= 0) {
+        apply_operator(&num, op.op[op.top--]);
+    }
+    return num.value[0]; // 返回栈顶的值，即表达式的结果
+}
+
+
+
 // word_t 为unsigned int类型, 32位
 word_t expr(char* e, bool* success) {
     if (!make_token(e)) {
@@ -195,8 +299,8 @@ word_t expr(char* e, bool* success) {
 
     /* TODO: Insert codes to evaluate the expression. */
     /* 这里可以添加代码来计算表达式的值 */
-
-
-
-    return 0;
+    word_t result = calculate_expression();
+    return result;
 }
+
+/* This function will be used in expression evaluation */
