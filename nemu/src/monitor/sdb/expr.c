@@ -189,6 +189,8 @@ static bool make_token(char* e) {
     return true;
 }
 
+
+/* 这是尝试使用中缀表达式转后缀表达式来解决问题 */
 // 个人添加的辅助函数
 
 #define MAX_PRIORITY 100
@@ -288,6 +290,100 @@ word_t calculate_expression() {
     return num.value[0]; // 返回栈顶的值，即表达式的结果
 }
 
+/* 这这里尝试使用递归来解决问题 */
+
+// static word_t check_parentheses(word_t p, word_t q) {
+//     if (tokens[p].type == '(') {
+//         for (int i = p; i <= q; i++) {
+//             if (tokens[i].type == ')') {
+//                 return i;
+//             }
+//         }
+//     }
+//     return 0;
+// }
+
+// static int get_priority(int i) {
+//     if (tokens[i].type == '+' || tokens[i].type == '-') {
+//         return 1;
+//     }
+//     else if (tokens[i].type == '*' || tokens[i].type == '/') {
+//         return 2;
+//     }
+//     return 0;
+// }
+
+// static int find_expr(int in_op) {
+//     int i;
+//     int priority = 10;
+//     int op = -1;
+
+//     for (i = in_op; i < nr_token; i++) {
+//         if (tokens[i].type == '+' || tokens[i].type == '-' || tokens[i].type == '*' || tokens[i].type == '/') {
+//             int current_priority = get_priority(i);
+//             if (current_priority <= priority) {
+//                 priority = current_priority;
+//                 op = i;
+//             }
+//         }
+//     }
+
+//     if (op == -1) {
+//         printf("Error: No operator found\n");
+//         return -1;
+//     }
+//     return op;
+// }
+
+// static word_t claculate_expression(word_t p, word_t q) {
+//     /* 如果表达式的开始位置比结束位置还要小 */
+//     if (p > q) {
+//         printf("Error: Invalid expression\n");
+//         return 0;
+//     }
+
+//     /* 如果表达式的开始位置等于结束位置 */
+//     else if (p == q) { return strtol(tokens[p].str, NULL, 10); }
+
+//     /* 检查括号是否合规 */
+//     else if (check_parentheses(p, q)) {
+//         int pos = check_parentheses(p, q);
+//         if (tokens[pos].type == ')') {
+//             return claculate_expression(p + 1, pos - 1);
+//         }
+//         else {
+//             printf("Error: Unmatched parentheses\n");
+//             return 0;
+//         }   
+//     }
+
+
+//     else {
+//         int op = find_expr(p); //position;
+//         word_t val1 = claculate_expression(p, op - 1);
+//         word_t val2 = claculate_expression(op + 1, q);
+
+//         switch (tokens[op].type) {
+//         case '+':
+//             return val1 + val2;
+//         case '-':
+//             return val1 - val2;
+//         case '*':
+//             return val1 * val2;
+//         case '/':
+//             if (val2 == 0) {
+//                 printf("Error: Division by zero\n");
+//                 return 0;
+//             }
+//             return val1 / val2;
+//         case TK_EQ:
+//             return val1 == val2;
+//         default:
+//             assert(0);
+//         }
+//     }
+// }
+
 
 
 // word_t 为unsigned int类型, 32位
@@ -299,8 +395,12 @@ word_t expr(char* e, bool* success) {
 
     /* TODO: Insert codes to evaluate the expression. */
     /* 这里可以添加代码来计算表达式的值 */
-    word_t result = calculate_expression();
-    return result;
+
+    /* 这是使用后缀表达式求值使得代码 */
+    return calculate_expression();
+
+    /* 这是使用递归求值时的代码 */
+    // return claculate_expression(0, nr_token - 1);
 }
 
 /* This function will be used in expression evaluation */
