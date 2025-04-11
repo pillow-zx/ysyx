@@ -138,7 +138,8 @@ static int cmd_x(char* args) {
 
 /*  TODO： 表达式求值：求出表达式的值 */
 static int cmd_expr(char* args) {
-    bool success = true;    word_t result = expr(args, &success);
+    bool success = true;
+    word_t result = expr(args, &success);
     if (success) {
         printf("0x%08x\n", result);
     }

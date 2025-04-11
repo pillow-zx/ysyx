@@ -23,7 +23,7 @@
 // this should be enough
 static char buf[65536] = {};
 static char code_buf[65536 + 128] = {}; // a little larger than `buf`
-static char *code_format =
+static char* code_format =
 "#include <stdio.h>\n"
 "int main() { "
 "  unsigned result = %s; "
@@ -31,39 +31,84 @@ static char *code_format =
 "  return 0; "
 "}";
 
-static void gen_rand_expr() {
-  buf[0] = '\0';
+char* buff_ptr = buf;
+
+static unsigned choose(int n) {
+    return rand() % n;
 }
 
-int main(int argc, char *argv[]) {
-  int seed = time(0);
-  srand(seed);
-  int loop = 1;
-  if (argc > 1) {
-    sscanf(argv[1], "%d", &loop);
-  }
-  int i;
-  for (i = 0; i < loop; i ++) {
-    gen_rand_expr();
+static void gen(char ch) {
+    *buff_ptr++ = ch;
+}
 
-    sprintf(code_buf, code_format, buf);
+static void gen_num() {
+    int num = choose(100); // 生成0-99的随机数
+    char num_str[32];
+    sprintf(num_str, "%d", num);
+    int len = strlen(num_str);
+    for (int i = 0; i < len; i++) {
+        gen(num_str[i]);
+    }
+}
 
-    FILE *fp = fopen("/tmp/.code.c", "w");
-    assert(fp != NULL);
-    fputs(code_buf, fp);
-    fclose(fp);
+static void gen_rand_op() {
+    char  ops[] = { '+', '-', '*', '/' };
+    gen(ops[choose(4)]);
+}
 
-    int ret = system("gcc /tmp/.code.c -o /tmp/.expr");
-    if (ret != 0) continue;
+static void gen_rand_expr() {
+    if (buff_ptr - buf > 65000) {
+        return;
+    }
+    switch (choose(3)) {
+    case 0: gen_num(); break;
+    case 1: gen('('); gen_rand_expr(); gen(')'); break;
+    default: gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
+    }
+}
 
-    fp = popen("/tmp/.expr", "r");
-    assert(fp != NULL);
+int main(int argc, char* argv[]) {
+    /* 初始化随机数种子 */
+    int seed = time(0);
+    srand(seed);
+    int loop = 1;
+    if (argc > 1) {
+        sscanf(argv[1], "%d", &loop);
+    }
 
-    int result;
-    ret = fscanf(fp, "%d", &result);
-    pclose(fp);
+    /* 执行loop次循环 */
+    int i;
+    for (i = 0; i < loop; i++) {
+        buff_ptr = buf; // 重置buf_ptr
+        memset(buf, 0, sizeof(buf)); // 清空buf
+        gen_rand_expr();    // 生成随机表达式
+        *buff_ptr = '\0';      // 添加字符串结束符
 
-    printf("%u %s\n", result, buf);
-  }
-  return 0;
+        /* 将buf中的表达式格式化到code_buf中 */
+        sprintf(code_buf, code_format, buf);
+
+        /* 将code_buf中的代码写入临时文件中 */
+        FILE* fp = fopen("/tmp/.code.c", "w");
+        assert(fp != NULL);
+        fputs(code_buf, fp);
+        fclose(fp);
+
+        /* 编译临时文件中的代码 */
+        int ret = system("gcc /tmp/.code.c -o /tmp/.expr");
+        if (ret != 0) continue;
+
+        /* 执行编译后的代码 */
+        /* 读取执行结果 */
+        // file:///home/waysorry/user/NemuNote/function/pepen和pclose.md */
+        fp = popen("/tmp/.expr", "r");
+        assert(fp != NULL);
+
+        /* 读取输出结果 */
+        int result;
+        ret = fscanf(fp, "%d", &result);
+        pclose(fp);
+
+        printf("%u %s\n", result, buf);
+    }
+    return 0;
 }
