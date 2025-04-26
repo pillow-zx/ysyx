@@ -21,6 +21,8 @@
 
 // The macro `__GUEST_ISA__` is defined in $(CFLAGS).
 // It will be expanded as "x86" or "mips32" ...
+// __GUEST_ISA__ 宏的定义在 $(CFLAGS) 中
+// 他会被展开为 "x86" 或 "mips32" ...（在这里会被展开为riscv32）
 typedef concat(__GUEST_ISA__, _CPU_state) CPU_state;
 typedef concat(__GUEST_ISA__, _ISADecodeInfo) ISADecodeInfo;
 
