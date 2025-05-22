@@ -18,9 +18,10 @@
 
 #include <common.h>
 
+// 定义cpu结构体 (CPU_state)
 typedef struct {
-  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
-  vaddr_t pc;
+  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)]; // 通用寄存器
+  vaddr_t pc;                             // pc寄存器
 } MUXDEF(CONFIG_RV64, riscv64_CPU_state, riscv32_CPU_state);
 
 // decode

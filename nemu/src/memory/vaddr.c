@@ -16,6 +16,10 @@
 #include <isa.h>
 #include <memory/paddr.h>
 
+/* 在这里提出一个问题：
+*  下面的三个函数除了调用另一个函数外没有任何功能
+*  既然如此，为什么要定义这三个函数呢？
+*/
 word_t vaddr_ifetch(vaddr_t addr, int len) {
   return paddr_read(addr, len);
 }

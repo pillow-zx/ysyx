@@ -15,6 +15,7 @@
 
 #include <isa.h>
 #include "local-include/reg.h"
+#include "common.h"
 
 const char* regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
@@ -25,8 +26,11 @@ const char* regs[] = {
 
 // 打印寄存器的值
 void isa_reg_display() {
-    for (int i = 0; i < 32; i++) {
-        printf("%s: 0x%08x\n", regs[i], gpr(i));
+    bool success = false;
+    for (int i = 0; i < ARRLEN(regs) ; i++) {
+        // printf("%s: 0x%08x\n", regs[i], gpr(i));
+        word_t value = isa_reg_str2val(regs[i], &success);
+        printf("%-16s0x%-16x%d\n: ", regs[i], value, value);
     }
 }
 
@@ -38,5 +42,7 @@ word_t isa_reg_str2val(const char* s, bool* success) {
             return gpr(i);
         }
     }
+    
+    *success = false;
     return 0;
 }

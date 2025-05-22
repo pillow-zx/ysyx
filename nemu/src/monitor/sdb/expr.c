@@ -473,7 +473,7 @@ word_t eval(int p, int q) {
         word_t result = 0;
         switch (tokens[p].type) {
         case TK_10NUM:
-            sscanf(tokens[p].str, "%x", &result);
+            sscanf(tokens[p].str, "%d", &result);
             return result;
             break;
         case TK_16NUM:
