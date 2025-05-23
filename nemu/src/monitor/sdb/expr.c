@@ -278,6 +278,7 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
+#include <memory/vaddr.h>
 
 enum {
     TK_NOTYPE = 256,
@@ -286,7 +287,11 @@ enum {
     /* TODO: Add more token types */
     TK_16NUM,
     TK_10NUM,
-
+    TK_AND,
+    TK_N_EQ,
+    TK_REGS,
+    TK_POINT,
+    TK_NEGTIVE,
 };
 
 static struct rule {
@@ -308,6 +313,9 @@ static struct rule {
     {"\\)", ')'},                    // right parenthesis
     {"0[xX][0-9a-fA-F]+", TK_16NUM}, // hex number
     {"[0-9]+", TK_10NUM},            // decimal number
+    {"&&", TK_AND},
+    {"!=", TK_N_EQ},
+    {"\\$(\\%0|ra|sp|gp|tp|t[0-6]|s[0-9]|s10|s11|a[0-7])", TK_REGS},
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -372,8 +380,23 @@ static bool make_token(char *e) {
                 case '/':
                 case '(':
                 case ')':
+                case TK_EQ:
+                case TK_AND:
+                case TK_N_EQ:
                     Assert(nr_token < 32, "Too many tokens");
                     tokens[nr_token].type = rules[i].token_type;
+
+                    if (tokens[nr_token].type == '*' || tokens[nr_token].type == '/') {
+                        if (tokens[nr_token - 1].type == 0 || tokens[nr_token - 1].type == '(' ||
+                            tokens[nr_token - 1].type == '+' ||
+                            tokens[nr_token - 1].type == '-' || tokens[nr_token - 1].type == TK_EQ ||
+                            tokens[nr_token - 1].type == TK_AND ||
+                            tokens[nr_token - 1].type == TK_N_EQ) {
+                            tokens[nr_token].type =
+                                tokens[nr_token].type == '*' ? TK_POINT : TK_NEGTIVE;
+                        }
+                    }
+
                     nr_token++;
                     break;
                 case TK_10NUM:
@@ -388,6 +411,13 @@ static bool make_token(char *e) {
                     strncpy(tokens[nr_token].str, substr_start, substr_len);
                     tokens[nr_token].str[substr_len] = '\0';
                     tokens[nr_token].type = TK_16NUM;
+                    nr_token++;
+                    break;
+                case TK_REGS:
+                    Assert(substr_len < 32, "Too long register");
+                    strncpy(tokens[nr_token].str, substr_start, substr_len);
+                    tokens[nr_token].str[substr_len] = '\0';
+                    tokens[nr_token].type = TK_REGS;
                     nr_token++;
                     break;
                 default:
@@ -426,14 +456,22 @@ bool check_parentheses(int p, int q) {
 
 static int priority(int operator) {
     switch (operator) {
+    case TK_AND:
+        return 0;
+    case TK_EQ:
+    case TK_N_EQ:
+        return 1;
     case '+':
     case '-':
-        return 1;
+        return 2;
     case '*':
     case '/':
-        return 2;
-    default:
         return 3;
+    case TK_POINT:
+    case TK_NEGTIVE:
+        return 4;
+    default:
+        return 5;
     }
 }
 
@@ -454,6 +492,11 @@ static int main_operator(int p, int q) {
         case '-':
         case '*':
         case '/':
+        case TK_EQ:
+        case TK_N_EQ:
+        case TK_AND:
+        case TK_POINT:
+        case TK_NEGTIVE:
             if (parenthesis_count == 0 && priority(operator) <= priority(main_operator)) {
                 main_operator = operator;
                 position = i;
@@ -480,6 +523,9 @@ word_t eval(int p, int q) {
             sscanf(tokens[p].str, "%x", &result);
             return result;
             break;
+        case TK_REGS:
+            bool success = false;
+            return isa_reg_str2val(tokens[p].str + 1, &success);
         default:
             Assert(false, "Unknown token type");
         }
@@ -491,9 +537,23 @@ word_t eval(int p, int q) {
             Assert(false, "No main operator");
         }
 
-        word_t val1 = eval(p, position - 1);
-        word_t val2 = eval(position + 1, q);
+        // word_t val1 = eval(p, position - 1);
+        // word_t val2 = eval(position + 1, q);
+
+        word_t val1 = eval(position + 1, q);
+        if (tokens[position].type == TK_POINT) {
+            return vaddr_read(val1, 4);
+        } else if (tokens[position].type == TK_NEGTIVE) {
+            return -val1;
+        }
+        word_t val2 = eval(p, position - 1);
         switch (tokens[position].type) {
+        case TK_EQ:
+            return val1 == val2;
+        case TK_AND:
+            return val1 && val2;
+        case TK_N_EQ:
+            return val1 != val2;
         case '+':
             return val1 + val2;
         case '-':
