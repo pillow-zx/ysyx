@@ -52,7 +52,7 @@ sim: $(BIN)
 clean:
 	rm -rf $(BUILD_DIR)
 
-include ../../Makefile
+include ../../../Makefile
 
 
 .PHONY: default all clean run
