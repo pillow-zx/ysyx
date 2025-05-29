@@ -372,56 +372,58 @@ static bool make_token(char *e) {
          */
 
                 switch (rules[i].token_type) {
-                case TK_NOTYPE:
-                    break;
-                case '+':
-                case '-':
-                case '*':
-                case '/':
-                case '(':
-                case ')':
-                case TK_EQ:
-                case TK_AND:
-                case TK_N_EQ:
-                    Assert(nr_token < 32, "Too many tokens");
-                    tokens[nr_token].type = rules[i].token_type;
+                    case TK_NOTYPE:
+                        break;
+                    case '+':
+                    case '-':
+                    case '*':
+                    case '/':
+                    case '(':
+                    case ')':
+                    case TK_EQ:
+                    case TK_AND:
+                    case TK_N_EQ:
+                        Assert(nr_token < 32, "Too many tokens");
+                        tokens[nr_token].type = rules[i].token_type;
 
-                    if (tokens[nr_token].type == '*' || tokens[nr_token].type == '/') {
-                        if (tokens[nr_token - 1].type == 0 || tokens[nr_token - 1].type == '(' ||
-                            tokens[nr_token - 1].type == '+' ||
-                            tokens[nr_token - 1].type == '-' || tokens[nr_token - 1].type == TK_EQ ||
-                            tokens[nr_token - 1].type == TK_AND ||
-                            tokens[nr_token - 1].type == TK_N_EQ) {
-                            tokens[nr_token].type =
-                                tokens[nr_token].type == '*' ? TK_POINT : TK_NEGTIVE;
+                        if (tokens[nr_token].type == '*' || tokens[nr_token].type == '/') {
+                            if (tokens[nr_token - 1].type == 0 ||
+                                tokens[nr_token - 1].type == '(' ||
+                                tokens[nr_token - 1].type == '+' ||
+                                tokens[nr_token - 1].type == '-' ||
+                                tokens[nr_token - 1].type == TK_EQ ||
+                                tokens[nr_token - 1].type == TK_AND ||
+                                tokens[nr_token - 1].type == TK_N_EQ) {
+                                tokens[nr_token].type =
+                                    tokens[nr_token].type == '*' ? TK_POINT : TK_NEGTIVE;
+                            }
                         }
-                    }
 
-                    nr_token++;
-                    break;
-                case TK_10NUM:
-                    Assert(substr_len < 32, "Too long number");
-                    strncpy(tokens[nr_token].str, substr_start, substr_len);
-                    tokens[nr_token].str[substr_len] = '\0';
-                    tokens[nr_token].type = TK_10NUM;
-                    nr_token++;
-                    break;
-                case TK_16NUM:
-                    Assert(substr_len < 32, "Too long number");
-                    strncpy(tokens[nr_token].str, substr_start, substr_len);
-                    tokens[nr_token].str[substr_len] = '\0';
-                    tokens[nr_token].type = TK_16NUM;
-                    nr_token++;
-                    break;
-                case TK_REGS:
-                    Assert(substr_len < 32, "Too long register");
-                    strncpy(tokens[nr_token].str, substr_start, substr_len);
-                    tokens[nr_token].str[substr_len] = '\0';
-                    tokens[nr_token].type = TK_REGS;
-                    nr_token++;
-                    break;
-                default:
-                    Assert(false, "Unknown token type");
+                        nr_token++;
+                        break;
+                    case TK_10NUM:
+                        Assert(substr_len < 32, "Too long number");
+                        strncpy(tokens[nr_token].str, substr_start, substr_len);
+                        tokens[nr_token].str[substr_len] = '\0';
+                        tokens[nr_token].type = TK_10NUM;
+                        nr_token++;
+                        break;
+                    case TK_16NUM:
+                        Assert(substr_len < 32, "Too long number");
+                        strncpy(tokens[nr_token].str, substr_start, substr_len);
+                        tokens[nr_token].str[substr_len] = '\0';
+                        tokens[nr_token].type = TK_16NUM;
+                        nr_token++;
+                        break;
+                    case TK_REGS:
+                        Assert(substr_len < 32, "Too long register");
+                        strncpy(tokens[nr_token].str, substr_start, substr_len);
+                        tokens[nr_token].str[substr_len] = '\0';
+                        tokens[nr_token].type = TK_REGS;
+                        nr_token++;
+                        break;
+                    default:
+                        Assert(false, "Unknown token type");
                 }
                 break;
             }
@@ -456,22 +458,22 @@ bool check_parentheses(int p, int q) {
 
 static int priority(int operator) {
     switch (operator) {
-    case TK_AND:
-        return 0;
-    case TK_EQ:
-    case TK_N_EQ:
-        return 1;
-    case '+':
-    case '-':
-        return 2;
-    case '*':
-    case '/':
-        return 3;
-    case TK_POINT:
-    case TK_NEGTIVE:
-        return 4;
-    default:
-        return 5;
+        case TK_AND:
+            return 0;
+        case TK_EQ:
+        case TK_N_EQ:
+            return 1;
+        case '+':
+        case '-':
+            return 2;
+        case '*':
+        case '/':
+            return 3;
+        case TK_POINT:
+        case TK_NEGTIVE:
+            return 4;
+        default:
+            return 5;
     }
 }
 
@@ -482,28 +484,28 @@ static int main_operator(int p, int q) {
     for (int i = p; i <= q; i++) {
         int operator= tokens[i].type;
         switch (operator) {
-        case '(':
-            parenthesis_count++;
-            break;
-        case ')':
-            parenthesis_count--;
-            break;
-        case '+':
-        case '-':
-        case '*':
-        case '/':
-        case TK_EQ:
-        case TK_N_EQ:
-        case TK_AND:
-        case TK_POINT:
-        case TK_NEGTIVE:
-            if (parenthesis_count == 0 && priority(operator) <= priority(main_operator)) {
-                main_operator = operator;
-                position = i;
-            }
-            break;
-        default:
-            break;
+            case '(':
+                parenthesis_count++;
+                break;
+            case ')':
+                parenthesis_count--;
+                break;
+            case '+':
+            case '-':
+            case '*':
+            case '/':
+            case TK_EQ:
+            case TK_N_EQ:
+            case TK_AND:
+            case TK_POINT:
+            case TK_NEGTIVE:
+                if (parenthesis_count == 0 && priority(operator) <= priority(main_operator)) {
+                    main_operator = operator;
+                    position = i;
+                }
+                break;
+            default:
+                break;
         }
     }
     return position;
@@ -515,19 +517,19 @@ word_t eval(int p, int q) {
     } else if (p == q) {
         word_t result = 0;
         switch (tokens[p].type) {
-        case TK_10NUM:
-            sscanf(tokens[p].str, "%d", &result);
-            return result;
-            break;
-        case TK_16NUM:
-            sscanf(tokens[p].str, "%x", &result);
-            return result;
-            break;
-        case TK_REGS:
-            bool success = false;
-            return isa_reg_str2val(tokens[p].str + 1, &success);
-        default:
-            Assert(false, "Unknown token type");
+            case TK_10NUM:
+                sscanf(tokens[p].str, "%d", &result);
+                return result;
+                break;
+            case TK_16NUM:
+                sscanf(tokens[p].str, "%x", &result);
+                return result;
+                break;
+            case TK_REGS:
+                bool success = false;
+                return isa_reg_str2val(tokens[p].str + 1, &success);
+            default:
+                Assert(false, "Unknown token type");
         }
     } else if (check_parentheses(p, q) == true) {
         return eval(p + 1, q - 1);
@@ -548,25 +550,25 @@ word_t eval(int p, int q) {
         }
         word_t val2 = eval(p, position - 1);
         switch (tokens[position].type) {
-        case TK_EQ:
-            return val1 == val2;
-        case TK_AND:
-            return val1 && val2;
-        case TK_N_EQ:
-            return val1 != val2;
-        case '+':
-            return val1 + val2;
-        case '-':
-            return val1 - val2;
-        case '*':
-            return val1 * val2;
-        case '/':
-            if (val2 == 0) {
-                Assert(false, "Division by zero");
-            }
-            return val1 / val2;
-        default:
-            Assert(false, "Unknown operator");
+            case TK_EQ:
+                return val1 == val2;
+            case TK_AND:
+                return val1 && val2;
+            case TK_N_EQ:
+                return val1 != val2;
+            case '+':
+                return val1 + val2;
+            case '-':
+                return val1 - val2;
+            case '*':
+                return val1 * val2;
+            case '/':
+                if (val2 == 0) {
+                    Assert(false, "Division by zero");
+                }
+                return val1 / val2;
+            default:
+                Assert(false, "Unknown operator");
         }
     }
     return 0;
