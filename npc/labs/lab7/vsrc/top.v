@@ -79,7 +79,7 @@ module ps2_keyboard(clk,resetn,ps2_clk,ps2_data, scan_code, key_count_out);
                     if ((buffer[0] == 0) &&  // start bit
                             (ps2_data)       &&  // stop bit
                             (^buffer[9:1])) begin      // odd  parity
-                        $display("receive %x", buffer[8:1]);
+                        // $display("receive %x", buffer[8:1]);
                         scan_code <= buffer[8:1]; // 提取扫描码
                         if (buffer[8:1] != 8'hF0) begin // not release code
                             key_count_out <= key_count_out + 1; // count key
