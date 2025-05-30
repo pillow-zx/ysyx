@@ -23,4 +23,11 @@ word_t expr(char* e, bool* success);
 /* 以下为新添加的 */
 void display_wp();  // 来自watchpoint.c；
 
+
+void add_wp(char* args);  // 来自watchpoint.c；
+
+void delete_wp(word_t no);  // 来自watchpoint.c；
+
+int update_wp();  // 来自watchpoint.c；
+
 #endif

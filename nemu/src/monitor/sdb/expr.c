@@ -325,6 +325,7 @@ static regex_t re[NR_REGEX] = {};
 /* Rules are used for many times.
  * Therefore we compile them only once before any usage.
  */
+// 初始化正则表达式
 void init_regex() {
     int i;
     char error_msg[128];
@@ -339,6 +340,7 @@ void init_regex() {
     }
 }
 
+// 定义token结构体
 typedef struct token {
     int type;
     char str[32];
@@ -347,6 +349,7 @@ typedef struct token {
 static Token tokens[32] __attribute__((used)) = {};
 static int nr_token __attribute__((used)) = 0;
 
+// 从字符串e中提取token
 static bool make_token(char *e) {
     int position = 0;
     int i;
@@ -356,15 +359,17 @@ static bool make_token(char *e) {
 
     while (e[position] != '\0') {
         /* Try all rules one by one. */
+        // 逐个尝试所有规则
         for (i = 0; i < NR_REGEX; i++) {
             if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
-                char *substr_start = e + position;
-                int substr_len = pmatch.rm_eo;
+                // 获取匹配的字符串
+                char *substr_start = e + position; // 匹配字符串起始位置
+                int substr_len = pmatch.rm_eo;     // 匹配字符串长度
 
                 Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s", i, rules[i].regex,
                     position, substr_len, substr_len, substr_start);
 
-                position += substr_len;
+                position += substr_len; // 更新指针位置
 
                 /* TODO: Now a new token is recognized with rules[i]. Add codes
          * to record the token in the array `tokens'. For certain types
@@ -372,8 +377,10 @@ static bool make_token(char *e) {
          */
 
                 switch (rules[i].token_type) {
+                    // 空格不计入
                     case TK_NOTYPE:
                         break;
+                    // 加减乘除法和逻辑运算直接放入token
                     case '+':
                     case '-':
                     case '*':
@@ -386,6 +393,7 @@ static bool make_token(char *e) {
                         Assert(nr_token < 32, "Too many tokens");
                         tokens[nr_token].type = rules[i].token_type;
 
+                        // 判断是否为负号或解引用
                         if (tokens[nr_token].type == '*' || tokens[nr_token].type == '/') {
                             if (tokens[nr_token - 1].type == 0 ||
                                 tokens[nr_token - 1].type == '(' ||
@@ -401,6 +409,7 @@ static bool make_token(char *e) {
 
                         nr_token++;
                         break;
+                    // 读取十六进制和十进制数字
                     case TK_10NUM:
                         Assert(substr_len < 32, "Too long number");
                         strncpy(tokens[nr_token].str, substr_start, substr_len);
@@ -415,6 +424,7 @@ static bool make_token(char *e) {
                         tokens[nr_token].type = TK_16NUM;
                         nr_token++;
                         break;
+                        // 获取寄存器的值
                     case TK_REGS:
                         Assert(substr_len < 32, "Too long register");
                         strncpy(tokens[nr_token].str, substr_start, substr_len);
@@ -429,6 +439,7 @@ static bool make_token(char *e) {
             }
         }
 
+        // 未匹配到任何规则
         if (i == NR_REGEX) {
             printf("no match at position %d\n%s\n%*.s^\n", position, e, position, "");
             return false;
@@ -438,6 +449,7 @@ static bool make_token(char *e) {
     return true;
 }
 
+// 检查括号是否匹配
 bool check_parentheses(int p, int q) {
     if (tokens[p].type != '(' || tokens[q].type != ')') {
         return false;
@@ -456,6 +468,7 @@ bool check_parentheses(int p, int q) {
     return true;
 }
 
+// 规定运算符的优先级
 static int priority(int operator) {
     switch (operator) {
         case TK_AND:
@@ -477,6 +490,7 @@ static int priority(int operator) {
     }
 }
 
+// 查找主运算符的位置
 static int main_operator(int p, int q) {
     int position = -1;
     int main_operator = -1;
@@ -511,10 +525,11 @@ static int main_operator(int p, int q) {
     return position;
 }
 
+// 计算表达式的值
 word_t eval(int p, int q) {
     if (p > q) {
         Assert(false, "p > q");
-    } else if (p == q) {
+    } else if (p == q) {    // 输入只有一个token
         word_t result = 0;
         switch (tokens[p].type) {
             case TK_10NUM:
@@ -531,10 +546,10 @@ word_t eval(int p, int q) {
             default:
                 Assert(false, "Unknown token type");
         }
-    } else if (check_parentheses(p, q) == true) {
-        return eval(p + 1, q - 1);
+    } else if (check_parentheses(p, q) == true) { // 检查括号是否匹配
+        return eval(p + 1, q - 1);          // 去除括号
     } else {
-        int position = main_operator(p, q);
+        int position = main_operator(p, q);       // 寻找主运算符的位置
         if (position == -1) {
             Assert(false, "No main operator");
         }
@@ -542,13 +557,14 @@ word_t eval(int p, int q) {
         // word_t val1 = eval(p, position - 1);
         // word_t val2 = eval(position + 1, q);
 
-        word_t val1 = eval(position + 1, q);
-        if (tokens[position].type == TK_POINT) {
-            return vaddr_read(val1, 4);
-        } else if (tokens[position].type == TK_NEGTIVE) {
+        word_t val1 = eval(position + 1, q);    // 计算右侧表达式的值
+        if (tokens[position].type == TK_POINT) {    // 指针解引用
+            return vaddr_read(val1, 4);  // 32位系统采用4位
+        } else if (tokens[position].type == TK_NEGTIVE) { // 如果是负号
             return -val1;
         }
-        word_t val2 = eval(p, position - 1);
+        word_t val2 = eval(p, position - 1);     // 计算左侧表达式的值
+        // 执行运算
         switch (tokens[position].type) {
             case TK_EQ:
                 return val1 == val2;
@@ -563,6 +579,7 @@ word_t eval(int p, int q) {
             case '*':
                 return val1 * val2;
             case '/':
+                // 防止除以零
                 if (val2 == 0) {
                     Assert(false, "Division by zero");
                 }

@@ -18,7 +18,7 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 
-#define R(i) gpr(i)
+#define R(i) gpr(i) // 获取寄存器i的值，原函数在reg.c中定义
 #define Mr vaddr_read
 #define Mw vaddr_write
 
