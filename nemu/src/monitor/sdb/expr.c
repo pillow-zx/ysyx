@@ -124,8 +124,13 @@ static bool make_token(char *e) {
                     case TK_NOTYPE:
                         break;
                     // 加减乘除法和逻辑运算直接放入token
-                    case '+':
                     case '-':
+                        // if (tokens[nr_token - 1] == '+' || tokens[nr_token - 1] == '-' ||
+                        //     tokens[nr_token - 1] == '*' || tokens[nr_token - 1] == '/' ||
+                        //     tokens[nr_token - 1] == '(') {
+                        //
+                        // }
+                    case '+':
                     case '*':
                     case '/':
                     case '(':
@@ -137,8 +142,8 @@ static bool make_token(char *e) {
                         tokens[nr_token].type = rules[i].token_type;
 
                         // 判断是否为负号或解引用
-                        if (tokens[nr_token].type == '*' || tokens[nr_token].type == '/') {
-                            if (tokens[nr_token - 1].type == 0 ||
+                        if (tokens[nr_token].type == '*' || tokens[nr_token].type == '-') {
+                            if (nr_token == 0 || tokens[nr_token - 1].type == 0 ||
                                 tokens[nr_token - 1].type == '(' ||
                                 tokens[nr_token - 1].type == '+' ||
                                 tokens[nr_token - 1].type == '-' ||
@@ -149,7 +154,6 @@ static bool make_token(char *e) {
                                     tokens[nr_token].type == '*' ? TK_POINT : TK_NEGTIVE;
                             }
                         }
-
                         nr_token++;
                         break;
                     // 读取十六进制和十进制数字
@@ -301,7 +305,7 @@ int32_t eval(int p, int q) {
         // word_t val1 = eval(p, position - 1);
         // word_t val2 = eval(position + 1, q);
 
-        int32_t val1 = eval(position + 1, q);              // 计算右侧表达式的值
+        int32_t val1 = eval(position + 1, q);             // 计算右侧表达式的值
         if (tokens[position].type == TK_POINT) {          // 指针解引用
             return vaddr_read(val1, 4);                   // 32位系统采用4位
         } else if (tokens[position].type == TK_NEGTIVE) { // 如果是负号

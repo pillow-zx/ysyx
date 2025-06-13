@@ -17,7 +17,7 @@
 #include "local-include/reg.h"
 #include "common.h"
 
-#include "cpu/cpu.h"
+extern CPU_state cpu;
 
 const char *regs[] = {"$0", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", "s1", "a0",
                       "a1", "a2", "a3", "a4", "a5",  "a6",  "a7", "s2", "s3", "s4", "s5",
@@ -31,8 +31,8 @@ void isa_reg_display() {
         word_t value = isa_reg_str2val(regs[i], &success); // 获取寄存器的值
         printf("%-16s0x%-16x%d\n", regs[i], value,
                value); // 打印寄存器名称、值（十六进制）和值（十进制）
-                       //         printf("pc:0x%-16x%d", Decode->pc, Decode->pc);
     }
+    printf("pc:0x%-16x%d\n", cpu.pc, cpu.pc); // 打印程序计数器pc的值
 }
 
 // 获取寄存器的值
