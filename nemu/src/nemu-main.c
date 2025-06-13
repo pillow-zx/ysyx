@@ -15,7 +15,6 @@
 
 #include <common.h>
 
-
 #include "./monitor/sdb/sdb.h"
 
 void init_monitor(int, char *[]);
@@ -31,6 +30,7 @@ int main(int argc, char *argv[]) {
     /* 将客户程序读入到客户计算机中 */
     init_monitor(argc, argv);
 #endif
+    // unsigned wrong = 0;
     // FILE *fp = fopen("/home/waysorry/ysyx/ysyx-workbench/nemu/tools/gen-expr/build/input", "r");
     // if (fp == NULL) {
     //     fprintf(stderr, "Failed to open input file.\n");
@@ -52,11 +52,11 @@ int main(int argc, char *argv[]) {
     //         printf("Error in expression: %s\n", exprs);
     //     } else if (res != result) {
     //         printf("Expression: %s, Expected: %u, Got: %u\n", exprs, result, res);
-    //         return -1;
+    //         wrong++;
     //     } else {
-    //         printf("Match\n");
+    //         printf("Expression: %s, Expected: %u, Got: %u\n", exprs, result, res);
     //     }
-    //     // printf("Expression: %s, Expected: %u, Got: %u\n", exprs, result, res);
+    //     printf("Woring: %u\n", wrong);
     // }
     // fclose(fp);
     // return 0;
