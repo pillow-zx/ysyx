@@ -12,17 +12,20 @@
 *
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
-
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <time.h>
 #include <assert.h>
 #include <string.h>
 
-// this should be enough
+
+typedef uint32_t word_t;
+
+// 缓冲区大小应该足够
 static char buf[65536] = {};
-static char code_buf[65536 + 128] = {}; // a little larger than `buf`
+static char code_buf[65536 + 128] = {}; // 比 buf 稍大一些
 static char *code_format = "#include <stdio.h>\n"
                            "int main() { "
                            "  unsigned result = %s; "
@@ -30,69 +33,104 @@ static char *code_format = "#include <stdio.h>\n"
                            "  return 0; "
                            "}";
 
-#define MAX_NUMBER 1000
-static int buf_len = 0;
 
-static uint32_t choose(uint32_t n) {
+// 跟踪字符串位置
+static word_t pos = 0;
+
+// 添加最大递归深度限制
+#define MAX_DEPTH 4
+static word_t current_depth = 0;
+
+// 生成 [0, n-1] 范围内的随机数
+static word_t choose(unsigned n) {
     return rand() % n;
 }
 
-// static void space() {
-//     int n = rand() % 10;
-//     for (int i = 0; i < n; i++) {
-//         buf[buf_len++] = ' ';
-//     }
-// }
-
-static void gen_num() {
-    char num_str[32];
-    uint32_t num;
-    int i = 1;
-    while (buf[buf_len - i] == ' ' && buf_len - i > 0) {
-        i++;
-    }
-    if (buf_len > 0 && buf[buf_len - i] == '/') {
-        num = choose(MAX_NUMBER) + 1; 
-    } else {
-        num = choose(MAX_NUMBER);
-    }
-    sprintf(num_str, "%u", num);
-    int len = strlen(num_str);
-    for (int i = 0; i < len; i++) {
-        buf[buf_len++] = num_str[i];
-    }
-    // space();
-}
-
+// 在缓冲区中添加单个字符
 static void gen(char ch) {
-    buf[buf_len++] = ch;
-    // space();
+    buf[pos++] = ch;
+    buf[pos] = '\0';
 }
 
-static void gen_rand_op() {
-    char ops[] = {'+', '-', '*', '/'};
-    buf[buf_len++] = ops[choose(4)];
-    // space();
+// 生成随机数字（1-100范围内）
+static void gen_num() {
+    // 生成1到100之间的数字，避免0
+    word_t num = 1 + choose(100);
+    pos += sprintf(buf + pos, "%d", num);
 }
+// 前向声明
+static void gen_rand_expr(void);
 
-static void gen_rand_expr() {
+// 生成安全的除数（永远不会为0）
+static void gen_safe_divisor() {
+    buf[pos] = '\0';
+    // 生成一个正数作为除数
     gen('(');
-    switch (choose(3)) {
-    case 0:
-        gen_num();
-        break;
-    case 1:
-        gen('(');
-        gen_rand_expr();
-        gen(')');
-        break;
-    default:
-        gen_rand_expr();
-        gen_rand_op();
-        gen_rand_expr();
-        break;
-    }
+    gen_num();
     gen(')');
+}
+
+// 生成随机运算符
+static void gen_rand_op_expr() {
+    // 可用运算符: +, -, *, /
+    char ops[] = {'+', '-', '*', '/'};
+    char op = ops[choose(4)];
+
+    // 如果是除法，确保除数非零
+    if (op == '/') {
+        gen(' ');
+        gen('/');
+        gen(' ');
+        gen_safe_divisor();
+    } else {
+        gen(' ');
+        gen(op);
+        gen(' ');
+        gen_rand_expr();
+    }
+}
+
+// 生成随机表达式
+static void gen_rand_expr() {
+    // 如果达到最大深度，只生成数字
+    if (current_depth >= MAX_DEPTH) {
+        gen_num();
+        return;
+    }
+
+    // 增加当前深度
+    current_depth++;
+
+    // 根据当前深度调整生成策略
+    int choice;
+    if (current_depth >= MAX_DEPTH - 1) {
+        // 在接近最大深度时，增加生成单个数字的概率
+        choice = choose(2) ? 0 : 2;
+    } else {
+        choice = choose(3);
+    }
+
+    switch (choice) {
+        case 0: // 生成单个数字
+            gen_num();
+            break;
+
+        case 1: // 生成带括号的表达式
+            gen('(');
+            gen_rand_expr();
+            gen(')');
+            break;
+
+        default: // 生成二元运算
+            gen('(');
+            gen_rand_expr();
+            gen_rand_op_expr();
+            gen(')');
+            break;
+    }
+
+    // 减少当前深度
+    current_depth--;
 }
 
 int main(int argc, char *argv[]) {
@@ -104,8 +142,9 @@ int main(int argc, char *argv[]) {
     }
     int i;
     for (i = 0; i < loop; i++) {
+        pos = 0;           // 重置位置以生成新表达式
+        current_depth = 0; // 重置递归深度
         gen_rand_expr();
-        buf[buf_len] = '\0';
 
         sprintf(code_buf, code_format, buf);
 
@@ -126,7 +165,6 @@ int main(int argc, char *argv[]) {
         pclose(fp);
 
         printf("%u %s\n", result, buf);
-        buf_len = 0;
     }
     return 0;
 }

@@ -13,6 +13,7 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include "utils.h"
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
@@ -35,6 +36,12 @@ static bool g_print_step = false; // g_print_step用于控制是否打印指令�
 
 void device_update();
 
+static void check_wp_updata() {
+    if (update_wp() > 0) {
+        nemu_state.state = NEMU_STOP;
+    }
+}
+
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
     if (ITRACE_COND) {
@@ -46,6 +53,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
         IFDEF(CONFIG_ITRACE, puts(_this->logbuf));
     }
     IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+    IFDEF(CONFIG_WATCHPOINT, check_wp_updata()); // 检查监视点是否被触发
 }
 
 /* 执行一次cpu的指令 */
@@ -83,6 +91,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
 }
 
 /* 实际运行cpu指令 n为运行的指令数 */
+// engin_start->sdb_mainloop->other_orders->cpu_exec->execute
 static void execute(uint64_t n) {
     Decode s;
     for (; n > 0; n--) {
@@ -90,15 +99,14 @@ static void execute(uint64_t n) {
         exec_once(&s, cpu.pc);
         g_nr_guest_inst++;
         trace_and_difftest(&s, cpu.pc);
-        if (nemu_state.state != NEMU_RUNNING)
+        if (nemu_state.state != NEMU_RUNNING) {
+            if (nemu_state.state == NEMU_STOP) {
+                // 若监视点触发则输出相关提示并退出cpu运行
+                printf("Touched watchpoint\n");
+            }
             break;
+        }
         IFDEF(CONFIG_DEVICE, device_update());
-    }
-}
-
-static void check_wp_updata() {
-    if (update_wp() > 0) {
-        nemu_state.state = NEMU_STOP;
     }
 }
 
@@ -128,6 +136,7 @@ void assert_fail_msg() {
 
 /* Simulate how the CPU works. */
 /* 模拟cpu运行 获取的n为cpu运行的指令数 */
+// engin_start->sdb_mainloop->other_orders->cpu_exec
 void cpu_exec(uint64_t n) {
     /* 运行的指令数为负数时，表示一直运行到遇到异常或中断 */
     g_print_step = (n < MAX_INST_TO_PRINT);
@@ -172,5 +181,4 @@ void cpu_exec(uint64_t n) {
         case NEMU_QUIT:
             statistic();
     }
-    IFDEF(CONFIG_WATCHPOINT, check_wp_updata());
 }

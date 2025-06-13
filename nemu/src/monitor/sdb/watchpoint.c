@@ -42,19 +42,23 @@ void init_wp_pool() {
     free_ = wp_pool;
 }
 /* TODO: Implement the functionality of watchpoint */
-WP *new_wp(char *str, bool* success) {
+WP *new_wp(char *str, bool *success) {
     WP *wp = free_;
     free_ = free_->next;
     strncpy(wp->str, str, strlen(str));
     wp->str[strlen(str)] = '\0';
     wp->value = expr(str, success); // 计算表达式的值
-    wp->next = head;             // 将新监视点插入到链表头部
+    wp->next = head;                // 将新监视点插入到链表头部
     head = wp;
     return wp;
 }
 
 void add_wp(char *str) {
-    Assert(free_ != NULL, "No free watchpoint available!");
+    // Assert(free_ != NULL, "No free watchpoint available!");
+    if (free_ == NULL) {
+        printf("No free watchpoint available!\n");
+        return;
+    }
 
     bool success = true;
     WP *wp = new_wp(str, &success);

@@ -53,13 +53,14 @@ static char *rl_gets() {
 
 /* 模拟cpu运行 */
 static int cmd_c(char *args) {
-    cpu_exec(-1);
+    cpu_exec(-1); //无符号数-1等于2^32 - 1
     return 0;
 }
 
 /* 退出 nemu */
 static int cmd_q(char *args) {
-    return -1;
+    nemu_state.state = NEMU_QUIT; // 将nemu状态设置为QUIT,在
+    return 0;
 }
 
 static int cmd_help(char *args);
@@ -67,10 +68,9 @@ static int cmd_help(char *args);
 /* TODO: 单步执行->单步调试功能 */
 // 程序单步执行N条指令后暂停执行,当N没有给出时, 缺省为1
 static int cmd_si(char *args) {
-    int n = 1;
+    int n = 1; // 设置默认值为1
     if (args != NULL) {
         if (sscanf(args, "%d", &n) < 1) {
-            // if ((n = atoi(args)) < 1) {
             printf("Invalid argument: %s\n", args);
             return 0;
         }
@@ -79,7 +79,7 @@ static int cmd_si(char *args) {
             return 0;
         }
     }
-    cpu_exec(n);
+    cpu_exec(n); // cpu_exec函数在cpu.c中定义, 用于执行n条指令
     return 0;
 }
 
@@ -92,7 +92,7 @@ static int cmd_info(char *args) {
     }
     /* 打印寄存器状态信息 */
     if (strcmp(args, "r") == 0) {
-        isa_reg_display();
+        isa_reg_display(); // 显示寄存器状态
     }
     /* 打印监视点信息 */
     else if (strcmp(args, "w") == 0) {
@@ -147,13 +147,12 @@ static int cmd_x(char *args) {
     return 0;
 }
 
-/*  TODO： 表达式求值：求出表达式的值 */
+/*TODO: 计算表达式->将表达式的值打印出来, 支持十六进制和十进制两种格式*/
 static int cmd_expr(char *args) {
     bool success = true;
     word_t result = expr(args, &success);
     if (success) {
-        // printf("0x%08x\n", result);
-        printf("%u\n", result);
+        printf("十六进制：0x%08x  |  十进制：%08u\n", result, result);
     } else {
         printf("Invalid expression: %s\n", args);
     }
@@ -168,7 +167,7 @@ static int cmd_w(char *args) {
 
 static int cmd_d(char *args) {
     word_t valude;
-    if (sscanf(args, "%d", &valude) < 1) {
+    if (sscanf(args, "%u", &valude) < 1) {
         printf("Invalid argument: %s\n", args);
         return 0;
     }
@@ -237,6 +236,7 @@ void sdb_set_batch_mode() {
     is_batch_mode = true;
 }
 
+// engin_start->sdb_mainloop
 void sdb_mainloop() {
     /* 是否打开批处理模式 */
     if (is_batch_mode) {
@@ -278,11 +278,10 @@ void sdb_mainloop() {
         for (i = 0; i < NR_CMD; i++) {
             if (strcmp(cmd, cmd_table[i].name) == 0) {
                 /* 判断是否推出nemu */
-                if (cmd_table[i].handler(args) < 0) {
-                    if (strcmp(cmd, "q") == 0) {
-                        nemu_state.state = NEMU_QUIT;
+                if (cmd_table[i].handler(args) == 0) {
+                    if (nemu_state.state == NEMU_QUIT) {
+                        return; // 退出nemu
                     }
-                    return;
                 }
                 break;
             }
