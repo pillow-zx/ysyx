@@ -144,6 +144,7 @@ static bool make_token(char *e) {
                         // 判断是否为负号或解引用
                         if (tokens[nr_token].type == '*' || tokens[nr_token].type == '-') {
                             if (nr_token == 0 || tokens[nr_token - 1].type == 0 ||
+                                tokens[nr_token - 1].type == TK_NEGTIVE ||
                                 tokens[nr_token - 1].type == '(' ||
                                 tokens[nr_token - 1].type == '+' ||
                                 tokens[nr_token - 1].type == '-' ||
@@ -309,6 +310,9 @@ int32_t eval(int p, int q) {
         if (tokens[position].type == TK_POINT) {          // 指针解引用
             return vaddr_read(val1, 4);                   // 32位系统采用4位
         } else if (tokens[position].type == TK_NEGTIVE) { // 如果是负号
+            if (position - 1 >=0 && tokens[position - 1].type == TK_NEGTIVE) {
+                return val1; // 如果前面是负号，则返回正数
+            }
             return -val1;
         }
         int32_t val2 = eval(p, position - 1); // 计算左侧表达式的值
