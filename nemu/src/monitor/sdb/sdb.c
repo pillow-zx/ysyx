@@ -58,9 +58,15 @@ static int cmd_c(char *args) {
 }
 
 /* 退出 nemu */
+/* 法一 */
+// static int cmd_q(char *args) {
+//     nemu_state.state = NEMU_QUIT; // 将nemu状态设置为QUIT,在
+//     return 0;
+// }
+
+/* 法二 */
 static int cmd_q(char *args) {
-    nemu_state.state = NEMU_QUIT; // 将nemu状态设置为QUIT,在
-    return 0;
+    return -1;
 }
 
 static int cmd_help(char *args);
@@ -278,10 +284,16 @@ void sdb_mainloop() {
         for (i = 0; i < NR_CMD; i++) {
             if (strcmp(cmd, cmd_table[i].name) == 0) {
                 /* 判断是否推出nemu */
-                if (cmd_table[i].handler(args) == 0) {
-                    if (nemu_state.state == NEMU_QUIT) {
-                        return; // 退出nemu
-                    }
+                /* 法一 */
+                // if (cmd_table[i].handler(args) == 0) {
+                //     if (nemu_state.state == NEMU_QUIT) {
+                //         return; // 退出nemu
+                //     }
+                // }
+                /* 法二 */
+                if (cmd_table[i].handler(args) < 0) {
+                    nemu_state.state = NEMU_QUIT; // 设置nemu状态为QUIT
+                    return; // 退出nemu
                 }
                 break;
             }
