@@ -207,6 +207,7 @@ static struct {
     {"w", "Setting watchpoint", cmd_w},
     {"d", "Delete watchpoint", cmd_d},
     {"clear", "Clean screen", cmd_clr},
+    {"ls", "List of commands", cmd_help},
 };
 
 #define NR_CMD ARRLEN(cmd_table) // 计算cmd_table的长度
