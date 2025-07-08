@@ -36,7 +36,7 @@ static bool g_print_step = false; // g_print_step用于控制是否打印指令�
 
 void device_update();
 
-static void check_wp_updata() {
+static void __attribute__((unused)) check_wp_update() {
     if (update_wp() > 0) {
         nemu_state.state = NEMU_STOP;
     }
@@ -53,7 +53,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
         IFDEF(CONFIG_ITRACE, puts(_this->logbuf));
     }
     IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
-    IFDEF(CONFIG_WATCHPOINT, check_wp_updata()); // 检查监视点是否被触发
+    IFDEF(CONFIG_WATCHPOINT, check_wp_update()); // 检查监视点是否被触发
 }
 
 /* 执行一次cpu的指令 */
@@ -61,8 +61,8 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 static void exec_once(Decode *s, vaddr_t pc) {
     s->pc = pc;
     s->snpc = pc;
-    isa_exec_once(s);
-    cpu.pc = s->dnpc;
+    isa_exec_once(s);   // 执行指令,修改s->snpc,使s->snpc指向下一条指令的地址
+    cpu.pc = s->dnpc;   // 更新pc
 #ifdef CONFIG_ITRACE
     char *p = s->logbuf;
     p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);

@@ -19,45 +19,89 @@
 #include <cpu/decode.h>
 
 #define R(i) gpr(i) // 获取寄存器i的值，原函数在reg.c中定义
-#define Mr vaddr_read
-#define Mw vaddr_write
+#define Mr   vaddr_read
+#define Mw   vaddr_write
 
 enum {
-    TYPE_I, TYPE_U, TYPE_S,
+    TYPE_I,
+    TYPE_U,
+    TYPE_S,
     TYPE_N, // none
 };
 
-#define src1R() do { *src1 = R(rs1); } while (0)
-#define src2R() do { *src2 = R(rs2); } while (0)
-#define immI() do { *imm = SEXT(BITS(i, 31, 20), 12); } while(0)
-#define immU() do { *imm = SEXT(BITS(i, 31, 12), 20) << 12; } while(0)
-#define immS() do { *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7); } while(0)
+// 获取rs1和rs2寄存器的值
+#define src1R()                                                                                                        \
+    do {                                                                                                               \
+        *src1 = R(rs1);                                                                                                \
+    } while (0)
+#define src2R()                                                                                                        \
+    do {                                                                                                               \
+        *src2 = R(rs2);                                                                                                \
+    } while (0)
+// 立即数或加载指令
+#define immI()                                                                                                         \
+    do {                                                                                                               \
+        *imm = SEXT(BITS(i, 31, 20), 12);                                                                              \
+    } while (0)
+// 上半部立即数指令
+#define immU()                                                                                                         \
+    do {                                                                                                               \
+        *imm = SEXT(BITS(i, 31, 12), 20) << 12;                                                                        \
+    } while (0)
+// 存储指令
+#define immS()                                                                                                         \
+    do {                                                                                                               \
+        *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7);                                                       \
+    } while (0);
 
-static void decode_operand(Decode* s, int* rd, word_t* src1, word_t* src2, word_t* imm, int type) {
+// 解码指令并获取操作数
+// s: Decode结构体指针, rd: 目标寄存器, src1: 源寄存器1的值, src2: 源寄存器2的值, imm: 立即数, type: 指令类型
+// type可以是TYPE_I, TYPE_U, TYPE_S, TYPE_N等，表示不同的指令类型
+static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_t *imm, int type) {
     uint32_t i = s->isa.inst;
     int rs1 = BITS(i, 19, 15);
     int rs2 = BITS(i, 24, 20);
     *rd = BITS(i, 11, 7);
     switch (type) {
-    case TYPE_I: src1R();          immI(); break;
-    case TYPE_U:                   immU(); break;
-    case TYPE_S: src1R(); src2R(); immS(); break;
-    case TYPE_N: break;
-    default: panic("unsupported type = %d", type);
+        // I型指令: 立即数指令
+        case TYPE_I:
+            src1R();    // 获取rs1寄存器的值
+            immI();
+            break;
+        // U型指令: 上半部立即数指令
+        case TYPE_U: immU(); break;
+        // S型指令: 存储指令
+        case TYPE_S:
+            src1R();    // 获取rs1寄存器的值
+            src2R();    // 获取rs2寄存器的值
+            immS();
+            break;
+        case TYPE_N: break;
+        default: panic("unsupported type = %d", type);
     }
 }
 
-static int decode_exec(Decode* s) {
+// 译码并执行指令
+static int decode_exec(Decode *s) {
     s->dnpc = s->snpc;
 
-#define INSTPAT_INST(s) ((s)->isa.inst)
-#define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
-  int rd = 0; \
-  word_t src1 = 0, src2 = 0, imm = 0; \
-  decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type)); \
-  __VA_ARGS__ ; \
-}
+#define INSTPAT_INST(s) ((s)->isa.inst) // 获取当前指令
+#define INSTPAT_MATCH(s, name, type, ... /* execute body */)                                                           \
+    {                                                                                                                  \
+        int rd = 0;                                                                                                    \
+        word_t src1 = 0, src2 = 0, imm = 0;                                                                            \
+        decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type));                                               \
+        __VA_ARGS__;                                                                                                   \
+    }
 
+    // 指令模式匹配
+    // INSTPAT(模式字符串, 指令名称, 指令类型, 指令执行操作);
+    /*
+    * 0表示相应的位只能匹配0
+    * 1表示相应的位只能匹配1
+    * ?表示相应的位可以匹配0或1
+    * 空格是分隔符, 只用于提升模式字符串的可读性, 不参与匹配
+    */
     INSTPAT_START();
     INSTPAT("??????? ????? ????? ??? ????? 00101 11", auipc, U, R(rd) = s->pc + imm);
     INSTPAT("??????? ????? ????? 100 ????? 00000 11", lbu, I, R(rd) = Mr(src1 + imm, 1));
@@ -72,7 +116,7 @@ static int decode_exec(Decode* s) {
     return 0;
 }
 
-int isa_exec_once(Decode* s) {
-    s->isa.inst = inst_fetch(&s->snpc, 4);
+int isa_exec_once(Decode *s) {
+    s->isa.inst = inst_fetch(&s->snpc, 4); // 取指,获取指令并更新s->snpc指向下一条指令的地址
     return decode_exec(s);
 }

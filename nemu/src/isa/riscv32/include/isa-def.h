@@ -24,7 +24,7 @@ typedef struct {
   vaddr_t pc;                             // pc寄存器
 } MUXDEF(CONFIG_RV64, riscv64_CPU_state, riscv32_CPU_state);
 
-// decode
+// decode  riscv32_ISADecodeInfo
 typedef struct {
   uint32_t inst;
 } MUXDEF(CONFIG_RV64, riscv64_ISADecodeInfo, riscv32_ISADecodeInfo);
