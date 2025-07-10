@@ -17,14 +17,16 @@
 #include <memory/paddr.h>
 
 
+// 将虚拟地址addr处的len字节指令读入物理地址
 word_t vaddr_ifetch(vaddr_t addr, int len) {
   return paddr_read(addr, len);
 }
 
+// 将虚拟地址addr处的len字节数据读入物理地址
 word_t vaddr_read(vaddr_t addr, int len) {
   return paddr_read(addr, len);
 }
-
+// 将虚拟地址addr处的len字节数据写入物理地址
 void vaddr_write(vaddr_t addr, int len, word_t data) {
   paddr_write(addr, len, data);
 }

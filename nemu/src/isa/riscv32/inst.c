@@ -14,19 +14,22 @@
 ***************************************************************************************/
 
 #include "local-include/reg.h"
+#include "macro.h"
 #include <cpu/cpu.h>
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 
-#define R(i) gpr(i) // 获取寄存器i的值，原函数在reg.c中定义
-#define Mr   vaddr_read
-#define Mw   vaddr_write
+#define R(i) gpr(i)      // 获取寄存器i的值，原函数在reg.c中定义
+#define Mr   vaddr_read  // 内存读函数，原函数在memory/vaddr.c中定义
+#define Mw   vaddr_write // 内存写函数，原函数在memory/vaddr.c中定义
 
 enum {
     TYPE_I,
     TYPE_U,
     TYPE_S,
     TYPE_N, // none
+
+    TYPE_J,
 };
 
 // 获取rs1和rs2寄存器的值
@@ -54,6 +57,12 @@ enum {
         *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7);                                                       \
     } while (0);
 
+#define immJ()                                                                                                         \
+    do {                                                                                                               \
+        *imm = SEXT(                                                                                                   \
+            (BITS(i, 31, 31) << 20) | (BITS(i, 19, 12) << 12) | (BITS(i, 20, 20) << 11) | (BITS(i, 30, 21) << 1), 21); \
+    } while (0)
+
 // 解码指令并获取操作数
 // s: Decode结构体指针, rd: 目标寄存器, src1: 源寄存器1的值, src2: 源寄存器2的值, imm: 立即数, type: 指令类型
 // type可以是TYPE_I, TYPE_U, TYPE_S, TYPE_N等，表示不同的指令类型
@@ -65,16 +74,19 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
     switch (type) {
         // I型指令: 立即数指令
         case TYPE_I:
-            src1R();    // 获取rs1寄存器的值
+            src1R(); // 获取rs1寄存器的值
             immI();
             break;
         // U型指令: 上半部立即数指令
         case TYPE_U: immU(); break;
         // S型指令: 存储指令
         case TYPE_S:
-            src1R();    // 获取rs1寄存器的值
-            src2R();    // 获取rs2寄存器的值
+            src1R(); // 获取rs1寄存器的值
+            src2R(); // 获取rs2寄存器的值
             immS();
+            break;
+        case TYPE_J:
+            immJ();  // 使用正确的J型立即数处理
             break;
         case TYPE_N: break;
         default: panic("unsupported type = %d", type);
@@ -108,7 +120,12 @@ static int decode_exec(Decode *s) {
     INSTPAT("??????? ????? ????? 000 ????? 01000 11", sb, S, Mw(src1 + imm, 1, src2));
 
     INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
-    INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv, N, INV(s->pc));
+    INSTPAT("??????? ????? ????? 000 ????? 00100 11", addi, I, R(rd) = src1 + imm);       // addi指令
+    INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal, J, R(rd) = s->dnpc + 4, s->dnpc = s->pc + imm);
+    // 使用& ~1确保地址对齐-> ~1-> ~0b00...001 = 0b11...110 与前面的数字按位与之后的结果是偶数地址(2字节对齐)
+    // 因为riscv要求指令地址必须是偶数,而又因为立即数可能是奇数,所以需要强制对齐
+    INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr, I, R(rd) = s->dnpc + 4, s->dnpc = (src1 + imm) & ~1);
+    INSTPAT("??????? ????? ????? 010 ????? 01000 11", sw, S, Mw(src1 + 12, 4, src2));
     INSTPAT_END();
 
     R(0) = 0; // reset $zero to 0
