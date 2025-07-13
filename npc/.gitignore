@@ -11,3 +11,5 @@
 !README.md
 build/
 work/
+.vscode/
+.gitignore
