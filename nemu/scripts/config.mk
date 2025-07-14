@@ -68,6 +68,8 @@ savedefconfig: $(CONF)
 help:
 	@echo  '  menuconfig	  - Update current config utilising a menu based program'
 	@echo  '  savedefconfig   - Save current config as configs/defconfig (minimal config)'
+	@echo  '  menuconfig      - 更新当前配置, 使用基于菜单的程序'
+	@echo  '  savedefconfig   - 将当前配置保存为configs/defconfig (最小配置)'
 
 # distclean命令用于清理构建目录和配置文件
 distclean: clean
