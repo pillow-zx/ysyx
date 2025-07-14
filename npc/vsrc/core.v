@@ -109,7 +109,7 @@ module ysyx_25060173_core(
     assign alu_op   = inst_addi;
 
 
-    ysyx_25060173_alu alu(
+    ysyx_25060173_alu u_alu(
                           .alu_src1(alu_src1),
                           .alu_src2(alu_src2),
                           .alu_op(alu_op),
