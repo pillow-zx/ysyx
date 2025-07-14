@@ -36,7 +36,7 @@ OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o) $(CXXSRC:%.cc=$(OBJ_DIR)/%.o)
 # $(call call_fixdep, $(@:.o=.d), $@): 生成依赖文件  call_fixdep是一个函数，用于生成依赖文件
 $(OBJ_DIR)/%.o: %.c
 	@echo + CC $<
-	@mkdir -p $(dir $@)			
+	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
 
