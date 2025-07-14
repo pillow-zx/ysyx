@@ -18,23 +18,26 @@ static void single_cycle(Vysyx_25060173_core* core) {
     core->eval();
     core->clk = 1;
     core->eval();
-    pc_counter++;
-    if (pc_counter >= test_data.size()) {
-        pc_counter = test_data.size() - 1; // Stop at the last instruction
+    
+    // Only advance pc_counter if we're still running and not at the last instruction
+    if (RUN && pc_counter < test_data.size() - 1) {
+        pc_counter++;
     }
 }
 
 static void reset(Vysyx_25060173_core* core, int n) {
-    core->rst = 1;
+    core->reset = 0;  // reset is active low in the module
     while (n-- > 0) {
         single_cycle(core);
     }
-    core->rst = 0;
+    core->reset = 1;  // release reset (inactive high)
 }
 
-void inst_ebreak() {
-    std::cout << "EBREAK instruction encountered. Stopping simulation." << std::endl;
-    RUN = 0;  // Stop the simulation
+extern "C" void ebreak_handler() {
+    if (RUN) {  // Only print once
+        std::cout << "EBREAK instruction encountered. Stopping simulation." << std::endl;
+        RUN = 0;  // Stop the simulation
+    }
 }
 
 int main(int argc, char** argv) {

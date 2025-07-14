@@ -1,4 +1,4 @@
-import "DPI-C" context function void inst_ebreak();
+import "DPI-C" context function void ebreak_handler();
 
 module ysyx_25060173_core(
         input wire clk,
@@ -66,7 +66,7 @@ module ysyx_25060173_core(
                                       );
     always @(posedge clk) begin
         if (inst_ebreak) begin
-            inst_ebreak();
+            ebreak_handler();
         end
     end
 
