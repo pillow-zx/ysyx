@@ -218,3 +218,11 @@ config RT_CHECK
   default y
 
 endmenu
+
+menu "Running Args"
+
+config BATCH
+    bool "Enable batch Model"
+    default n
+
+endmenu

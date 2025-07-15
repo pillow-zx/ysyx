@@ -25,7 +25,10 @@ $(BINARY):: compile_git
 # Some convenient rules
 
 override ARGS ?= --log=$(BUILD_DIR)/nemu-log.txt
-override ARGS += --batch $(ARGS_DIFF)
+override ARGS += $(ARGS_DIFF)
+ifneq ($(CONFIG_BATCH),)
+override ARGS += --batch
+endif
 
 # Command to execute NEMU
 IMG ?=
