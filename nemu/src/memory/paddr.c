@@ -76,12 +76,25 @@ void init_mem() {
     Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 
+
+extern char iringbuf[64][128];
+extern int iringbuf_head;
+
+static void iringbuf_show() {
+    printf("\033[34m%s\033[0m\n", iringbuf[iringbuf_head - 1]);
+    for (int i = 0; i < iringbuf_head; i++) {
+        printf("\033[34m%s\033[0m\n", iringbuf[i]);
+    }
+}
+
+
 /* 读取物理地址的数据 */
 word_t paddr_read(paddr_t addr, int len) {
     /* 首先检查地址是否在物理内存范围内（使用 likely 提示编译器这是常见情况） */
     /* 如果是，调用 pmem_read，如果不是且启用了设备模拟，尝试从 MMIO（内存映射 I/O）读取，如果以上都不是，报告越界错误*/
     if (likely(in_pmem(addr))) return pmem_read(addr, len);
     IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
+    iringbuf_show();
     out_of_bound(addr);
     return 0;
 }
@@ -92,5 +105,6 @@ void paddr_write(paddr_t addr, int len, word_t data) {
     /* 如果是，调用 pmem_write,如果不是且启用了设备模拟，尝试写入 MMIO,如果以上都不是，报告越界错误*/
     if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
     IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
+    iringbuf_show();
     out_of_bound(addr);
 }
