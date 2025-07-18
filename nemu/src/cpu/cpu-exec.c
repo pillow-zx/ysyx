@@ -37,7 +37,11 @@ static bool g_print_step = false; // g_print_step用于控制是否打印指令�
 char iringbuf[64][128] = {}; // iringbuf用于存储指令跟踪日志
 int iringbuf_head = 0; // iringbuf_head用于指示iring
 
+#ifdef CONFIG_ITRACE
 static void iringbuf_write(Decode *s) {
+    if (s->logbuf[0] == '\0') {
+        return; // 如果日志缓冲区为空，则不进行任何操作
+    }
     if (iringbuf_head < sizeof(iringbuf) / sizeof(iringbuf[0])) {
         snprintf(iringbuf[iringbuf_head], sizeof(iringbuf[0]), "%s", s->logbuf);
         iringbuf_head++;
@@ -47,6 +51,7 @@ static void iringbuf_write(Decode *s) {
         snprintf(iringbuf[iringbuf_head], sizeof(iringbuf[0]), "%s", s->logbuf);
     }
 }
+#endif
 
 void device_update();
 
@@ -60,7 +65,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
     if (ITRACE_COND) {
         log_write("%s\n", _this->logbuf);
-        iringbuf_write(_this);
+        IFDEF(CONFIG_ITRACE, iringbuf_write(_this));
     }
 #endif
     /* 如果全局变量g_print_step被定义，输出跟踪的指令信息 */

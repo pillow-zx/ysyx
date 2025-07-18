@@ -58,8 +58,8 @@
 #define __P_ONE_1                           X, // 值为1
 #define __P_ZERO_0                          X, // 值为0
 // define some selection functions based on the properties of BOOLEAN macro
-#define MUXDEF(macro, X, Y)                 MUX_MACRO_PROPERTY(__P_DEF_, macro, X, Y)  // 检查宏是否已定义
-#define MUXNDEF(macro, X, Y)                MUX_MACRO_PROPERTY(__P_DEF_, macro, Y, X)  // 检查宏是否未定义
+#define MUXDEF(macro, X, Y)                 MUX_MACRO_PROPERTY(__P_DEF_, macro, X, Y)  // 检查宏是否已定义, 如果已定义则返回X，否则返回Y
+#define MUXNDEF(macro, X, Y)                MUX_MACRO_PROPERTY(__P_DEF_, macro, Y, X)  // 检查宏是否未定义, 如果未定义则返回X，否则返回Y
 #define MUXONE(macro, X, Y)                 MUX_MACRO_PROPERTY(__P_ONE_, macro, X, Y)  // 检查宏是否定义为1
 #define MUXZERO(macro, X, Y)                MUX_MACRO_PROPERTY(__P_ZERO_, macro, X, Y) // 检查宏是否定义为0
 

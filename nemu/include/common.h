@@ -43,11 +43,11 @@ typedef MUXDEF(CONFIG_ISA64, uint64_t, uint32_t) word_t;
 // sword_t: 有符号版本的机器字类型
 typedef MUXDEF(CONFIG_ISA64, int64_t, int32_t)  sword_t;
 
-#define FMT_WORD MUXDEF(CONFIG_ISA64, "0x%016" PRIx64, "0x%08" PRIx32)
+#define FMT_WORD MUXDEF(CONFIG_ISA64, "0x%016" PRIx64, "0x%08" PRIx32)  // word_t 的格式化字符串
 
 typedef word_t vaddr_t;
-typedef MUXDEF(PMEM64, uint64_t, uint32_t) paddr_t;
-#define FMT_PADDR MUXDEF(PMEM64, "0x%016" PRIx64, "0x%08" PRIx32)
+typedef MUXDEF(PMEM64, uint64_t, uint32_t) paddr_t;     // 物理地址类型，根据是否为64位ISA定义为64位或32位
+#define FMT_PADDR MUXDEF(PMEM64, "0x%016" PRIx64, "0x%08" PRIx32)   // paddr_t 的格式化字符串
 typedef uint16_t ioaddr_t;
 
 #include <debug.h>
