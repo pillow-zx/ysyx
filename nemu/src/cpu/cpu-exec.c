@@ -52,7 +52,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
     if (g_print_step) {
         IFDEF(CONFIG_ITRACE, puts(_this->logbuf));
     }
-    IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+    IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc)); // 步进调试
     IFDEF(CONFIG_WATCHPOINT, check_wp_update()); // 检查监视点是否被触发
 }
 
