@@ -31,6 +31,8 @@ extern char *ftrace_file_strtab;
 extern Elf32_Sym *ftrace_file_symtab;
 extern int ftrace_file_symtab_num;
 
+#define CALL_FUNC_TIMES 20 // 定义调用函数的次数, 这里设置为20次, 也可以根据需要调整
+
 // 获取与pc匹配的符号名称
 static char *get_symbol_name(vaddr_t pc) {
     for (int i = 0; i < ftrace_file_symtab_num; i++) {
@@ -44,24 +46,44 @@ static char *get_symbol_name(vaddr_t pc) {
     return NULL; // 如果没有找到匹配的符号名称，则返回NULL
 }
 
+// 函数调用栈，用于跟踪调用和返回
+static struct {
+    vaddr_t pc;
+    char name[64];
+} call_stack[CALL_FUNC_TIMES];
+static int call_stack_depth = 0;
+
 // ftrace_elf_start函数用于跟踪程序中的函数调用和返回
-static void ftrace_elf_start(vaddr_t pc) {
+static void ftrace_elf_start(vaddr_t pc, vaddr_t dnpc, bool is_call, bool is_ret) {
     if (ftrace_file == NULL || ftrace_file_header == NULL || ftrace_file_sections == NULL ||
         ftrace_file_strtab == NULL || ftrace_file_symtab == NULL) {
         return; // 如果跟踪文件或相关数据未初始化，则直接返回
     }
 
-    static char last_symbol_name[256] = ""; // 静态变量保存上次的符号名称
+    char *symbol_name = get_symbol_name(pc);
 
-    char *symbol_name = get_symbol_name(pc); // 获取与pc匹配的符号名称
-
-    // 只有当找到符号名称且与上次不同时才输出
     if (symbol_name != NULL) {
-        if (strcmp(symbol_name, last_symbol_name) != 0) {
-            // 符号名称与上次不同，输出跟踪信息并更新记录
-            Log("ftrace: %s at " FMT_WORD, symbol_name, pc);
-            strncpy(last_symbol_name, symbol_name, sizeof(last_symbol_name) - 1);
-            last_symbol_name[sizeof(last_symbol_name) - 1] = '\0'; // 确保字符串以'\0'结尾
+        if (is_call) {
+            // 函数调用
+            for (int i = 0; i < call_stack_depth; i++) {
+                printf("  "); // 打印缩进表示调用层次
+            }
+            Log("call: %s at " FMT_WORD, symbol_name, pc);
+
+            // 将函数信息压入调用栈
+            if (call_stack_depth < CALL_FUNC_TIMES) {
+                call_stack[call_stack_depth].pc = pc;
+                strncpy(call_stack[call_stack_depth].name, symbol_name, sizeof(call_stack[call_stack_depth].name) - 1);
+                call_stack[call_stack_depth].name[sizeof(call_stack[call_stack_depth].name) - 1] = '\0';
+                call_stack_depth++;
+            }
+        } else if (is_ret && call_stack_depth > 0) {
+            // 函数返回
+            call_stack_depth--;
+            for (int i = 0; i < call_stack_depth; i++) {
+                printf("  "); // 打印缩进表示调用层次
+            }
+            Log("return: %s at " FMT_WORD, call_stack[call_stack_depth].name, dnpc);
         }
     }
 }
@@ -128,7 +150,36 @@ static void exec_once(Decode *s, vaddr_t pc) {
     s->pc = pc;
     s->snpc = pc;
     isa_exec_once(s); // 执行指令,修改s->snpc,使s->snpc指向下一条指令的地址
-    IFDEF(CONFIG_FTRACE, ftrace_elf_start(pc));
+
+#ifdef CONFIG_FTRACE
+    // 检测函数调用和返回
+    bool is_call = false;
+    bool is_ret = false;
+
+    // 获取指令
+    uint32_t instruction = s->isa.inst;
+
+    // 检测JAL指令 (函数调用)
+    if ((instruction & 0x7f) == 0x6f) { // JAL opcode
+        uint32_t rd = (instruction >> 7) & 0x1f;
+        if (rd == 1) { // rd = ra (x1), 这是函数调用
+            is_call = true;
+        }
+    }
+    // 检测JALR指令 (可能是函数调用或返回)
+    else if ((instruction & 0x7f) == 0x67) { // JALR opcode
+        uint32_t rd = (instruction >> 7) & 0x1f;
+        uint32_t rs1 = (instruction >> 15) & 0x1f;
+        if (rd == 1 && rs1 != 1) { // rd = ra, rs1 != ra, 这是函数调用
+            is_call = true;
+        } else if (rd == 0 && rs1 == 1) { // rd = x0, rs1 = ra, 这是函数返回
+            is_ret = true;
+        }
+    }
+
+    ftrace_elf_start(pc, s->dnpc, is_call, is_ret);
+#endif
+
     cpu.pc = s->dnpc; // 更新pc
 #ifdef CONFIG_ITRACE
     char *p = s->logbuf;
