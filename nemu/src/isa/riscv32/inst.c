@@ -216,5 +216,5 @@ static int decode_exec(Decode *s) {
 
 int isa_exec_once(Decode *s) {
     s->isa.inst = inst_fetch(&s->snpc, 4); // 取指,获取指令并更新s->snpc指向下一条指令的地址
-    return decode_exec(s);
+    return decode_exec(s); // 译码并执行指令同时更新dnpc
 }

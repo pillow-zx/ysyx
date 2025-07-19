@@ -22,6 +22,42 @@
 // 个人添加的头文件
 #include <../../monitor/sdb/sdb.h>
 
+#ifdef CONFIG_FTRACE
+#include <elf.h>
+extern char *ftrace_file;
+extern Elf32_Ehdr *ftrace_file_header;
+extern Elf32_Shdr *ftrace_file_sections;
+extern char *ftrace_file_strtab;
+extern Elf32_Sym *ftrace_file_symtab;
+
+// 获取与pc匹配的符号名称
+static char *get_symbol_name(vaddr_t pc) {
+    for (int i = 0; ftrace_file_symtab[i].st_name != 0; i++) {
+        // 因为st_info包含了符号绑定和类型信息，所以需要使用ELF32_ST_TYPE宏来获取符号类型
+        if (ELF32_ST_TYPE(ftrace_file_symtab[i].st_info) == STT_FUNC && pc >= ftrace_file_symtab[i].st_value &&
+            pc < ftrace_file_symtab[i].st_value + ftrace_file_symtab[i].st_size) {
+            // 因为st_name是字符串在字符串表的偏移量, 所以要加上ftrace_file_strtab进行指针计算
+            return ftrace_file_strtab + ftrace_file_symtab[i].st_name;
+        }
+    }
+    return NULL; // 如果没有找到匹配的符号名称，则返回NULL
+}
+
+// ftrace_elf_start函数用于跟踪程序中的函数调用和返回
+static void ftrace_elf_start(vaddr_t pc) {
+    if (ftrace_file == NULL || ftrace_file_header == NULL || ftrace_file_sections == NULL ||
+        ftrace_file_strtab == NULL || ftrace_file_symtab == NULL) {
+        return; // 如果跟踪文件或相关数据未初始化，则直接返回
+    }
+
+    char *symbol_name = get_symbol_name(pc); // 获取与pc匹配的符号名称
+    if (symbol_name != NULL) {
+        Log("ftrace: %s at " FMT_WORD, symbol_name, pc);
+    }
+}
+
+#endif // CONFIG_FTRACE
+
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
@@ -35,7 +71,7 @@ static uint64_t g_timer = 0;      // unit: us    // g_timer用于记录cpu运行
 static bool g_print_step = false; // g_print_step用于控制是否打印指令跟踪信息
 
 char iringbuf[64][128] = {}; // iringbuf用于存储指令跟踪日志
-int iringbuf_head = 0; // iringbuf_head用于指示iring
+int iringbuf_head = 0;       // iringbuf_head用于指示iring
 
 #ifdef CONFIG_ITRACE
 static void iringbuf_write(Decode *s) {
@@ -73,16 +109,17 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
         IFDEF(CONFIG_ITRACE, puts(_this->logbuf));
     }
     IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc)); // 步进调试
-    IFDEF(CONFIG_WATCHPOINT, check_wp_update()); // 检查监视点是否被触发
+    IFDEF(CONFIG_WATCHPOINT, check_wp_update());            // 检查监视点是否被触发
 }
 
-/* 执行一次cpu的指令 */
+/* 执行一次cpu的指令 */ // pc为实际执行指令地址, dnpc为下一次要执行的指令地址
 // execute->exec_once->isa_exec_once->encode
 static void exec_once(Decode *s, vaddr_t pc) {
     s->pc = pc;
     s->snpc = pc;
-    isa_exec_once(s);   // 执行指令,修改s->snpc,使s->snpc指向下一条指令的地址
-    cpu.pc = s->dnpc;   // 更新pc
+    isa_exec_once(s); // 执行指令,修改s->snpc,使s->snpc指向下一条指令的地址
+    IFDEF(CONFIG_FTRACE, ftrace_elf_start(pc));
+    cpu.pc = s->dnpc; // 更新pc
 #ifdef CONFIG_ITRACE
     char *p = s->logbuf;
     p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
@@ -105,8 +142,8 @@ static void exec_once(Decode *s, vaddr_t pc) {
     p += space_len;
 
     void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-    disassemble(p, s->logbuf + sizeof(s->logbuf) - p, MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc),
-                (uint8_t *)&s->isa.inst, ilen);
+    disassemble(p, s->logbuf + sizeof(s->logbuf) - p, MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst,
+                ilen);
 #endif
 }
 
@@ -165,11 +202,9 @@ void cpu_exec(uint64_t n) {
         case NEMU_END:
         case NEMU_ABORT:
         case NEMU_QUIT:
-            printf(
-                "Program execution has ended. To restart the program, exit NEMU and run again.\n");
+            printf("Program execution has ended. To restart the program, exit NEMU and run again.\n");
             return;
-        default:
-            nemu_state.state = NEMU_RUNNING;
+        default: nemu_state.state = NEMU_RUNNING;
     }
 
     /* 获取cpu开始运行的时间 */
@@ -185,20 +220,16 @@ void cpu_exec(uint64_t n) {
 
     /* 检查nemu状态，结束nemu运行 */
     switch (nemu_state.state) {
-        case NEMU_RUNNING:
-            nemu_state.state = NEMU_STOP;
-            break;
+        case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
 
         case NEMU_END:
         case NEMU_ABORT:
             Log("nemu: %s at pc = " FMT_WORD,
-                (nemu_state.state == NEMU_ABORT
-                     ? ANSI_FMT("ABORT", ANSI_FG_RED)
-                     : (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN)
-                                                 : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
+                (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED)
+                                                : (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN)
+                                                                            : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
                 nemu_state.halt_pc);
             // fall through
-        case NEMU_QUIT:
-            statistic();
+        case NEMU_QUIT: statistic();
     }
 }

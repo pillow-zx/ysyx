@@ -48,13 +48,13 @@ static int difftest_port = 1234;
 
 static long load_img() {
     // 检查 img_file 是否为 NULL
-    if (img_file == NULL) {
-        Log("No image is given. Use the default build-in image.");
-        return 4096; // built-in image size
-    }
+    // if (img_file == NULL) {
+    //     Log("No image is given. Use the default build-in image.");
+    //     return 4096; // built-in image size
+    // }
 
     // 以二进制方式打开镜像文件
-    FILE *fp = fopen(img_file, "rb");
+    FILE *fp = fopen("/home/waysorry/ysyx/ysyx-workbench/am-kernels/tests/cpu-tests/build/add-riscv32-nemu.bin", "rb");
     Assert(fp, "Can not open '%s'", img_file);
 
     // 获取镜像文件的大小
