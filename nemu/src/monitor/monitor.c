@@ -81,8 +81,9 @@ static long load_img() {
 char *ftrace_file = NULL;                // 用于存储ELF格式的镜像文件路径
 Elf32_Ehdr *ftrace_file_header;          // ELF文件头结构体
 Elf32_Shdr *ftrace_file_sections = NULL; // ELF节头结构体数组
-char *ftrace_file_strtab = NULL;         // ELF节头字符串表
+char *ftrace_file_strtab = NULL;         // ELF符号名字符串表
 Elf32_Sym *ftrace_file_symtab = NULL;    //  ELF符号表
+int ftrace_file_symtab_num = 0;          // 符号表条目数量
 // 解析elf文件
 static void ftrace_elf_init(char *ftrace_file) {
     if (ftrace_file == NULL) {
@@ -123,25 +124,28 @@ static void ftrace_elf_init(char *ftrace_file) {
     Assert(ret == ftrace_file_header->e_shnum, "Failed to read section headers from '%s'", ftrace_file);
     Log("ELF file '%s' initialized successfully with %d sections.", ftrace_file, ftrace_file_header->e_shnum);
 
-    // 读取节头字符串表
-    if (ftrace_file_header->e_shstrndx != SHN_UNDEF) {
-        fseek(fp, ftrace_file_sections[ftrace_file_header->e_shstrndx].sh_offset, SEEK_SET);
-        ftrace_file_strtab = (char *)malloc(ftrace_file_sections[ftrace_file_header->e_shstrndx].sh_size);
-        Assert(ftrace_file_strtab, "Failed to allocate memory for section header string table");
-        ret = fread(ftrace_file_strtab, ftrace_file_sections[ftrace_file_header->e_shstrndx].sh_size, 1, fp);
-        Assert(ret == 1, "Failed to read section header string table from '%s'", ftrace_file);
-        Log("Section header string table read successfully from '%s'", ftrace_file);
-    }
-
-    // 读取节头符号表
+    // 读取节头符号表和对应的字符串表
     for (int i = 0; i < ftrace_file_header->e_shnum; i++) {
         if (ftrace_file_sections[i].sh_type == SHT_SYMTAB) {
+            // 读取符号表
             fseek(fp, ftrace_file_sections[i].sh_offset, SEEK_SET);
             ftrace_file_symtab = (Elf32_Sym *)malloc(ftrace_file_sections[i].sh_size);
             Assert(ftrace_file_symtab, "Failed to allocate memory for symbol table");
             ret = fread(ftrace_file_symtab, ftrace_file_sections[i].sh_size, 1, fp);
             Assert(ret == 1, "Failed to read symbol table from '%s'", ftrace_file);
-            Log("Symbol table read successfully from '%s'", ftrace_file);
+            // 计算符号表条目数量
+            ftrace_file_symtab_num = ftrace_file_sections[i].sh_size / sizeof(Elf32_Sym);
+
+            // 读取对应的符号名字符串表
+            int strtab_index = ftrace_file_sections[i].sh_link;
+            if (strtab_index < ftrace_file_header->e_shnum) {
+                fseek(fp, ftrace_file_sections[strtab_index].sh_offset, SEEK_SET);
+                ftrace_file_strtab = (char *)malloc(ftrace_file_sections[strtab_index].sh_size);
+                Assert(ftrace_file_strtab, "Failed to allocate memory for symbol string table");
+                ret = fread(ftrace_file_strtab, ftrace_file_sections[strtab_index].sh_size, 1, fp);
+                Assert(ret == 1, "Failed to read symbol string table from '%s'", ftrace_file);
+                Log("Symbol table and string table read successfully from '%s', %d symbols", ftrace_file, ftrace_file_symtab_num);
+            }
             break; // 找到符号表后退出循环
         }
     }

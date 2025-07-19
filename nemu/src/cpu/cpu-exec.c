@@ -29,10 +29,11 @@ extern Elf32_Ehdr *ftrace_file_header;
 extern Elf32_Shdr *ftrace_file_sections;
 extern char *ftrace_file_strtab;
 extern Elf32_Sym *ftrace_file_symtab;
+extern int ftrace_file_symtab_num;
 
 // 获取与pc匹配的符号名称
 static char *get_symbol_name(vaddr_t pc) {
-    for (int i = 0; ftrace_file_symtab[i].st_name != 0; i++) {
+    for (int i = 0; i < ftrace_file_symtab_num; i++) {
         // 因为st_info包含了符号绑定和类型信息，所以需要使用ELF32_ST_TYPE宏来获取符号类型
         if (ELF32_ST_TYPE(ftrace_file_symtab[i].st_info) == STT_FUNC && pc >= ftrace_file_symtab[i].st_value &&
             pc < ftrace_file_symtab[i].st_value + ftrace_file_symtab[i].st_size) {
@@ -50,9 +51,18 @@ static void ftrace_elf_start(vaddr_t pc) {
         return; // 如果跟踪文件或相关数据未初始化，则直接返回
     }
 
+    static char last_symbol_name[256] = ""; // 静态变量保存上次的符号名称
+
     char *symbol_name = get_symbol_name(pc); // 获取与pc匹配的符号名称
+
+    // 只有当找到符号名称且与上次不同时才输出
     if (symbol_name != NULL) {
-        Log("ftrace: %s at " FMT_WORD, symbol_name, pc);
+        if (strcmp(symbol_name, last_symbol_name) != 0) {
+            // 符号名称与上次不同，输出跟踪信息并更新记录
+            Log("ftrace: %s at " FMT_WORD, symbol_name, pc);
+            strncpy(last_symbol_name, symbol_name, sizeof(last_symbol_name) - 1);
+            last_symbol_name[sizeof(last_symbol_name) - 1] = '\0'; // 确保字符串以'\0'结尾
+        }
     }
 }
 
