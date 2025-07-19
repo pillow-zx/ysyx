@@ -56,11 +56,11 @@ int main(int argc, char *argv[]) {
     //     } else {
     //         printf("Expression: %s, Expected: %u, Got: %u\n", exprs, result, res);
     //     }
-    //     printf("Woring: %u\n", wrong);
     // }
+    // printf("Wrong: %u\n", wrong);
     // fclose(fp);
     // return 0;
-    //
+
     /* Start engine. */
     engine_start();
 

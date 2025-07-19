@@ -275,7 +275,7 @@ static int main_operator(int p, int q) {
 }
 
 // 计算表达式的值
-int32_t eval(int p, int q) {
+word_t eval(int p, int q) {
     if (p > q) {
         Assert(false, "p > q");
     } else if (p == q) { // 输入只有一个token
@@ -313,7 +313,7 @@ int32_t eval(int p, int q) {
             if (position - 1 >=0 && tokens[position - 1].type == TK_NEGTIVE) {
                 return val1; // 如果前面是负号，则返回正数
             }
-            return -val1;
+            return ~val1 + 1; // 返回负数
         }
         int32_t val2 = eval(p, position - 1); // 计算左侧表达式的值
         // 执行运算

@@ -187,6 +187,40 @@ static int cmd_clr(char *args) {
     return 0;
 }
 
+static int run_test(char *args) {
+    unsigned wrong = 0;
+    FILE *fp = fopen("/home/waysorry/ysyx/ysyx-workbench/nemu/tools/gen-expr/build/input", "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Failed to open input file.\n");
+        return 1;
+    }
+    char *temp = (char *)malloc(1000 * sizeof(char));
+    while (fgets(temp, 1000, fp) != NULL) {
+        char *temps = strtok(temp, " ");
+        if (temps == NULL) {
+            continue;
+        }
+        char *exprs = temps + strlen(temps) + 1;
+        exprs[strlen(exprs) - 1] = '\0'; // Remove newline character at the end
+        word_t result;
+        sscanf(temps, "%u", &result);
+        bool success = true;
+        word_t res = expr(exprs, &success);
+        if (!success) {
+            printf("Error in expression: %s\n", exprs);
+        } else if (res != result) {
+            printf("Expression: %s, Expected: %u, Got: %u\n", exprs, result, res);
+            exit(1);
+            wrong++;
+        } else {
+            printf("Expression: %s, Expected: %u, Got: %u\n", exprs, result, res);
+        }
+    }
+    printf("Wrong: %u\n", wrong);
+    fclose(fp);
+    return 0;
+}
+
 /* 内置指令 */
 static struct {
     const char *name;
@@ -208,6 +242,7 @@ static struct {
     {"d", "Delete watchpoint", cmd_d},
     {"clear", "Clean screen", cmd_clr},
     {"ls", "List of commands", cmd_help},
+    {"test", "Run test for expression", run_test},
 };
 
 #define NR_CMD ARRLEN(cmd_table) // 计算cmd_table的长度
@@ -294,7 +329,7 @@ void sdb_mainloop() {
                 /* 法二 */
                 if (cmd_table[i].handler(args) < 0) {
                     nemu_state.state = NEMU_QUIT; // 设置nemu状态为QUIT
-                    return; // 退出nemu
+                    return;                       // 退出nemu
                 }
                 break;
             }
