@@ -67,36 +67,53 @@ static void ftrace_elf_start(vaddr_t pc, vaddr_t dnpc, bool is_call, bool is_ret
         return; // 如果跟踪文件或相关数据未初始化，则直接返回
     }
 
-    char *symbol_name = get_symbol_name(pc);
+    if (is_call) {
+        // 对于函数调用，查找跳转目标地址的符号
+        char *target_symbol = get_symbol_name(dnpc);
+        if (target_symbol != NULL) {
+            // 检查是否为重复调用（避免无限递归的情况）
+            bool is_duplicate = false;
+            if (call_stack_depth > 0) {
+                is_duplicate = (strcmp(call_stack[call_stack_depth - 1].name, target_symbol) == 0);
+            }
 
-    if (symbol_name != NULL) {
-        if (is_call) {
-            if (strcmp(call_stack[call_stack_depth - 1].name, symbol_name) != 0) {
-                // 函数调用
+            if (!is_duplicate) {
+                // 打印缩进表示调用层次
                 for (int i = 0; i < call_stack_depth; i++) {
-                    printf("  "); // 打印缩进表示调用层次
+                    printf("  ");
                 }
-                Log("call: %s at " FMT_WORD, symbol_name, dnpc);
+                Log("call: %s at " FMT_WORD, target_symbol, dnpc);
+
                 // 将函数信息压入调用栈
                 if (call_stack_depth < CALL_FUNC_TIMES) {
                     call_stack[call_stack_depth].pc = dnpc;
-                    strncpy(call_stack[call_stack_depth].name, symbol_name,
+                    strncpy(call_stack[call_stack_depth].name, target_symbol,
                             sizeof(call_stack[call_stack_depth].name) - 1);
                     call_stack[call_stack_depth].name[sizeof(call_stack[call_stack_depth].name) - 1] = '\0';
                     call_stack_depth++;
+                } else {
+                    Log("Warning: call stack overflow, max depth %d reached", CALL_FUNC_TIMES);
                 }
-                // show_stack(); // 打印当前调用栈
             }
-        } else if (is_ret && call_stack_depth > 0) {
-            if (strcmp(call_stack[call_stack_depth - 1].name, symbol_name) == 0) {
-                // show_stack(); // 打印当前调用栈
-                // 函数返回
-                call_stack_depth--;
-                for (int i = 0; i < call_stack_depth; i++) {
-                    printf("  "); // 打印缩进表示调用层次
-                }
-                Log("return: %s at " FMT_WORD, call_stack[call_stack_depth].name, dnpc);
+        }
+    } else if (is_ret && call_stack_depth > 0) {
+        // 对于函数返回，检查当前pc是否在栈顶函数的范围内
+        char *current_symbol = get_symbol_name(pc);
+        if (current_symbol != NULL && strcmp(call_stack[call_stack_depth - 1].name, current_symbol) == 0) {
+            // 函数返回
+            call_stack_depth--;
+            for (int i = 0; i < call_stack_depth; i++) {
+                printf("  ");
             }
+            Log("return: %s at " FMT_WORD, current_symbol, pc);
+        }
+        // 如果当前符号不匹配，可能是从内联函数或其他情况返回，也尝试处理
+        else if (call_stack_depth > 0) {
+            call_stack_depth--;
+            for (int i = 0; i < call_stack_depth; i++) {
+                printf("  ");
+            }
+            Log("return: %s at " FMT_WORD, call_stack[call_stack_depth].name, pc);
         }
     }
 }
@@ -172,21 +189,38 @@ static void exec_once(Decode *s, vaddr_t pc) {
     // 获取指令
     uint32_t instruction = s->isa.inst;
 
-    // 检测JAL指令 (函数调用)
+    // 检测JAL指令 (无条件跳转并链接)
     if ((instruction & 0x7f) == 0x6f) { // JAL opcode
         uint32_t rd = (instruction >> 7) & 0x1f;
-        if (rd == 1) { // rd = ra (x1), 这是函数调用
+        // 任何跳转到函数地址的JAL指令都可能是函数调用
+        char *target_symbol = get_symbol_name(s->dnpc);
+        if (target_symbol != NULL && rd != 0) { // rd != 0 表示会保存返回地址
             is_call = true;
         }
     }
-    // 检测JALR指令 (可能是函数调用或返回)
+    // 检测JALR指令 (间接跳转并链接)
     else if ((instruction & 0x7f) == 0x67) { // JALR opcode
         uint32_t rd = (instruction >> 7) & 0x1f;
         uint32_t rs1 = (instruction >> 15) & 0x1f;
-        if (rd == 1 && rs1 != 1) { // rd = ra, rs1 != ra, 这是函数调用
-            is_call = true;
-        } else if (rd == 0 && rs1 == 1) { // rd = x0, rs1 = ra, 这是函数返回
+
+        // 函数调用模式：rd != 0 (保存返回地址) 且跳转到函数符号
+        if (rd != 0) {
+            char *target_symbol = get_symbol_name(s->dnpc);
+            if (target_symbol != NULL) {
+                is_call = true;
+            }
+        }
+        // 函数返回模式：rd == 0 且 rs1 == 1 (返回地址寄存器)
+        else if (rd == 0 && rs1 == 1) {
             is_ret = true;
+        }
+        // 其他返回模式：rd == 0 且从当前函数返回
+        else if (rd == 0) {
+            char *current_symbol = get_symbol_name(pc);
+            if (current_symbol != NULL && call_stack_depth > 0 &&
+                strcmp(call_stack[call_stack_depth - 1].name, current_symbol) == 0) {
+                is_ret = true;
+            }
         }
     }
 
