@@ -88,7 +88,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
         temp++;
     }
     *p = '\0'; // Only set null terminator at the end
-    return (p - out);
+    return p - out; // Return the number of characters written
 }
 
 int sprintf(char *out, const char *fmt, ...) {

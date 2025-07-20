@@ -90,7 +90,6 @@ static void ftrace_elf_init(char *ftrace_file) {
         Log("No ftrace file is given.");
         return;
     }
-    Log("Ftrace file: %s", ftrace_file);
 
     FILE *fp = fopen(ftrace_file, "rb");
     Assert(fp, "Can not open '%s'", ftrace_file);
@@ -104,14 +103,12 @@ static void ftrace_elf_init(char *ftrace_file) {
     // 检查ELF文件头的魔数是否正确
     if (ftrace_file_header->e_ident[EI_MAG0] != ELFMAG0 || ftrace_file_header->e_ident[EI_MAG1] != ELFMAG1 ||
         ftrace_file_header->e_ident[EI_MAG2] != ELFMAG2 || ftrace_file_header->e_ident[EI_MAG3] != ELFMAG3) {
-        Log("Invalid ELF file: '%s'", ftrace_file);
         fclose(fp);
         return;
     }
 
     // 导航到节头表
     if (ftrace_file_header->e_shoff == 0 || ftrace_file_header->e_shentsize == 0) {
-        Log("No section header in ELF file: '%s'", ftrace_file);
         fclose(fp);
         return;
     }
@@ -122,7 +119,6 @@ static void ftrace_elf_init(char *ftrace_file) {
     Assert(ftrace_file_sections, "Failed to allocate memory for section headers");
     ret = fread(ftrace_file_sections, sizeof(Elf32_Shdr), ftrace_file_header->e_shnum, fp);
     Assert(ret == ftrace_file_header->e_shnum, "Failed to read section headers from '%s'", ftrace_file);
-    Log("ELF file '%s' initialized successfully with %d sections.", ftrace_file, ftrace_file_header->e_shnum);
 
     // 读取节头符号表和对应的字符串表
     for (int i = 0; i < ftrace_file_header->e_shnum; i++) {
@@ -144,13 +140,13 @@ static void ftrace_elf_init(char *ftrace_file) {
                 Assert(ftrace_file_strtab, "Failed to allocate memory for symbol string table");
                 ret = fread(ftrace_file_strtab, ftrace_file_sections[strtab_index].sh_size, 1, fp);
                 Assert(ret == 1, "Failed to read symbol string table from '%s'", ftrace_file);
-                Log("Symbol table and string table read successfully from '%s', %d symbols", ftrace_file, ftrace_file_symtab_num);
             }
             break; // 找到符号表后退出循环
         }
     }
 
     // 关闭文件
+    Log("%s: ftrace file loaded successfully", ftrace_file);
     fclose(fp);
 }
 #endif // CONFIG_FTRACE
