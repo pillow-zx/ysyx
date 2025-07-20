@@ -5,10 +5,6 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
-int printf(const char *fmt, ...) {
-    panic("Not implemented");
-}
-
 static int getlength(int num) {
     int len = 0;
     if (num == 0)
@@ -42,13 +38,13 @@ static char *int_to_string(int num) {
         str[0] = '-';
     }
     str[len] = '\0';
-    
+
     // Special case for 0
     if (num == 0) {
         str[i] = '0';
         return str;
     }
-    
+
     while (num > 0) {
         str[i++] = (num % 10) + '0';
         num /= 10;
@@ -91,7 +87,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
         }
         temp++;
     }
-    *p = '\0';  // Only set null terminator at the end
+    *p = '\0'; // Only set null terminator at the end
     return (p - out);
 }
 
@@ -103,12 +99,29 @@ int sprintf(char *out, const char *fmt, ...) {
     return ret;
 }
 
-int snprintf(char *out, size_t n, const char *fmt, ...) {
-    panic("Not implemented");
+int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
+    int ret = vsprintf(out, fmt, ap);
+    return ret < n ? ret : n; // Ensure we do not write more than n characters
 }
 
-int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
-    panic("Not implemented");
+int snprintf(char *out, size_t n, const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    int ret = vsnprintf(out, n, fmt, ap);
+    return ret;
+}
+
+int printf(const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+
+    char buffer[1024]; // Temporary buffer for output
+    int ret = vsprintf(buffer, fmt, ap);
+    va_end(ap);
+
+    putstr(buffer); // Output to console
+
+    return ret;
 }
 
 #endif
