@@ -53,6 +53,13 @@ static struct {
 } call_stack[CALL_FUNC_TIMES];
 static int call_stack_depth = 0;
 
+// static void show_stack() {
+//     // 打印调用栈
+//     for (int i = 0; i < call_stack_depth; i++) {
+//         printf("  %s at " FMT_WORD "\n", call_stack[i].name, call_stack[i].pc);
+//     }
+// }
+
 // ftrace_elf_start函数用于跟踪程序中的函数调用和返回
 static void ftrace_elf_start(vaddr_t pc, vaddr_t dnpc, bool is_call, bool is_ret) {
     if (ftrace_file == NULL || ftrace_file_header == NULL || ftrace_file_sections == NULL ||
@@ -64,26 +71,32 @@ static void ftrace_elf_start(vaddr_t pc, vaddr_t dnpc, bool is_call, bool is_ret
 
     if (symbol_name != NULL) {
         if (is_call) {
-            // 函数调用
-            for (int i = 0; i < call_stack_depth; i++) {
-                printf("  "); // 打印缩进表示调用层次
-            }
-            Log("call: %s at " FMT_WORD, symbol_name, pc);
-
-            // 将函数信息压入调用栈
-            if (call_stack_depth < CALL_FUNC_TIMES) {
-                call_stack[call_stack_depth].pc = pc;
-                strncpy(call_stack[call_stack_depth].name, symbol_name, sizeof(call_stack[call_stack_depth].name) - 1);
-                call_stack[call_stack_depth].name[sizeof(call_stack[call_stack_depth].name) - 1] = '\0';
-                call_stack_depth++;
+            if (strcmp(call_stack[call_stack_depth - 1].name, symbol_name) != 0) {
+                // 函数调用
+                for (int i = 0; i < call_stack_depth; i++) {
+                    printf("  "); // 打印缩进表示调用层次
+                }
+                Log("call: %s at " FMT_WORD, symbol_name, dnpc);
+                // 将函数信息压入调用栈
+                if (call_stack_depth < CALL_FUNC_TIMES) {
+                    call_stack[call_stack_depth].pc = dnpc;
+                    strncpy(call_stack[call_stack_depth].name, symbol_name,
+                            sizeof(call_stack[call_stack_depth].name) - 1);
+                    call_stack[call_stack_depth].name[sizeof(call_stack[call_stack_depth].name) - 1] = '\0';
+                    call_stack_depth++;
+                }
+                // show_stack(); // 打印当前调用栈
             }
         } else if (is_ret && call_stack_depth > 0) {
-            // 函数返回
-            call_stack_depth--;
-            for (int i = 0; i < call_stack_depth; i++) {
-                printf("  "); // 打印缩进表示调用层次
+            if (strcmp(call_stack[call_stack_depth - 1].name, symbol_name) == 0) {
+                // show_stack(); // 打印当前调用栈
+                // 函数返回
+                call_stack_depth--;
+                for (int i = 0; i < call_stack_depth; i++) {
+                    printf("  "); // 打印缩进表示调用层次
+                }
+                Log("return: %s at " FMT_WORD, call_stack[call_stack_depth].name, dnpc);
             }
-            Log("return: %s at " FMT_WORD, call_stack[call_stack_depth].name, dnpc);
         }
     }
 }
