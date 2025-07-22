@@ -7,6 +7,20 @@
 
 static unsigned int run = 1;
 static unsigned int sim_time = 0;
+static uint32_t temp_pc = 0x80000000;  // Initial PC value
+static uint32_t times = 0;
+
+#define MAX_TIMES 10000
+#define SUCCESS_MSG(x) std::cout << "\033[32m" << x << "\033[0m" << std::endl
+#define FAIL_MSG(x) std::cout << "\033[31m" << x << "\033[0m" << std::endl
+
+
+static void npc_break() {
+    if (times >= MAX_TIMES) {
+        FAIL_MSG("Simulation exceeded maximum cycles, stopping execution.");
+        run = 0;
+    }
+}
 
 static void single_cycle(Vysyx_25060173_core *core, std::vector<uint32_t> &insts, VerilatedVcdC *tfp) {
     uint32_t pc_count = (core->now_pc - 0x80000000) / 4;  // Use current PC, not next PC
@@ -84,9 +98,13 @@ int main(int argc, char **argv) {
 
     while (run) {
         single_cycle(core, insts, tfp);
+        times++;
+        npc_break();
         // std::cout << "Next PC: 0x" << std::hex << core->next_pc << std::endl;
         std::cout << "Now  PC: 0x" << std::hex << core->now_pc << "  Next PC: 0x" << std::hex << core->next_pc << std::endl;
     }
+
+    if (times < MAX_TIMES) SUCCESS_MSG("Simulation finished successfully.");
 
     tfp->close();
     delete tfp;
