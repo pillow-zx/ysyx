@@ -3,12 +3,14 @@ TOPNAME = ysyx_25060173_core
 INC_PATH ?=  # Include paths, can be set as needed
 
 VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc \
+VERILATOR_CFLAGS += -MMD --build -cc --trace\
 				-O3 --x-assign fast --x-initial fast --noassert
 
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
+
+WAVE = ./trace.vcd
 
 default: $(BIN)
 
@@ -31,11 +33,19 @@ $(BIN): $(VSRCS) $(CSRCS)
 # 目标别名：构建项目
 all: default
 
+# 添加args支持：允许用户传递运行的程序
+run-env: $(BIN) $(IMG)
+	@echo "Running simulation with args: $(IMG)"
+
 # 仿真目标：构建并运行仿真器
-sim: $(BIN)
-	@$^  # 执行生成的仿真器可执行文件
+run: run-env
+	$(BIN) $(IMG)
 	@echo "Simulation completed."
 	$(call git_commit, "sim RTL") # 自动提交仿真结果到git（请勿删除此行）
+
+# 查看波形
+wave: $(WAVE)
+	@gtkwave $(WAVE) &
 
 # 清理目标：删除所有构建产物
 clean:

@@ -1,55 +1,90 @@
 #include <iostream>
 #include <vector>
-#include "verilated.h"
+#include <verilated.h>
+#include <fstream>
 #include "verilated_vcd_c.h"
 #include "Vysyx_25060173_core.h"
 
-static unsigned int RUN = 1;
-static unsigned int pc_counter = 0;
+static unsigned int run = 1;
+static unsigned int pc_count = 0;
+static unsigned int sim_time = 0;
 
-static const std::vector<unsigned int> test_data = {
-    0b00000000000000001000000100010011, // addi x1, x0, 1
-    0b00000000000100000000000001110011, // ebreak
-};
+static void single_cycle(Vysyx_25060173_core *core, std::vector<uint32_t> &insts, VerilatedVcdC *tfp)  {
+    if (pc_count >= insts.size()) {
+        run = 0;
+        return;
+    }
 
-static void single_cycle(Vysyx_25060173_core* core) {
     core->clk = 0;
-    core->inst = test_data[pc_counter]; // Fetch instruction based on PC
+    core->inst = insts[pc_count];
     core->eval();
+    tfp->dump(sim_time++);
+
     core->clk = 1;
     core->eval();
-    
-    // Only advance pc_counter if we're still running and not at the last instruction
-    if (RUN && pc_counter < test_data.size() - 1) {
-        pc_counter++;
-    }
+    tfp->dump(sim_time++);
+
+    pc_count++;
 }
 
-static void reset(Vysyx_25060173_core* core, int n) {
-    core->reset = 0;  // reset is active low in the module
-    while (n-- > 0) {
-        single_cycle(core);
+static void reset(Vysyx_25060173_core *core, int n) {
+    core->reset = 1;
+    core->clk = 0;
+    core->eval();
+
+    for (int i = 0; i < n; i++) {
+        core->clk = 1;
+        core->eval();
+        core->clk = 0;
+        core->eval();
     }
-    core->reset = 1;  // release reset (inactive high)
+
+    core->reset = 0;
+    core->eval();
 }
 
 extern "C" void ebreak_handler() {
-    if (RUN) {  // Only print once
-        std::cout << "EBREAK instruction encountered. Stopping simulation." << std::endl;
-        RUN = 0;  // Stop the simulation
+    if (run) {
+        std::cout << "EBREAK encountered, stopping execution." << std::endl;
+        run = 0;
     }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     Verilated::commandArgs(argc, argv);
-    Vysyx_25060173_core* core = new Vysyx_25060173_core;
+    Vysyx_25060173_core *core = new Vysyx_25060173_core;
+
+    Verilated::traceEverOn(true);
+    VerilatedVcdC *tfp = new VerilatedVcdC;
+    core->trace(tfp, 99);
+    tfp->open("trace.vcd");
+
+    std::cout << argv[0] << " is running..." << std::endl;
+    std::ifstream file(argv[1], std::ios::binary);
+    if (!file) {
+        throw std::runtime_error("Failed to open file");
+    }
+
+    file.seekg(0, std::ios::end);
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+    uint32_t count = static_cast<uint32_t>(size / sizeof(uint32_t));
+    std::vector<uint32_t> insts(count);
+
+    if (!file.read(reinterpret_cast<char *>(insts.data()), count * sizeof(uint32_t))) {
+        throw std::runtime_error("Failed to read file");
+    }
+
+    file.close();
 
     reset(core, 10);
 
-    while (RUN) {
-        single_cycle(core);
+    while (run) {
+        single_cycle(core, insts, tfp);
     }
 
+    tfp->close();
+    delete tfp;
     delete core;
     return 0;
 }

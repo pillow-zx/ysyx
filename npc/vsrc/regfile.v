@@ -3,16 +3,15 @@ module ysyx_25060173_RegisterFile #(
     ADDR_WIDTH = 5,
     DATA_WIDTH = 32
 ) (
-    input  wire                  clk,
+    input  wire                    clk,
     input  wire [ADDR_WIDTH - 1:0] raddr1,
     output wire [DATA_WIDTH - 1:0] rdata1,
     input  wire [ADDR_WIDTH - 1:0] raddr2,
     output wire [DATA_WIDTH - 1:0] rdata2,
-    input  wire                  we,      // 写使能信号
+    input  wire                    we,      // 写使能信号
     input  wire [ADDR_WIDTH - 1:0] waddr,
     input  wire [DATA_WIDTH - 1:0] wdata
 );
-
   reg [DATA_WIDTH - 1:0] regfile[(1 << ADDR_WIDTH) - 1:0];
 
   always @(posedge clk) begin
