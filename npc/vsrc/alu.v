@@ -21,7 +21,7 @@ module ysyx_25060173_alu (
   wire adder_cout;
 
   assign adder_a = alu_src1;
-  assign adder_b = alu_src2;
+  assign adder_b = alu_src2[31] == 1 ? ~alu_src2 + 1 : alu_src2; // Two's complement for subtraction
   assign adder_cin = 1'b0;
 
   assign {adder_cout, adder_result} = adder_a + adder_b + {{31{1'b0}}, adder_cin};

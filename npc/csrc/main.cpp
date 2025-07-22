@@ -6,10 +6,11 @@
 #include "Vysyx_25060173_core.h"
 
 static unsigned int run = 1;
-static unsigned int pc_count = 0;
 static unsigned int sim_time = 0;
 
-static void single_cycle(Vysyx_25060173_core *core, std::vector<uint32_t> &insts, VerilatedVcdC *tfp)  {
+static void single_cycle(Vysyx_25060173_core *core, std::vector<uint32_t> &insts, VerilatedVcdC *tfp) {
+    uint32_t pc_count = (core->next_pc - 0x80000000) / 4;
+
     if (pc_count >= insts.size()) {
         run = 0;
         return;
@@ -23,24 +24,26 @@ static void single_cycle(Vysyx_25060173_core *core, std::vector<uint32_t> &insts
     core->clk = 1;
     core->eval();
     tfp->dump(sim_time++);
-
-    pc_count++;
 }
 
-static void reset(Vysyx_25060173_core *core, int n) {
-    core->reset = 1;
-    core->clk = 0;
-    core->eval();
-
+static void reset(Vysyx_25060173_core *core, int n, VerilatedVcdC *tfp) {
     for (int i = 0; i < n; i++) {
+        core->clk = 0;
+        core->reset = 0;
+        core->eval();
+        tfp->dump(sim_time++);
         core->clk = 1;
         core->eval();
-        core->clk = 0;
-        core->eval();
-    }
+        tfp->dump(sim_time++);
 
-    core->reset = 0;
-    core->eval();
+        core->clk = 0;
+        core->reset = 1;
+        core->eval();
+        tfp->dump(sim_time++);
+        core->clk = 1;
+        core->eval();
+        tfp->dump(sim_time++);
+    }
 }
 
 extern "C" void ebreak_handler() {
@@ -77,10 +80,12 @@ int main(int argc, char **argv) {
 
     file.close();
 
-    reset(core, 10);
+    reset(core, 10, tfp);
 
     while (run) {
         single_cycle(core, insts, tfp);
+        // std::cout << "Next PC: 0x" << std::hex << core->next_pc << std::endl;
+        std::cout << "Now  PC: 0x" << std::hex << core->now_pc << "  Next PC: 0x" << std::hex << core->next_pc << std::endl;
     }
 
     tfp->close();
