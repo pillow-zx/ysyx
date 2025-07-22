@@ -9,7 +9,7 @@ static unsigned int run = 1;
 static unsigned int sim_time = 0;
 
 static void single_cycle(Vysyx_25060173_core *core, std::vector<uint32_t> &insts, VerilatedVcdC *tfp) {
-    uint32_t pc_count = (core->next_pc - 0x80000000) / 4;
+    uint32_t pc_count = (core->now_pc - 0x80000000) / 4;  // Use current PC, not next PC
 
     if (pc_count >= insts.size()) {
         run = 0;
@@ -17,7 +17,7 @@ static void single_cycle(Vysyx_25060173_core *core, std::vector<uint32_t> &insts
     }
 
     core->clk = 0;
-    core->inst = insts[pc_count];
+    core->inst = insts[pc_count];  // Get instruction based on current PC
     core->eval();
     tfp->dump(sim_time++);
 

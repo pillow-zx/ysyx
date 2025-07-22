@@ -48,11 +48,10 @@ module ysyx_25060173_core (
   assign rs1      = inst[19:15];  // 19-15
   assign rs2      = inst[24:20];  // 24-20
 
-  wire [ 6:0] i7;
   wire [11:0] i12;
   wire [19:0] i20;
 
-  assign i12 = inst[31:20];  // 31-20
+  assign i12 = inst_sw ? {inst[31:25], inst[11:7]} : inst[31:20];  // 31-20
   assign i20 = inst[31:12];  // 31-12
 
   wire inst_addi;
@@ -79,7 +78,6 @@ module ysyx_25060173_core (
     end
   end
 
-  wire need_i7;
   wire need_i12;
   wire need_i20;
   wire need_i20_jal;
@@ -92,16 +90,15 @@ module ysyx_25060173_core (
   wire [31:0] wdata;
   wire we;
 
-  assign need_i7 = inst_sw;
-  assign need_i20_jal = inst_jal;
+
+  assign need_i20_jal = inst_jal | inst_sw;
   assign need_i12 = inst_addi | inst_jalr;
   assign need_i20 = inst_auipc | inst_lui;
-  assign imm = need_i7 ? {{25{i7[6]}}, i7}          :
-               need_i12 ? {{20{i12[11]}}, i12}       :
+  assign imm = need_i12 ? {{20{i12[11]}}, i12}       :
                need_i20 ? {{12{i20[19]}}, i20} << 12 :
                need_i20_jal ? {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0} :
                32'b0;  // 立即数扩展
-  assign we = inst_addi | inst_auipc | inst_lui | inst_jal | inst_jalr | inst_sw ? 1'b1 : 1'b0;
+  assign we = inst_addi | inst_auipc | inst_lui | inst_jal | inst_jalr ? 1'b1 : 1'b0;
   assign raddr1 = rs1;
   assign raddr2 = rs2;
 
