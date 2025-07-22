@@ -22,7 +22,7 @@ static void npc_break() {
     }
 }
 
-static void single_cycle(Vysyx_25060173_core *core, std::vector<uint32_t> &insts, VerilatedVcdC *tfp) {
+static void cpu_exec_once(Vysyx_25060173_core *core, std::vector<uint32_t> &insts, VerilatedVcdC *tfp) {
     uint32_t pc_count = (core->now_pc - 0x80000000) / 4;  // Use current PC, not next PC
 
     if (pc_count >= insts.size()) {
