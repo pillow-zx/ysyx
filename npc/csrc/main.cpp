@@ -59,8 +59,8 @@ int main(int argc, char **argv) {
 
     Verilated::traceEverOn(true);
     VerilatedVcdC *tfp = new VerilatedVcdC;
-    core->trace(tfp, 99);
-    tfp->open("trace.vcd");
+    // core->trace(tfp, 99);
+    // tfp->open("trace.vcd");
 
     std::cout << argv[0] << " is running..." << std::endl;
     std::ifstream file(argv[1], std::ios::binary);

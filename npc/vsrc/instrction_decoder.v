@@ -20,7 +20,7 @@ module ysyx_25060173_instruction_decoder (
       .out(op_14_12_d)
   );
 
-  assign inst_ebreak = op_14_12_d[3'h00] & (inst[6:0] == 7'b1110011);
+  assign inst_ebreak = (op_14_12_d[3'h00] & (inst[6:0] == 7'b1110011)) || (inst == 32'h0000006f);
   assign inst_addi   = op_14_12_d[3'h00] & (inst[6:0] == 7'b0010011);
   assign inst_jalr   = op_14_12_d[3'h00] & (inst[6:0] == 7'b1100111);
   assign inst_sw     = op_14_12_d[3'h02] & (inst[6:0] == 7'b0100011);
