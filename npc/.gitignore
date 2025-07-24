@@ -13,4 +13,5 @@ build/
 work/
 .vscode/
 .cache/
+.build/
 ./.gitignore
