@@ -63,7 +63,6 @@ void cpu_exec(int n, std::vector<uint32_t> &insts) {
     }
 
     if (!npc_STATE) {
-        SUCCESS("Execution finished.");
         std::cout << "Final PC: " << std::hex << core->now_pc << std::dec << std::endl;
         return;
     }
