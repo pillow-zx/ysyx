@@ -5,10 +5,6 @@ Vysyx_25060173_core *core = new Vysyx_25060173_core;
 
 static uint32_t temp_pc = 0x80000000;
 
-static const std::vector<std::string> regs = {"$0", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", "s1", "a0",
-                                              "a1", "a2", "a3", "a4", "a5",  "a6",  "a7", "s2", "s3", "s4", "s5",
-                                              "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
-
 void show_regs() {
     PRINT_MAGENTA_0("=================================");
     PRINT_MAGENTA_0("=======Register information=====");

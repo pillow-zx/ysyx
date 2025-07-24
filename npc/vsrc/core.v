@@ -1,12 +1,11 @@
 import "DPI-C" context function void ebreak_handler();
-
 module ysyx_25060173_core (
     input wire clk,
     input wire reset,
     input wire [31:0] inst,
     output wire [31:0] result,
     output wire [31:0] next_pc,
-    output wire [31:0] now_pc
+    output reg [31:0] now_pc
 );
   reg rst;
   always @(posedge clk) begin
@@ -141,6 +140,7 @@ module ysyx_25060173_core (
   assign nextpc = inst_jal ? pc + imm : inst_jalr ? (rdata1 + imm) & ~1 : pc + 4;
 
   assign next_pc = nextpc;
+  
   assign now_pc = pc;
 
 endmodule

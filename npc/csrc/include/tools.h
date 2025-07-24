@@ -7,6 +7,7 @@
 #include <sstream>
 #include <fstream>
 #include <bitset>
+#include <regex>
 
 
 std::string get_string(std::string prompt);
