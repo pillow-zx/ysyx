@@ -2,10 +2,6 @@
 TOPNAME = ysyx_25060173_core
 INC_PATH ?=  # Include paths, can be set as needed
 
-# Boost library configuration
-BOOST_LIBS = -lboost_system -lboost_filesystem
-BOOST_CFLAGS = -DBOOST_ALL_DYN_LINK
-
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc --trace\
 				-O3 --x-assign fast --x-initial fast --noassert
@@ -25,8 +21,7 @@ VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) $(BOOST_CFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -std=c++17
-LDFLAGS += $(BOOST_LIBS)
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
 $(BIN): $(VSRCS) $(CSRCS)
 	@rm -rf $(OBJ_DIR)
