@@ -1,6 +1,6 @@
 # Makefile for building and simulating the NPC project
 TOPNAME = ysyx_25060173_core
-INC_PATH ?=  # Include paths, can be set as needed
+INC_PATH ?= $(abspath ./csrc/include)  # Include paths for header files
 
 # Boost library configuration
 BOOST_LIBS = -lboost_system -lboost_filesystem
@@ -22,7 +22,7 @@ $(shell mkdir -p $(BUILD_DIR))
 $(shell mkdir -p $(OBJ_DIR))
 
 VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
-CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+CSRCS = $(abspath ./csrc/main.cpp) $(shell find $(abspath ./csrc/src) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) $(BOOST_CFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -std=c++17
