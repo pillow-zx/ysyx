@@ -1,9 +1,9 @@
-#include "cpu.h"
+#include <cpu.h>
 
 bool npc_STATE = true;
 Vysyx_25060173_core *core = new Vysyx_25060173_core;
-
 static uint32_t temp_pc = 0x80000000;
+static std::string logfile = "/home/waysorry/ysyx/ysyx-workbench/npc/log.txt";
 
 void show_regs() {
     PRINT_MAGENTA_0("=================================");
@@ -30,7 +30,7 @@ void show_regs() {
     PRINT_MAGENTA_0("=================================");
 }
 
-static void reset() {
+void reset() {
     for (int i = 0; i < 10; i++) {
         core->clk = 0;
         core->reset = 0;
@@ -51,13 +51,14 @@ static void reset() {
 }
 
 static void cpu_exec_once(std::vector<uint32_t> &insts) {
-    // Calculate instruction index based on current PC
-    uint32_t pc_index = (core->now_pc - temp_pc) / 4;
+    static uint32_t pc_index = (core->now_pc - temp_pc) / 4;
 
     if (pc_index >= insts.size()) {
         npc_STATE = false;
         return;
     }
+
+    itrace(core->now_pc, insts, logfile);
 
     core->clk = 0;
     core->inst = insts[pc_index]; // Get instruction based on current PC
@@ -72,7 +73,6 @@ static void say_pc() {
 }
 
 void cpu_exec(int n, std::vector<uint32_t> &insts) {
-    reset();
     if (n < 0) {
         // Continue execution until stopped
         while (npc_STATE) {

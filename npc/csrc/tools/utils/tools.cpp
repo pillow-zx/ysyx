@@ -1,5 +1,5 @@
-#include "tools.h"
-#include "macro.h"
+#include <tools.h>
+#include <macro.h>
 
 extern bool npc_STATE;
 

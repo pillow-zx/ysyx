@@ -16,4 +16,6 @@ extern Vysyx_25060173_core *core;
 
 void cpu_exec(int n, std::vector<uint32_t> &insts);
 
+void reset();
+
 void show_regs();

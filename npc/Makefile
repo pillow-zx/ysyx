@@ -1,60 +1,62 @@
-# Makefile for building and simulating the NPC project
-TOPNAME = ysyx_25060173_core
-INC_PATH ?= $(abspath ./csrc/include)  # Include paths for header files
+# NPC Project Main Makefile
 
-# Boost library configuration
-BOOST_LIBS = -lboost_system -lboost_filesystem
-BOOST_CFLAGS = -DBOOST_ALL_DYN_LINK
+# Set default goal explicitly before including any other files
+.DEFAULT_GOAL := default
 
-VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc --trace\
-				-O3 --x-assign fast --x-initial fast --noassert
+# Project configuration
+include config.mk
 
-BUILD_DIR = ./build
-OBJ_DIR = $(BUILD_DIR)/obj_dir
-BIN = $(BUILD_DIR)/$(TOPNAME)
+# Source files configuration
+include source.mk
 
-WAVE = ./trace.vcd
+# Verilator configuration
+include verilator.mk
 
-default: $(BIN)
+# Default target
+default: all
 
-$(shell mkdir -p $(BUILD_DIR))
-$(shell mkdir -p $(OBJ_DIR))
+# Main build target
+all: $(BIN)
 
-VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
-CSRCS = $(abspath ./csrc/main.cpp) $(shell find $(abspath ./csrc/src) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+# Binary build target
+$(BIN): verilator-build
 
-INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) $(BOOST_CFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -std=c++17
-LDFLAGS += $(BOOST_LIBS)
-
-$(BIN): $(VSRCS) $(CSRCS)
-	@rm -rf $(OBJ_DIR)
-	$(VERILATOR) $(VERILATOR_CFLAGS) \
-		--top-module $(TOPNAME) $^ \
-		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
-
-# 目标别名：构建项目
-all: default
-
-# 添加args支持：允许用户传递运行的程序
+# Run targets
 run-env: $(BIN) $(IMG)
 	@echo "Running simulation with args: $(IMG)"
 
-# 仿真目标：构建并运行仿真器
 run: run-env
 	$(BIN) $(IMG)
 	@echo "Simulation completed."
-	$(call git_commit, "sim RTL") # 自动提交仿真结果到git（请勿删除此行）
 
-# 查看波形
+# Additional targets
 wave: $(WAVE)
 	@gtkwave $(WAVE) &
 
-# 清理目标：删除所有构建产物
+# Clean target
 clean:
-	rm -rf $(BUILD_DIR)
+	@echo "Cleaning build directory..."
+	@rm -rf $(BUILD_DIR)
 
-# 包含父目录的Makefile（可能包含git_commit函数定义等）
-include ../Makefile
+# Info targets
+info:
+	@echo "Project: $(PROJECT_NAME)"
+	@echo "Top module: $(TOPNAME)"
+	@echo "Build directory: $(BUILD_DIR)"
+	@echo "Binary: $(BIN)"
+	@echo "Verilog sources: $(words $(VSRCS)) files"
+	@echo "C/C++ sources: $(words $(CSRCS)) files"
+
+help:
+	@echo "Available targets:"
+	@echo "  all/default  - Build the project"
+	@echo "  run          - Build and run simulation"
+	@echo "  clean        - Clean build files"
+	@echo "  wave         - Open waveform viewer"
+	@echo "  info         - Show project information"
+	@echo "  help         - Show this help"
+
+.PHONY: default all clean info help run run-env wave
+
+-include ../Makefile
+

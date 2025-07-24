@@ -8,6 +8,7 @@
 #include <fstream>
 #include <bitset>
 #include <regex>
+#include "Log.h"
 
 
 std::string get_string(std::string prompt);

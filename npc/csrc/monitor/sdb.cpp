@@ -1,13 +1,12 @@
-#include "tools.h"
-#include "cpu.h"
+#include "sdb.h"
 
-
-void handle_commands(std::vector<uint32_t> &insts) {
+void npc_start(std::vector<uint32_t> &insts) {
     welcome();
     while (npc_STATE) {
         std::string command = get_string("(npc)>");
         std::vector<std::string> tokens = Stringsplit(command, " ");
-        if (tokens.empty()) continue;
+        if (tokens.empty())
+            continue;
         if (tokens[0] == "help") {
             command_lists();
         } else if (tokens[0] == "q") {
@@ -32,10 +31,9 @@ void handle_commands(std::vector<uint32_t> &insts) {
     }
 }
 
-int main(int argc, char **argv) {
-    Verilated::commandArgs(argc, argv);
-    std::vector<uint32_t> insts = get_insts(argv[1]);
-    handle_commands(insts);
-    PRINT_GREEN_0("NPC simulation completed successfully!");
-    return 0;
+void npc_init(std::vector<uint32_t> &insts, std::string filename) {
+    reset(); // Reset the CPU state
+    npc_STATE = true; // Set the simulation state to running
+    // Load instructions from the specified file
+    insts = get_insts(filename);
 }
