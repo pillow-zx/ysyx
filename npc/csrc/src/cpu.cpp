@@ -5,6 +5,34 @@ Vysyx_25060173_core *core = new Vysyx_25060173_core;
 
 static uint32_t temp_pc = 0x80000000;
 
+static const std::vector<std::string> regs = {"$0", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", "s1", "a0",
+                                              "a1", "a2", "a3", "a4", "a5",  "a6",  "a7", "s2", "s3", "s4", "s5",
+                                              "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
+
+void show_regs() {
+    std::cout << "================================" << std::endl;
+    std::cout << "=======Register information=====" << std::endl;
+    std::cout << "================================" << std::endl;
+    uint32_t count = 0;
+    for (int i = 0; i < NPC_BITS; i++) {
+        // 通过Verilator提供的公共接口访问寄存器文件
+        uint32_t reg_value;
+        reg_value = core->rootp->ysyx_25060173_core__DOT__u_ysyx_25060173_RegisterFile__DOT__regfile[i];
+        std::cout << regs.at(i) << ": " << std::hex << reg_value << std::dec;
+        if (count == 8) {
+            std::cout << std::endl;
+            count = 0;
+        } else {
+            std::cout << "\t";
+            count++;
+        }
+    }
+    std::cout << std::endl;
+    std::cout << "================================" << std::endl;
+    std::cout << "      Total registers: " << NPC_BITS << std::endl;
+    std::cout << "================================" << std::endl;
+}
+
 static void reset() {
     for (int i = 0; i < 10; i++) {
         core->clk = 0;
@@ -28,14 +56,14 @@ static void reset() {
 static void cpu_exec_once(std::vector<uint32_t> &insts) {
     // Calculate instruction index based on current PC
     uint32_t pc_index = (core->now_pc - temp_pc) / 4;
-    
+
     if (pc_index >= insts.size()) {
         npc_STATE = false;
         return;
     }
-    
+
     core->clk = 0;
-    core->inst = insts[pc_index];  // Get instruction based on current PC
+    core->inst = insts[pc_index]; // Get instruction based on current PC
     core->eval();
 
     core->clk = 1;

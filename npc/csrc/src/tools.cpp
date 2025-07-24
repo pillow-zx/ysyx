@@ -1,4 +1,5 @@
 #include "tools.h"
+#include "macro.h"
 
 extern bool npc_STATE;
 
@@ -43,6 +44,19 @@ std::vector<uint32_t> get_insts(std::string prompt) {
     npc_STATE = true; // Set the state to true after reading instructions
     return insts;
 }
+
+void show_memory(const std::vector<uint32_t> &insts) {
+    std::cout << "================================" << std::endl;
+    std::cout << "=======Memory information=======" << std::endl;
+    std::cout << "================================" << std::endl;
+    for (const auto &inst : insts) {
+        std::cout << std::bitset<32>(inst) << std::endl;
+    }
+    std::cout << "================================" << std::endl;
+    std::cout << "      Total instructions: " << insts.size() << std::endl;
+    std::cout << "================================" << std::endl;
+}
+
 
 void command_lists() {
     std::cout << "Available commands:" << std::endl;

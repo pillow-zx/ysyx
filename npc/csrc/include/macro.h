@@ -2,6 +2,9 @@
 
 #include <boost/format.hpp>
 
+// Define NPC bits
+#define NPC_BITS 32
+
 // ANSI颜色代码
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"

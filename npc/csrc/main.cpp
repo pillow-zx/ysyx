@@ -16,6 +16,12 @@ void handle_commands(std::vector<uint32_t> &insts) {
             int n = std::stoi(command.substr(3));
             cpu_exec(n, insts);
             std::cout << "NOW PC: " << std::hex << core->now_pc << std::dec << std::endl;
+        } else if (command.substr(0, 4) == "info") {
+            if (command == "info r") {
+                show_regs();
+            } else if (command == "info m") {
+                show_memory(insts);
+            }
         } else {
             std::cout << "Unknown command: " << command << std::endl;
             continue;
