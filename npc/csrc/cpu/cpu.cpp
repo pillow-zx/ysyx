@@ -51,14 +51,14 @@ void reset() {
 }
 
 static void cpu_exec_once(std::vector<uint32_t> &insts) {
-    static uint32_t pc_index = (core->now_pc - temp_pc) / 4;
+    uint32_t pc_index = (core->now_pc - temp_pc) / 4;
 
     if (pc_index >= insts.size()) {
         npc_STATE = false;
         return;
     }
 
-    itrace(core->now_pc, insts, logfile);
+    itrace(pc_index, insts, logfile);
 
     core->clk = 0;
     core->inst = insts[pc_index]; // Get instruction based on current PC
