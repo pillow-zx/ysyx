@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include "macro.h"
 #include "tools.h"
 #include "verilated.h"

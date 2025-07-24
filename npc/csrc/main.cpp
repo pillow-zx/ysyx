@@ -6,21 +6,24 @@ void handle_commands(std::vector<uint32_t> &insts) {
     welcome();
     while (npc_STATE) {
         std::string command = get_string("(npc)>");
-        if (command == "help") {
+        std::vector<std::string> tokens = Stringsplit(command, " ");
+        if (tokens.empty()) continue;
+        if (tokens[0] == "help") {
             command_lists();
-        } else if (command == "q") {
+        } else if (tokens[0] == "q") {
             npc_STATE = false;
-        } else if (command == "c") {
+        } else if (tokens[0] == "c") {
             cpu_exec(-1, insts);
-        } else if (command.substr(0, 3) == "si ") {
-            int n = std::stoi(command.substr(3));
+        } else if (tokens[0] == "si") {
+            int n = (tokens.size() > 1) ? std::stoi(tokens[1]) : 1;
             cpu_exec(n, insts);
-            std::cout << "NOW PC: " << std::hex << core->now_pc << std::dec << std::endl;
-        } else if (command.substr(0, 4) == "info") {
-            if (command == "info r") {
+        } else if (tokens[0] == "info") {
+            if (tokens.size() > 1 && tokens[1] == "r") {
                 show_regs();
-            } else if (command == "info m") {
+            } else if (tokens.size() > 1 && tokens[1] == "m") {
                 show_memory(insts);
+            } else {
+                std::cout << "Unknown info command: " << command << std::endl;
             }
         } else {
             std::cout << "Unknown command: " << command << std::endl;

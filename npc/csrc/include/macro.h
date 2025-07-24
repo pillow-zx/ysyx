@@ -5,15 +5,15 @@
 // Define NPC bits
 #define NPC_BITS 32
 
-// ANSI颜色代码
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-#define ANSI_COLOR_YELLOW  "\x1b[33m"
-#define ANSI_COLOR_BLUE    "\x1b[34m"
-#define ANSI_COLOR_MAGENTA "\x1b[35m"
-#define ANSI_COLOR_CYAN    "\x1b[36m"
-#define ANSI_COLOR_WHITE   "\x1b[37m"
-#define ANSI_COLOR_RESET   "\x1b[0m"
+// ANSI颜色代码（粗体版本）
+#define ANSI_COLOR_RED     "\x1b[1;31m" // 红色
+#define ANSI_COLOR_GREEN   "\x1b[1;32m" // 绿色
+#define ANSI_COLOR_YELLOW  "\x1b[1;33m" // 黄色
+#define ANSI_COLOR_BLUE    "\x1b[1;34m" // 蓝色
+#define ANSI_COLOR_MAGENTA "\x1b[1;35m" // 品红色
+#define ANSI_COLOR_CYAN    "\x1b[1;36m" // 青色
+#define ANSI_COLOR_WHITE   "\x1b[1;37m" // 白色
+#define ANSI_COLOR_RESET   "\x1b[0m"    // 重置颜色
 
 // 背景颜色代码
 #define ANSI_BG_RED        "\x1b[41m"

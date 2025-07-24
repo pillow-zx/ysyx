@@ -23,6 +23,19 @@ uint32_t get_integer(std::string prompt) {
     return value;
 }
 
+std::vector<std::string> Stringsplit(const std::string &str, const std::string &delim = " ") {
+    size_t start = 0;
+    size_t end = str.find(delim);
+    std::vector<std::string> tokens;
+    while (end != std::string::npos) {
+        tokens.push_back(str.substr(start, end - start));
+        start = end + delim.length();
+        end = str.find(delim, start);
+    }
+    tokens.push_back(str.substr(start, end));
+    return tokens;
+}
+
 std::vector<uint32_t> get_insts(std::string prompt) {
     std::ifstream file(prompt, std::ios::binary);
     if (!file) {
@@ -46,31 +59,37 @@ std::vector<uint32_t> get_insts(std::string prompt) {
 }
 
 void show_memory(const std::vector<uint32_t> &insts) {
-    std::cout << "================================" << std::endl;
-    std::cout << "=======Memory information=======" << std::endl;
-    std::cout << "================================" << std::endl;
+    PRINT_MAGENTA_0("=================================");
+    PRINT_MAGENTA_0("=======Memory information=======");
+    PRINT_MAGENTA_0("=================================");
     for (const auto &inst : insts) {
-        std::cout << std::bitset<32>(inst) << std::endl;
+        PRINT_GREEN_0(std::bitset<32>(inst).to_string());
     }
-    std::cout << "================================" << std::endl;
-    std::cout << "      Total instructions: " << insts.size() << std::endl;
-    std::cout << "================================" << std::endl;
+    PRINT_MAGENTA_0("=================================");
+    PRINT_MAGENTA_0("=======End of Memory Info=======");
+    PRINT_MAGENTA_0("=================================");
 }
 
 
 void command_lists() {
-    std::cout << "Available commands:" << std::endl;
-    std::cout << "help - Show this help message" << std::endl;
-    std::cout << "q - Exit the simulator" << std::endl;
-    std::cout << "c - Continue execution after an EBREAK" << std::endl;
-    std::cout << "si [n] - Step through 'n' instructions (default is 1)" << std::endl;
+    PRINT_GREEN_0("=================================");
+    PRINT_GREEN_0("=======Available commands=======");
+    PRINT_GREEN_0("=================================");
+    PRINT_GREEN_0("help - Show this help message");
+    PRINT_GREEN_0("q - Exit the simulator");
+    PRINT_GREEN_0("c - Continue execution after an EBREAK");
+    PRINT_GREEN_0("si [n] - Step through 'n' instructions (default is 1)");
+    PRINT_GREEN_0("info r - Show register information");
+    PRINT_GREEN_0("info m - Show memory information");
+    PRINT_GREEN_0("=================================");
+    PRINT_GREEN_0("=================================");
 }
 
 
 
 void welcome() {
-    std::cout << "Welcome to the RISC-V CPU Simulator!" << std::endl;
-    std::cout << "This simulator executes RISC-V instructions and handles EBREAK." << std::endl;
-    std::cout << "You can enter commands to interact with the simulator." << std::endl;
+    PRINT_GREEN_0("=================================");
+    PRINT_GREEN_0("=======Welcome to the NPC=======");
+    PRINT_GREEN_0("=================================");
     command_lists();
 }

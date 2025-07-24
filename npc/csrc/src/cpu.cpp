@@ -10,15 +10,16 @@ static const std::vector<std::string> regs = {"$0", "ra", "sp", "gp", "tp",  "t0
                                               "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
 
 void show_regs() {
-    std::cout << "================================" << std::endl;
-    std::cout << "=======Register information=====" << std::endl;
-    std::cout << "================================" << std::endl;
+    PRINT_MAGENTA_0("=================================");
+    PRINT_MAGENTA_0("=======Register information=====");
+    PRINT_MAGENTA_0("=================================");
     uint32_t count = 0;
     for (int i = 0; i < NPC_BITS; i++) {
         // 通过Verilator提供的公共接口访问寄存器文件
         uint32_t reg_value;
         reg_value = core->rootp->ysyx_25060173_core__DOT__u_ysyx_25060173_RegisterFile__DOT__regfile[i];
-        std::cout << regs.at(i) << ": " << std::hex << reg_value << std::dec;
+        std::string prompt = boost::str(boost::format("%s: 0x%08x") % regs.at(i) % reg_value);
+        PRINT_BLUE_0(prompt);
         if (count == 8) {
             std::cout << std::endl;
             count = 0;
@@ -28,9 +29,9 @@ void show_regs() {
         }
     }
     std::cout << std::endl;
-    std::cout << "================================" << std::endl;
-    std::cout << "      Total registers: " << NPC_BITS << std::endl;
-    std::cout << "================================" << std::endl;
+    PRINT_MAGENTA_0("=================================");
+    PRINT_MAGENTA_0("      Total registers: " << NPC_BITS);
+    PRINT_MAGENTA_0("=================================");
 }
 
 static void reset() {
