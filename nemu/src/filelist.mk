@@ -20,6 +20,7 @@ DIRS-BLACKLIST-$(CONFIG_TARGET_AM) += src/monitor/sdb				# 不参与编译的目
 
 SHARE = $(if $(CONFIG_TARGET_SHARE),1,0)							# 是否共享库, 如果CONFIG_TARGET_SHARE存在, 则设置SHARE为1, 否则为0
 LIBS += $(if $(CONFIG_TARGET_NATIVE_ELF),-lreadline -ldl -pie,)		# 链接的库, 如果CONFIG_TARGET_NATIVE_ELF存在, 则链接readline和dl库, 并使用-pie选项
+LIBS += $(if $(CONFIG_TARGET_SHARE),-lreadline -ldl,)				# 如果CONFIG_TARGET_SHARE存在, 则也链接readline和dl库
 
 # 如果定义了mainargs变量, 则将其作为ASFLAGS的参数
 ifdef mainargs
