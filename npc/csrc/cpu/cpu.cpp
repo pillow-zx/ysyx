@@ -59,6 +59,7 @@ static void cpu_exec_once(std::vector<uint32_t> &insts) {
     }
 
     itrace(pc_index, insts, logfile);
+    mtrace(pc_index, insts);
 
     core->clk = 0;
     core->inst = insts[pc_index]; // Get instruction based on current PC
@@ -77,13 +78,13 @@ void cpu_exec(int n, std::vector<uint32_t> &insts) {
         // Continue execution until stopped
         while (npc_STATE) {
             cpu_exec_once(insts);
-            say_pc();
+            // say_pc();
         }
     } else {
         // Execute n instructions
         for (int i = 0; i < n && npc_STATE; i++) {
             cpu_exec_once(insts);
-            say_pc();
+            // say_pc();
         }
     }
 

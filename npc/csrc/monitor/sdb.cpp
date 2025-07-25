@@ -1,5 +1,8 @@
 #include "sdb.h"
 
+static std::string itrace_file;
+static std::string img_file;
+
 void npc_start(std::vector<uint32_t> &insts) {
     welcome();
     while (npc_STATE) {
@@ -31,9 +34,65 @@ void npc_start(std::vector<uint32_t> &insts) {
     }
 }
 
-void npc_init(std::vector<uint32_t> &insts, std::string filename) {
-    reset(); // Reset the CPU state
-    npc_STATE = true; // Set the simulation state to running
-    // Load instructions from the specified file
-    insts = get_insts(filename);
+static void init_insts(std::vector<uint32_t> &insts) {
+    if (img_file.empty()) {
+        std::cerr << "Error: No image file specified." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    insts = get_insts(img_file);
+}
+
+#include <getopt.h>
+
+extern char *ftrace_file; // 用于存储ELF格式的镜像文件路径
+
+static int parse_args(int argc, char **argv) {
+    const struct option table[] = {
+        {"help", no_argument, nullptr, 'h'},
+        {"log", required_argument, nullptr, 'l'},
+        {"ftrace", required_argument, nullptr, 'f'},
+        {"img", required_argument, nullptr, 'i'},
+    };
+    int opt;
+    std::cout << argv[0] << " - NPC (Nyuzi Processor Core) Simulator\n";
+    std::cout << argv[1] << " - Image file for the Nyuzi processor\n";
+    while ((opt = getopt_long(argc, argv, "hl:f:i:", table, nullptr)) != -1) {
+        switch (opt) {
+            case 'h':
+                std::cout << "Usage: npc [options] <filename>\n"
+                          << "Options:\n"
+                          << "  -h, --help          Show this help message\n"
+                          << "  -l, --log <file>    Log output to specified file\n"
+                          << "  -f, --ftrace <file> Enable function tracing with specified ELF file\n";
+                return 0;
+            case 'l':
+                // Handle log file option
+                itrace_file = optarg;
+                break;
+            case 'f':
+                // Handle ftrace file option
+                ftrace_file = optarg;
+                ftrace_elf_init(ftrace_file);
+                break;
+            case 'i':
+                // Handle image file option
+                img_file = optarg;
+                break;
+            default:
+                std::cerr << "Unknown option: " << static_cast<char>(opt) << std::endl;
+                return -1;
+        }
+    }
+    return 0;
+}
+
+
+
+void npc_init(std::vector<uint32_t> &insts, int argc, char **argv) {
+    parse_args(argc, argv);
+
+    init_insts(insts);
+
+    npc_STATE = true;
+    reset();
 }

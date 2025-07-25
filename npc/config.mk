@@ -8,6 +8,9 @@ BUILD_DIR = $(NPC_HOME)/build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
 
+# Log file
+LOG_FILE = $(BUILD_DIR)/npc-log.txt
+
 # Source directories
 VSRC_DIR = $(NPC_HOME)/vsrc
 CSRC_DIR = $(NPC_HOME)/csrc

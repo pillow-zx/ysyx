@@ -4,16 +4,16 @@
 
 ```
 npc/
-├── Makefile              # 主构建文件（已修复）
+├── Makefile              # 主构建文件
 ├── config.mk             # 项目配置
-├── source.mk             # 源文件管理（已修复）
+├── source.mk             # 源文件管理
 ├── verilator.mk          # Verilator配置
 ├── csrc/
-│   ├── filelist.mk       # 源文件列表（已修复）
+│   ├── filelist.mk       # 源文件列表
 │   ├── tools/
 │   │   └── tools.mk      # 工具模块配置
 │   └── monitor/
-│       └── monitor.mk    # Monitor模块配置（新建）
+│       └── monitor.mk    # Monitor模块配置
 └── build/
     └── ysyx_25060173_core  # 成功构建的可执行文件
 ```

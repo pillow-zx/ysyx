@@ -11,7 +11,7 @@ include $(CSRC_DIR)/filelist.mk
 
 # Compiler flags
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -std=c++17
+CXXFLAGS += $(INCFLAGS) -std=c++17 -g
 
 # Boost library configuration
 BOOST_LIBS = -lboost_system -lboost_filesystem

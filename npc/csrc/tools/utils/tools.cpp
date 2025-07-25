@@ -37,6 +37,7 @@ std::vector<std::string> Stringsplit(const std::string &str, const std::string &
 }
 
 std::vector<uint32_t> get_insts(std::string prompt) {
+    PRINT_BLUE_0("Reading instructions from file: " + prompt);
     std::ifstream file(prompt, std::ios::binary);
     if (!file) {
         throw std::runtime_error("Could not open file: " + prompt);
