@@ -18,6 +18,7 @@ void npc_start() {
         } else if (tokens[0] == "si") {
             int n = (tokens.size() > 1) ? std::stoi(tokens[1]) : 1;
             cpu_exec(n);
+            say_pc();
         } else if (tokens[0] == "info") {
             if (tokens.size() > 1 && tokens[1] == "r") {
                 show_regs();

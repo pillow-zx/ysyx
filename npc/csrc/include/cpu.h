@@ -23,3 +23,5 @@ void cpu_exec(uint32_t n);
 void reset();
 
 void show_regs();
+
+void say_pc();

@@ -67,7 +67,7 @@ static void cpu_exec_once(uint32_t inst) {
     ftrace(inst);
 }
 
-static void say_pc() {
+void say_pc() {
     PRINT_BLUE_0("Current PC: " << std::hex << core->now_pc << std::dec);
 }
 
