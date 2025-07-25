@@ -70,9 +70,18 @@ static void say_pc() {
 }
 
 void cpu_exec(int n) {
-    for (; n > 0 && npc_STATE; n--) {
-        cpu_exec_once(read_pmem(core->now_pc - DEFAULT_PC_START));
-        say_pc();
+    if (n == -1) {
+        // Continue execution until npc_STATE becomes false
+        while (npc_STATE) {
+            cpu_exec_once(read_pmem(core->now_pc - DEFAULT_PC_START));
+            say_pc();
+        }
+    } else {
+        // Execute n instructions
+        for (; n > 0 && npc_STATE; n--) {
+            cpu_exec_once(read_pmem(core->now_pc - DEFAULT_PC_START));
+            say_pc();
+        }
     }
 
     if (!npc_STATE) {
