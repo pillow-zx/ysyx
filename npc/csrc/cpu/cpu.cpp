@@ -69,7 +69,7 @@ static void cpu_exec_once(std::vector<uint32_t> &insts) {
 }
 
 static void say_pc() {
-    std::cout << "PC: " << std::hex << core->now_pc << std::dec << std::endl;
+    PRINT_BLUE_0("Current PC: " << std::hex << core->now_pc << std::dec);
 }
 
 void cpu_exec(int n, std::vector<uint32_t> &insts) {
