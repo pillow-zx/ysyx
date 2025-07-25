@@ -49,17 +49,24 @@ Elf32_Sym *ftrace_file_symtab = NULL;    //  ELF符号表
 int ftrace_file_symtab_num;
 
 // 解析elf文件
-void ftrace_elf_init(char *ftrace_file) {
-    if (ftrace_file == NULL) {
+void ftrace_elf_init(char *elf_file_path) {
+    std::cout << "Initializing ftrace with ELF file: " << (elf_file_path ? elf_file_path : "NULL") << std::endl;
+    
+    if (elf_file_path == NULL) {
         PRINT_BLUE_0("Ftrace ELF file is not set, skipping initialization.");
         return;
     }
+    
+    // 将传入的路径赋值给全局变量
+    ftrace_file = elf_file_path;
 
-    FILE *fp = fopen(ftrace_file, "rb");
+    FILE *fp = fopen(elf_file_path, "rb");
     if (fp == NULL) {
-        std::cerr << "Failed to open ftrace ELF file: " << ftrace_file << std::endl;
+        std::cerr << "Failed to open ftrace ELF file: " << elf_file_path << std::endl;
         return;
     }
+    
+    std::cout << "Successfully opened ELF file for ftrace" << std::endl;
 
     // 读取ELF文件头
     ftrace_file_header = (Elf32_Ehdr *)malloc(sizeof(Elf32_Ehdr));
@@ -145,15 +152,24 @@ void ftrace_elf_init(char *ftrace_file) {
     }
 
     // 关闭文件
-    std::cout << ANSI_COLOR_BLUE << "Ftrace ELF file initialized: " << ftrace_file << ANSI_COLOR_RESET << std::endl;
+    PRINT_BLUE_0("Ftrace ELF file '" << ftrace_file << "' initialized successfully.");
     fclose(fp);
 }
 
 static char *get_symbol_name(uint32_t pc) {
+    if (ftrace_file_symtab == NULL || ftrace_file_strtab == NULL) {
+        return NULL;
+    }
+    
     for (int i = 0; i < ftrace_file_symtab_num; i++) {
-        if (ELF32_ST_TYPE(ftrace_file_symtab[i].st_info) == STT_FUNC && pc >= ftrace_file_symtab[i].st_value &&
-            pc < ftrace_file_symtab[i].st_value + ftrace_file_symtab[i].st_size) {
-            return ftrace_file_symtab[i].st_name + ftrace_file_strtab;
+        if (ELF32_ST_TYPE(ftrace_file_symtab[i].st_info) == STT_FUNC) {
+            // Convert symbol addresses to relative addresses for comparison
+            uint32_t symbol_start = ftrace_file_symtab[i].st_value - DEFAULT_PC_START;
+            uint32_t symbol_end = symbol_start + ftrace_file_symtab[i].st_size;
+                   
+            if (pc >= symbol_start && pc < symbol_end) {
+                return ftrace_file_strtab + ftrace_file_symtab[i].st_name;
+            }
         }
     }
     return NULL;
@@ -189,7 +205,7 @@ static void ftrace_elf_start(uint32_t pc, uint32_t dnpc, bool is_call, bool is_r
                 for (int i = 0; i < call_stack_depth; i++) {
                     printf("  ");
                 }
-                std::cout << ANSI_COLOR_BLUE << "call: " << target_symbol << " at 0x" << std::hex << dnpc
+                std::cout << ANSI_COLOR_BLUE << "call: " << target_symbol << " at 0x" << std::hex << (dnpc + DEFAULT_PC_START)
                           << ANSI_COLOR_RESET << std::endl;
 
                 // 将函数信息压入调用栈
@@ -201,7 +217,7 @@ static void ftrace_elf_start(uint32_t pc, uint32_t dnpc, bool is_call, bool is_r
                     call_stack_depth++;
                 } else {
                     std::cout << ANSI_COLOR_BLUE << "Warning: Call stack overflow, ignoring call to " << target_symbol
-                              << " at 0x" << std::hex << dnpc << ANSI_COLOR_RESET << std::endl;
+                              << " at 0x" << std::hex << (dnpc + DEFAULT_PC_START) << ANSI_COLOR_RESET << std::endl;
                 }
             }
         }
@@ -215,7 +231,7 @@ static void ftrace_elf_start(uint32_t pc, uint32_t dnpc, bool is_call, bool is_r
                 printf("  ");
             }
             std::cout << ANSI_COLOR_BLUE << "return: " << call_stack[call_stack_depth].name << " at 0x" << std::hex
-                      << pc << ANSI_COLOR_RESET << std::endl;
+                      << (pc + DEFAULT_PC_START) << ANSI_COLOR_RESET << std::endl;
         }
         // 如果当前符号不匹配，可能是从内联函数或其他情况返回，也尝试处理
         else if (call_stack_depth > 0) {
@@ -224,28 +240,31 @@ static void ftrace_elf_start(uint32_t pc, uint32_t dnpc, bool is_call, bool is_r
                 printf("  ");
             }
             std::cout << ANSI_COLOR_BLUE << "return: " << call_stack[call_stack_depth].name << " at 0x" << std::hex
-                      << pc << ANSI_COLOR_RESET << std::endl;
+                      << (pc + DEFAULT_PC_START) << ANSI_COLOR_RESET << std::endl;
         }
     }
 }
 
 #include <string.h>
 void ftrace(uint32_t inst) {
-
     bool is_call = false;
     bool is_ret = false;
 
-    uint32_t pc = core->now_pc - DEFAULT_PC_START;
-    uint32_t dnpc = core->next_pc - DEFAULT_PC_START;
+    // After clock edge, core->now_pc is the next PC
+    // The instruction corresponds to the previous PC
+    uint32_t next_pc = core->now_pc - DEFAULT_PC_START;
+    uint32_t current_pc = core->now_pc - DEFAULT_PC_START - 4;  // Previous PC
+    uint32_t pc = current_pc;
+    uint32_t dnpc = next_pc;
 
-    if ((inst & 0x7f) == 0x6f) {
+    if ((inst & 0x7f) == 0x6f) {  // JAL instruction
         uint32_t rd = (inst >> 7) & 0x1f;
 
         char *target_symbol = get_symbol_name(dnpc);
         if (target_symbol != NULL && rd != 0) {
             is_call = true;
         }
-    } else if ((inst & 0x7f) == 0x67) {
+    } else if ((inst & 0x7f) == 0x67) {  // JALR instruction
         uint32_t rd = (inst >> 7) & 0x1f;
         uint32_t rs1 = (inst >> 15) & 0x1f;
 

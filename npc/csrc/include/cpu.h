@@ -18,7 +18,7 @@ const std::vector<std::string> regs = {"$0", "ra", "sp", "gp", "tp",  "t0",  "t1
 extern bool npc_STATE;
 extern Vysyx_25060173_core *core;
 
-void cpu_exec(int n);
+void cpu_exec(uint32_t n);
 
 void reset();
 

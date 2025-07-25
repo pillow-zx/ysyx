@@ -55,7 +55,6 @@ static void cpu_exec_once(uint32_t inst) {
 
     itrace(inst, logfile);
     // mtrace(pc_index, read_pmem(core->now_pc));
-    ftrace(inst);
 
     core->clk = 0;
     core->inst = inst; // Get instruction based on current PC
@@ -63,27 +62,22 @@ static void cpu_exec_once(uint32_t inst) {
 
     core->clk = 1;
     core->eval();
+    
+    // Call ftrace after clock edge to get correct next_pc
+    ftrace(inst);
 }
 
 static void say_pc() {
     PRINT_BLUE_0("Current PC: " << std::hex << core->now_pc << std::dec);
 }
 
-void cpu_exec(int n) {
-    if (n == -1) {
-        // Continue execution until npc_STATE becomes false
-        while (npc_STATE) {
-            cpu_exec_once(read_pmem(core->now_pc - DEFAULT_PC_START));
-            say_pc();
-        }
-    } else {
-        // Execute n instructions
-        for (; n > 0 && npc_STATE; n--) {
-            cpu_exec_once(read_pmem(core->now_pc - DEFAULT_PC_START));
-            say_pc();
-        }
+void cpu_exec(uint32_t n) {
+    for (; n > 0 && npc_STATE; n--) {
+        // Execute one instruction
+        cpu_exec_once(read_pmem(core->now_pc - DEFAULT_PC_START));
+        // Print current PC
+        // say_pc();
     }
-
     if (!npc_STATE) {
         std::cout << "Final PC: " << std::hex << core->now_pc << std::dec << std::endl;
         return;
