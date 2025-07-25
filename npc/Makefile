@@ -26,7 +26,7 @@ run-env: $(BIN) $(IMG)
 	@echo "Running simulation with args: $(IMG)"
 
 run: run-env
-	$(BIN) -i$(IMG) -l$(LOG_FILE)
+	$(BIN) -i$(IMG) -l$(LOG_FILE) -f$(ELF)
 	@echo "Simulation completed."
 
 # Additional targets

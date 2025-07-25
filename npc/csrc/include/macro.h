@@ -2,6 +2,9 @@
 
 #include <boost/format.hpp>
 
+// Define default pc start
+#define DEFAULT_PC_START 0x80000000
+
 // Define NPC bits
 #define NPC_BITS           32
 

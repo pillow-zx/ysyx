@@ -2,16 +2,10 @@
 #include <stdio.h>
 #include <capstone/capstone.h>
 
-void itrace(const uint32_t pc_index, std::vector<uint32_t> &insts, std::string log_file) {
+void itrace(uint32_t inst, std::string log_file) {
     std::ofstream log_stream(log_file, std::ios::app);
     if (!log_stream) {
         std::cerr << "Failed to open log file: " << log_file << std::endl;
-        return;
-    }
-
-    // 检查pc_index是否有效
-    if (pc_index >= insts.size()) {
-        log_stream << "Invalid PC index: " << pc_index << " (max: " << insts.size() - 1 << ")" << std::endl;
         return;
     }
 
@@ -25,12 +19,7 @@ void itrace(const uint32_t pc_index, std::vector<uint32_t> &insts, std::string l
         return;
     }
 
-    // 计算实际的PC地址用于显示
-    uint32_t actual_pc = 0x80000000 + pc_index * 4;
-
-    // 反汇编指令
-    count =
-        cs_disasm(handle, reinterpret_cast<const uint8_t *>(&insts[pc_index]), sizeof(uint32_t), actual_pc, 1, &insn);
+    count = cs_disasm(handle, reinterpret_cast<const uint8_t *>(&inst), sizeof(uint32_t), core->now_pc, 1, &insn);
 
     if (count > 0) {
         for (size_t i = 0; i < count; i++) {
@@ -39,16 +28,15 @@ void itrace(const uint32_t pc_index, std::vector<uint32_t> &insts, std::string l
         }
         cs_free(insn, count);
     } else {
-        log_stream << "Failed to disassemble instruction at PC index: " << pc_index << " (PC: 0x" << std::hex
-                   << actual_pc << ")" << std::endl;
+        log_stream << "Failed to disassemble instruction at 0x" << std::hex << core->now_pc << std::endl;
     }
     cs_close(&handle);
 }
 
-void mtrace(const uint32_t pc_index, std::vector<uint32_t> &insts) {
-    std::cout << ANSI_COLOR_BLUE << "PC: " << std::hex << (pc_index * 4 + 0x80000000)
-              << ", Instruction: " << std::bitset<32>(insts[pc_index]) << ANSI_COLOR_RESET << std::endl;
-}
+// void mtrace(const uint32_t pc_index, std::vector<uint32_t> &insts) {
+//     std::cout << ANSI_COLOR_BLUE << "PC: " << std::hex << (pc_index * 4 + 0x80000000)
+//               << ", Instruction: " << std::bitset<32>(insts[pc_index]) << ANSI_COLOR_RESET << std::endl;
+// }
 
 #include <elf.h>
 #include <stdlib.h>
@@ -161,18 +149,15 @@ void ftrace_elf_init(char *ftrace_file) {
     fclose(fp);
 }
 
-
-
 static char *get_symbol_name(uint32_t pc) {
     for (int i = 0; i < ftrace_file_symtab_num; i++) {
         if (ELF32_ST_TYPE(ftrace_file_symtab[i].st_info) == STT_FUNC && pc >= ftrace_file_symtab[i].st_value &&
             pc < ftrace_file_symtab[i].st_value + ftrace_file_symtab[i].st_size) {
-                return ftrace_file_symtab[i].st_name + ftrace_file_strtab;
-            }
+            return ftrace_file_symtab[i].st_name + ftrace_file_strtab;
+        }
     }
     return NULL;
 }
-
 
 #define CALL_FUNC_TIMES 64
 
@@ -204,7 +189,8 @@ static void ftrace_elf_start(uint32_t pc, uint32_t dnpc, bool is_call, bool is_r
                 for (int i = 0; i < call_stack_depth; i++) {
                     printf("  ");
                 }
-                std::cout << ANSI_COLOR_BLUE << "call: " << target_symbol << " at 0x" << std::hex << dnpc << ANSI_COLOR_RESET << std::endl;
+                std::cout << ANSI_COLOR_BLUE << "call: " << target_symbol << " at 0x" << std::hex << dnpc
+                          << ANSI_COLOR_RESET << std::endl;
 
                 // 将函数信息压入调用栈
                 if (call_stack_depth < CALL_FUNC_TIMES) {
@@ -228,8 +214,8 @@ static void ftrace_elf_start(uint32_t pc, uint32_t dnpc, bool is_call, bool is_r
             for (int i = 0; i < call_stack_depth; i++) {
                 printf("  ");
             }
-            std::cout << ANSI_COLOR_BLUE << "return: " << call_stack[call_stack_depth].name
-                      << " at 0x" << std::hex << pc << ANSI_COLOR_RESET << std::endl;
+            std::cout << ANSI_COLOR_BLUE << "return: " << call_stack[call_stack_depth].name << " at 0x" << std::hex
+                      << pc << ANSI_COLOR_RESET << std::endl;
         }
         // 如果当前符号不匹配，可能是从内联函数或其他情况返回，也尝试处理
         else if (call_stack_depth > 0) {
@@ -237,23 +223,25 @@ static void ftrace_elf_start(uint32_t pc, uint32_t dnpc, bool is_call, bool is_r
             for (int i = 0; i < call_stack_depth; i++) {
                 printf("  ");
             }
-            std::cout << ANSI_COLOR_BLUE << "return: " << call_stack[call_stack_depth].name
-                      << " at 0x" << std::hex << pc << ANSI_COLOR_RESET << std::endl;
+            std::cout << ANSI_COLOR_BLUE << "return: " << call_stack[call_stack_depth].name << " at 0x" << std::hex
+                      << pc << ANSI_COLOR_RESET << std::endl;
         }
     }
 }
 
+#include <string.h>
+void ftrace(uint32_t inst) {
 
-# include <string.h>
-void ftrace(const uint32_t pc_index, std::vector<uint32_t> &insts) {
     bool is_call = false;
     bool is_ret = false;
 
-    uint32_t inst = insts[pc_index];
+    uint32_t pc = core->now_pc - DEFAULT_PC_START;
+    uint32_t dnpc = core->next_pc - DEFAULT_PC_START;
+
     if ((inst & 0x7f) == 0x6f) {
         uint32_t rd = (inst >> 7) & 0x1f;
 
-        char *target_symbol = get_symbol_name(pc_index * 4 + 0x80000000);
+        char *target_symbol = get_symbol_name(dnpc);
         if (target_symbol != NULL && rd != 0) {
             is_call = true;
         }
@@ -262,17 +250,19 @@ void ftrace(const uint32_t pc_index, std::vector<uint32_t> &insts) {
         uint32_t rs1 = (inst >> 15) & 0x1f;
 
         if (rd != 0) {
-            char *target_symbol = get_symbol_name(pc_index * 4 + 0x80000000);
+            char *target_symbol = get_symbol_name(dnpc);
             if (target_symbol != NULL) {
                 is_call = true;
             }
         } else if (rd == 0 && rs1 == 1) {
             is_ret = true;
         } else if (rd == 0) {
-            char *current_symbol = get_symbol_name(pc_index * 4 + 0x80000000);
-            if (current_symbol != NULL && call_stack_depth > 0 && strcmp(call_stack[call_stack_depth - 1].name, current_symbol) == 0) {
+            char *current_symbol = get_symbol_name(pc);
+            if (current_symbol != NULL && call_stack_depth > 0 &&
+                strcmp(call_stack[call_stack_depth - 1].name, current_symbol) == 0) {
                 is_ret = true;
             }
         }
     }
+    ftrace_elf_start(pc, dnpc, is_call, is_ret);
 }

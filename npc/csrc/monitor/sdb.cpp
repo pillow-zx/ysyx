@@ -3,8 +3,7 @@
 static std::string itrace_file;
 static std::string img_file;
 
-void npc_start(std::vector<uint32_t> &insts) {
-    welcome();
+void npc_start() {
     while (npc_STATE) {
         std::string command = get_string("(npc)>");
         std::vector<std::string> tokens = Stringsplit(command, " ");
@@ -15,18 +14,24 @@ void npc_start(std::vector<uint32_t> &insts) {
         } else if (tokens[0] == "q") {
             npc_STATE = false;
         } else if (tokens[0] == "c") {
-            cpu_exec(-1, insts);
+            cpu_exec(-1);
         } else if (tokens[0] == "si") {
             int n = (tokens.size() > 1) ? std::stoi(tokens[1]) : 1;
-            cpu_exec(n, insts);
+            cpu_exec(n);
         } else if (tokens[0] == "info") {
             if (tokens.size() > 1 && tokens[1] == "r") {
                 show_regs();
-            } else if (tokens.size() > 1 && tokens[1] == "m") {
-                show_memory(insts);
             } else {
                 std::cout << "Unknown info command: " << command << std::endl;
             }
+        } else if (tokens[0] == "x") {
+            if (tokens.size() < 2) {
+                std::cout << "Usage: x <n> - to show n words of memory" << std::endl;
+                continue;
+            }
+            uint32_t n = std::stoi(tokens[1]);
+            ASSERT_WITH_MSG_0(std::stoul(tokens[1], nullptr, 0) < 0x80000000, "Invalid memory address");
+            show_memory(n);
         } else {
             std::cout << "Unknown command: " << command << std::endl;
             continue;
@@ -34,12 +39,31 @@ void npc_start(std::vector<uint32_t> &insts) {
     }
 }
 
-static void init_insts(std::vector<uint32_t> &insts) {
+static void init_cpu() {
+    npc_STATE = true;
+    reset();
+}
+
+static void load_img() {
     if (img_file.empty()) {
-        std::cerr << "Error: No image file specified." << std::endl;
+        std::cerr << "No image file specified. Use -i <filename> to specify an image file." << std::endl;
         exit(EXIT_FAILURE);
     }
-    insts = get_insts(img_file);
+
+    std::ifstream img_stream(img_file, std::ios::binary);
+    ASSERT_WITH_MSG_0(img_stream.is_open(), "Failed to open image file: " + img_file);
+
+    img_stream.seekg(0, std::ios::end);
+    std::streamsize size = img_stream.tellg();
+    img_stream.seekg(0, std::ios::beg);
+
+    long count = size / sizeof(uint32_t);
+    std::cout << ANSI_COLOR_GREEN << "The image is " << img_file << " size = " << count << std::endl;
+
+    img_stream.read(reinterpret_cast<char *>(write_pmem().data()), size);
+
+    ASSERT_WITH_MSG_0(img_stream, "Failed to read image file: " + img_file);
+    img_stream.close();
 }
 
 #include <getopt.h>
@@ -54,8 +78,6 @@ static int parse_args(int argc, char **argv) {
         {"img", required_argument, nullptr, 'i'},
     };
     int opt;
-    std::cout << argv[0] << " - NPC (Nyuzi Processor Core) Simulator\n";
-    std::cout << argv[1] << " - Image file for the Nyuzi processor\n";
     while ((opt = getopt_long(argc, argv, "hl:f:i:", table, nullptr)) != -1) {
         switch (opt) {
             case 'h':
@@ -78,21 +100,20 @@ static int parse_args(int argc, char **argv) {
                 // Handle image file option
                 img_file = optarg;
                 break;
-            default:
-                std::cerr << "Unknown option: " << static_cast<char>(opt) << std::endl;
-                return -1;
+            default: std::cerr << "Unknown option: " << static_cast<char>(opt) << std::endl; return -1;
         }
     }
     return 0;
 }
 
-
-
-void npc_init(std::vector<uint32_t> &insts, int argc, char **argv) {
+void npc_init(int argc, char **argv) {
     parse_args(argc, argv);
 
-    init_insts(insts);
+    init_memory();
 
-    npc_STATE = true;
-    reset();
+    load_img();
+
+    init_cpu();
+
+    welcome();
 }

@@ -8,6 +8,7 @@
 #include <fstream>
 #include <bitset>
 #include <regex>
+#include "cpu.h"
 #include "Log.h"
 
 
@@ -19,7 +20,7 @@ std::vector<std::string> Stringsplit(const std::string &str, const std::string &
 
 std::vector<uint32_t> get_insts(std::string prompt);
 
-void show_memory(const std::vector<uint32_t> &insts);
+void show_memory(uint32_t n);
 
 void command_lists();
 

@@ -1,5 +1,6 @@
 #include <tools.h>
 #include <macro.h>
+#include <iomanip>
 
 extern bool npc_STATE;
 
@@ -36,41 +37,23 @@ std::vector<std::string> Stringsplit(const std::string &str, const std::string &
     return tokens;
 }
 
-std::vector<uint32_t> get_insts(std::string prompt) {
-    PRINT_BLUE_0("Reading instructions from file: " + prompt);
-    std::ifstream file(prompt, std::ios::binary);
-    if (!file) {
-        throw std::runtime_error("Could not open file: " + prompt);
-    }
-
-    file.seekg(0, std::ios::end);
-    std::streamsize size = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    uint32_t count = static_cast<uint32_t>(size / sizeof(uint32_t));
-    std::vector<uint32_t> insts(count);
-
-    if (!file.read(reinterpret_cast<char*>(insts.data()), count * sizeof(uint32_t))) {
-        throw std::runtime_error("Error reading file: " + prompt);
-    }
-
-    file.close();
-    npc_STATE = true; // Set the state to true after reading instructions
-    return insts;
-}
-
-void show_memory(const std::vector<uint32_t> &insts) {
+void show_memory(uint32_t n) {
     PRINT_MAGENTA_0("=================================");
     PRINT_MAGENTA_0("=======Memory information=======");
     PRINT_MAGENTA_0("=================================");
-    for (const auto &inst : insts) {
-        PRINT_GREEN_0(std::bitset<32>(inst).to_string());
+    for (uint32_t i = 0; i < n; i++) {
+        uint32_t addr = i * 4;
+        uint32_t value = read_pmem(addr);
+        std::string formatted = boost::str(boost::format("0x%08x: %s (0x%08x)") 
+                                         % addr 
+                                         % std::bitset<32>(value).to_string() 
+                                         % value);
+        PRINT_BLUE_0(formatted);
     }
     PRINT_MAGENTA_0("=================================");
     PRINT_MAGENTA_0("=======End of Memory Info=======");
     PRINT_MAGENTA_0("=================================");
 }
-
 
 void command_lists() {
     PRINT_GREEN_0("=================================");
@@ -85,8 +68,6 @@ void command_lists() {
     PRINT_GREEN_0("=================================");
     PRINT_GREEN_0("=================================");
 }
-
-
 
 void welcome() {
     PRINT_GREEN_0("=================================");

@@ -2,7 +2,8 @@
 
 #include "tools.h"
 #include "cpu.h"
+#include "memory.h"
 
-void npc_start(std::vector<uint32_t> &insts);
+void npc_start();
 
-void npc_init(std::vector<uint32_t> &insts, int argc, char **argv);
+void npc_init(int argc, char **argv);

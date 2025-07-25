@@ -5,10 +5,9 @@
 
 int main(int argc, char **argv) {
     Verilated::commandArgs(argc, argv);
-    std::vector<uint32_t> insts;
 
-    npc_init(insts, argc, argv);
+    npc_init(argc, argv);
 
-    npc_start(insts);
+    npc_start();
     return 0;
 }
