@@ -30,7 +30,6 @@ __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction)
 // direction 为 difftest_to_dut 时, 获取ref的寄存器状态到 dut
 // direction 为 difftest_to_ref 时, 设置ref的寄存器状态到 dut
 
-
 // Reference implementation of register copy for differential testing
 __EXPORT void difftest_regcpy(void *dut, bool direction) {
     CPU_state *temp_cpu = (CPU_state *)dut; // 将传入的指针转换为 CPU_state 类型
@@ -45,7 +44,7 @@ __EXPORT void difftest_regcpy(void *dut, bool direction) {
     }
 }
 
-#include "cpu/decode.h"
+#include <cpu/decode.h>
 // Reference implementation of instruction execution for differential testing
 // 让 ref 执行 n 条指令
 __EXPORT void difftest_exec(uint64_t n) {

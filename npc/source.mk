@@ -20,6 +20,11 @@ BOOST_CFLAGS = -DBOOST_ALL_DYN_LINK
 # Capstone library configuration
 CAPSTONE_LIBS = -lcapstone
 CAPSTONE_CFLAGS = -I/usr/include/capstone
+
+# Difftest library configuration
+DIFTEST_LIBS = -ldifftest
+
+
 CXXFLAGS += $(BOOST_CFLAGS) $(CAPSTONE_CFLAGS)
 LDFLAGS += $(BOOST_LIBS) $(CAPSTONE_LIBS)
 

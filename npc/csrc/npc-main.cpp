@@ -1,5 +1,3 @@
-#include "tools.h"
-#include "cpu.h"
 #include "monitor/sdb.h"
 
 
