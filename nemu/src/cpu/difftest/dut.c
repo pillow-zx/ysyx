@@ -114,7 +114,7 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
         ref_so_file);
 
     ref_difftest_init(port);
-    // ref_difftest_memcpy 用于把addr处的img_size字节数据从REF的guest memory复制到DUT的host memory 
+    // ref_difftest_memcpy 用于把addr处的img_size字节数据从REF的guest memory复制到DUT的host memory
     ref_difftest_memcpy(RESET_VECTOR, guest_to_host(RESET_VECTOR), img_size, DIFFTEST_TO_REF);
     //
     ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
