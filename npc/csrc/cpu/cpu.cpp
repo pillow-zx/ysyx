@@ -60,7 +60,6 @@ void reset() {
 }
 
 static void cpu_exec_once(uint32_t inst) {
-
     itrace(inst, logfile);
     // mtrace(pc_index, read_pmem(core->now_pc));
 
@@ -70,7 +69,7 @@ static void cpu_exec_once(uint32_t inst) {
 
     core->clk = 1;
     core->eval();
-    
+
     // Call ftrace after clock edge to get correct next_pc
     ftrace(inst);
 }
@@ -82,14 +81,12 @@ void say_pc() {
 extern unsigned int core_regs[NPC_BITS];
 
 void cpu_exec(uint32_t n) {
-    uint32_t inst = read_pmem(core->now_pc - DEFAULT_PC_START);
     for (; n > 0 && npc_STATE; n--) {
+        uint32_t inst = read_pmem(core->now_pc - DEFAULT_PC_START);
         // Execute one instruction
         cpu_exec_once(inst);
-        // Print current PC
-        say_pc();
-        // show_regs();
-        difftest_step_and_check(core_regs, core->now_pc, core->next_pc, inst);
+        if (core->now_pc > DEFAULT_PC_START)
+            difftest_step_and_check();
     }
     if (!npc_STATE) {
         std::cout << "Final PC: " << std::hex << core->now_pc << std::dec << std::endl;

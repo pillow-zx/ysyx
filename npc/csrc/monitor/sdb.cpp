@@ -1,20 +1,20 @@
+#include <iostream>
+#include <getopt.h>
+#include <vector>
+#include <string>
+#include <fstream>
 #include <tools.h>
 #include <difftest.h>
 #include <cpu.h>
-#include <memory.h>
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <string>
 #include <macro.h>
 #include <Log.h>
-#include "sdb.h"
+#include <memory.h>
 
 static std::string diff_so_file;
 static std::string itrace_file;
 static std::string img_file;
 
-unsigned int core_regs[NPC_BITS] = {0};
+unsigned int core_regs[NPC_BITS + 1] = {0};
 
 void npc_start() {
     while (npc_STATE) {
@@ -129,9 +129,10 @@ void npc_init(int argc, char **argv) {
 
     long img_size = load_img();
 
-    init_difftest(core_regs, write_pmem().data());
-
     init_cpu();
+
+    // Initialize difftest
+    init_difftest(core_regs, write_pmem().data());
 
     welcome();
 }

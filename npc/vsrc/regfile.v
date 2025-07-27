@@ -18,6 +18,7 @@ module ysyx_25060173_RegisterFile #(
     if (we) begin
       regfile[waddr] <= wdata;
     end
+    regfile[0] <= 0; // 保持寄存器0为0
   end
 
   assign rdata1 = (raddr1 == 0) ? 0 : regfile[raddr1];

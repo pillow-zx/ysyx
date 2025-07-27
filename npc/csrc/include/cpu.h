@@ -1,7 +1,7 @@
 #pragma once
 
 #include <dlfcn.h>
-#include "Vysyx_25060173_core.h"
+#include "Vysyx_25060173_core.h"  // Update path to where Verilator generates the header
 
 // cpu runs
 const std::vector<std::string> regs = {"$0", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", "s1", "a0",

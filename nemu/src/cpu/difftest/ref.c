@@ -17,44 +17,62 @@
 #include <cpu/cpu.h>
 #include <difftest-def.h>
 #include <memory/paddr.h>
+#include <cpu/decode.h>
 
-// Reference implementation of memory copy for differential
-// direction 指定copy的方向, difftest_to_dut 表示向dut拷贝, difftest_to_ref 表示向ref拷贝
+// Reference implementation of memory copy for differential testing
+// direction 指定copy的方向, DIFFTEST_TO_REF 表示向ref拷贝, DIFFTEST_TO_DUT 表示向dut拷贝
 __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) {
-    if (direction) {
-        memcpy(guest_to_host(addr), buf, n); // 从 buf 复制数据到物理地址 addr
-        return;
+    if (direction == DIFFTEST_TO_REF) {
+        // 将buf的数据复制到ref的物理内存地址addr处
+        memcpy(guest_to_host(addr), buf, n);
+    } else {
+        // 将ref的物理内存地址addr处的数据复制到buf中
+        memcpy(buf, guest_to_host(addr), n);
     }
-    memcpy(buf, guest_to_host(addr), n); // 从物理地址 addr 复制数据到 buf
 }
-// direction 为 difftest_to_dut 时, 获取ref的寄存器状态到 dut
-// direction 为 difftest_to_ref 时, 设置ref的寄存器状态到 dut
 
 // Reference implementation of register copy for differential testing
+// direction 为 DIFFTEST_TO_REF 时, 设置ref的寄存器状态为dut的寄存器状态
+// direction 为 DIFFTEST_TO_DUT 时, 获取ref的寄存器状态到dut
 __EXPORT void difftest_regcpy(void *dut, bool direction) {
-    RISCV_GPR_TYPE *regs = (RISCV_GPR_TYPE *)dut; // 将传入的指针转换为 uint32_t 类型的指针)
-    if (direction) {
+    RISCV_GPR_TYPE *regs = (RISCV_GPR_TYPE *)dut;
+
+    if (direction == DIFFTEST_TO_REF) {
+        // 将DUT的寄存器状态复制到ref的CPU寄存器
         for (int i = 0; i < RISCV_GPR_NUM; i++) {
-            cpu.gpr[i] = regs[i]; // 将 DUT 的寄存器状态复制到 CPU 寄存器
+            cpu.gpr[i] = regs[i];
         }
-        return;
-    }
-    for (int i = 0; i < RISCV_GPR_NUM; i++) {
-        regs[i] = cpu.gpr[i]; // 将 CPU 寄存器状态复制到 DUT 的寄存器
+        // 复制PC寄存器
+        cpu.pc = regs[RISCV_GPR_NUM];
+    } else {
+        // 将ref的CPU寄存器状态复制到DUT
+        for (int i = 0; i < RISCV_GPR_NUM; i++) {
+            regs[i] = cpu.gpr[i];
+        }
+        // 复制PC寄存器
+        regs[RISCV_GPR_NUM] = cpu.pc;
     }
 }
 
-#include <cpu/decode.h>
 // Reference implementation of instruction execution for differential testing
-// 让 ref 执行 n 条指令
-__EXPORT void difftest_exec(uint64_t n, uint32_t pc, uint32_t dnpc, uint32_t inst) {
-    Decode s;
+// 让ref执行n条指令，使用NEMU的运算模块
+__EXPORT void difftest_exec(uint64_t n) {
+    // 执行n条指令
     for (uint64_t i = 0; i < n; i++) {
-        s.pc = pc;         // 设置当前指令的地址
-        s.snpc = dnpc;     // 设置下一条指令的地址
-        s.dnpc = dnpc; // 假设每条指令长度为4字节
-        s.isa.inst = inst; // 设置当前指令
-        isa_exec_once(&s); // 执行一次指令
+        // 准备解码结构
+        Decode s;
+        s.pc = cpu.pc;           // 当前指令地址
+        s.snpc = cpu.pc;         // 静态下一条指令地址，初始化为当前PC
+        s.dnpc = cpu.pc;         // 动态下一条指令地址，初始化为当前PC
+
+        // 从内存中取指令（RISC-V指令为4字节）
+        s.isa.inst = paddr_read(cpu.pc, 4);
+
+        // 执行一条指令，这会更新s.dnpc
+        isa_exec_once(&s);
+
+        // 更新CPU的PC寄存器为下一条指令的地址
+        cpu.pc = s.dnpc;
     }
 }
 
@@ -63,13 +81,22 @@ __EXPORT void difftest_raise_intr(word_t NO) {
 }
 
 // Reference implementation of initialization for differential testing
-// 初始化 ref 的difftest功能
+// 初始化ref的difftest功能
 __EXPORT void difftest_init(void *regs, void *pmems) {
+    // 声明和调用初始化函数
     void init_mem();
+    void init_isa();
+
+    // 初始化内存子系统
     init_mem();
-    /* Perform ISA dependent initialization. */
+
+    // 执行ISA相关的初始化
     init_isa();
-    // copy the initial state of the CPU to the reference design
-    difftest_regcpy(&regs, DIFFTEST_TO_REF);                             // 将CPU寄存器状态复制到REF
-    difftest_memcpy(CONFIG_MBASE, pmems, CONFIG_MSIZE, DIFFTEST_TO_REF); // 将物理内存状态复制到REF
+
+    // 复制初始的CPU状态到reference设计
+    // 将传入的寄存器状态复制到ref
+    difftest_regcpy(regs, DIFFTEST_TO_REF);
+
+    // 将传入的物理内存状态复制到ref
+    difftest_memcpy(CONFIG_MBASE, pmems, CONFIG_MSIZE, DIFFTEST_TO_REF);
 }
