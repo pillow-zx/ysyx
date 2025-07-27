@@ -52,14 +52,18 @@ module ysyx_25060173_core (
 
   assign i12 = inst_sw ? {inst[31:25], inst[11:7]} : inst[31:20];  // 31-20
   assign i20 = inst[31:12];  // 31-12
-
+  // R 型指令
+  // I 型指令
+  wire inst_ebreak;
   wire inst_addi;
+  // S 型指令
+  wire inst_sw;
+  // B 型指令
+  // U 型指令
   wire inst_auipc;
   wire inst_lui;
-  wire inst_jal;
+  // J 型指令
   wire inst_jalr;
-  wire inst_sw;
-  wire inst_ebreak;
 
   ysyx_25060173_instruction_decoder u_instruction_decoder (
       .inst(inst),
@@ -132,15 +136,15 @@ module ysyx_25060173_core (
       .alu_result(alu_result)
   );
 
-  assign waddr  = rd;
-  assign wdata  = inst_jalr | inst_jal ? pc + 4 : alu_result;
+  assign waddr   = rd;
+  assign wdata   = inst_jalr | inst_jal ? pc + 4 : alu_result;
 
-  assign result = alu_result;
+  assign result  = alu_result;
 
-  assign nextpc = inst_jal ? pc + imm : inst_jalr ? (rdata1 + imm) & ~1 : pc + 4;
+  assign nextpc  = inst_jal ? pc + imm : inst_jalr ? (rdata1 + imm) & ~1 : pc + 4;
 
   assign next_pc = nextpc;
-  
-  assign now_pc = pc;
+
+  assign now_pc  = pc;
 
 endmodule
