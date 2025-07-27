@@ -1,15 +1,9 @@
 #pragma once
 
-#include <iostream>
+
 #include <string>
-#include <vector>
 #include <cstdint>
-#include <sstream>
-#include <fstream>
-#include <bitset>
-#include <regex>
-#include "cpu.h"
-#include "Log.h"
+#include <vector>
 
 
 std::string get_string(std::string prompt);

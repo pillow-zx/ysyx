@@ -1,6 +1,10 @@
 #include <tools.h>
 #include <macro.h>
-#include <iomanip>
+#include <bitset>
+#include <iostream>
+#include <sstream>
+#include <memory.h>
+
 
 extern bool npc_STATE;
 

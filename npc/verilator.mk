@@ -1,7 +1,6 @@
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc --trace\
-				-O0 --x-assign fast --x-initial fast --noassert\
-				-LDFLAGS "-L/home/waysorry/ysyx/ysyx-workbench/nemu/build/riscv32-nemu-interpreter-so"
+				-O0 --x-assign fast --x-initial fast --noassert
 
 # Find all Verilog source files
 VSRCS = $(shell find $(VSRC_DIR) -name "*.v")

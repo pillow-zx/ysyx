@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/format.hpp>
+#include <iostream>
 
 // Define default pc start
 #define DEFAULT_PC_START 0x80000000

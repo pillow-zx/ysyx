@@ -1,6 +1,11 @@
-#include <Log.h>
-#include <stdio.h>
+#include "Log.h"
+#include "Vysyx_25060173_core.h"
+#include <fstream>
+#include <iostream>
+#include <macro.h>
 #include <capstone/capstone.h>
+
+extern Vysyx_25060173_core *core;
 
 void itrace(uint32_t inst, std::string log_file) {
     std::ofstream log_stream(log_file, std::ios::app);

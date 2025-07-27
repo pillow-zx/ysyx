@@ -1,5 +1,5 @@
-#include "tools.h"
-#include "memory.h"
+#include <memory.h>
+#include <macro.h>
 #include <array>
 
 
@@ -24,5 +24,5 @@ uint32_t read_pmem(uint32_t addr) {
 
 void init_memory() {
     pmem.fill(0);
-    PRINT_GREEN_0("Memory initialized with size: " << CONFIG_MSIZE << " bytes");
+    PRINT_GREEN_0(std::string("Memory initialized with size: ") + std::to_string(CONFIG_MSIZE) + " bytes");
 }

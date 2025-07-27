@@ -1,7 +1,20 @@
+#include <tools.h>
+#include <difftest.h>
+#include <cpu.h>
+#include <memory.h>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <macro.h>
+#include <Log.h>
 #include "sdb.h"
 
+static std::string diff_so_file;
 static std::string itrace_file;
 static std::string img_file;
+
+unsigned int core_regs[NPC_BITS] = {0};
 
 void npc_start() {
     while (npc_STATE) {
@@ -45,7 +58,7 @@ static void init_cpu() {
     reset();
 }
 
-static void load_img() {
+static long load_img() {
     if (img_file.empty()) {
         std::cerr << "No image file specified. Use -i <filename> to specify an image file." << std::endl;
         exit(EXIT_FAILURE);
@@ -65,6 +78,8 @@ static void load_img() {
 
     ASSERT_WITH_MSG_0(img_stream, "Failed to read image file: " + img_file);
     img_stream.close();
+
+    return count;
 }
 
 #include <getopt.h>
@@ -112,7 +127,9 @@ void npc_init(int argc, char **argv) {
 
     init_memory();
 
-    load_img();
+    long img_size = load_img();
+
+    init_difftest(core_regs, write_pmem().data());
 
     init_cpu();
 

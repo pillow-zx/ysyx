@@ -1,8 +1,7 @@
 #pragma once
 
-#include "tools.h"
-#include "macro.h"
-
+#include <cstdint>
+#include <string>
 
 void itrace(uint32_t insts, const std::string log_file);
 

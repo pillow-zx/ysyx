@@ -1,5 +1,13 @@
 #include <cpu.h>
+#include <Log.h>
+#include <macro.h>
 #include <tools.h>
+#include <memory.h>
+#include <difftest.h>
+#include <iostream>
+#include "Vysyx_25060173_core___024root.h"
+#include "Vysyx_25060173_core_ysyx_25060173_core.h"
+#include "Vysyx_25060173_core_ysyx_25060173_RegisterFile.h"
 
 bool npc_STATE = true;
 Vysyx_25060173_core *core = new Vysyx_25060173_core;
@@ -71,12 +79,17 @@ void say_pc() {
     PRINT_BLUE_0("Current PC: " << std::hex << core->now_pc << std::dec);
 }
 
+extern unsigned int core_regs[NPC_BITS];
+
 void cpu_exec(uint32_t n) {
+    uint32_t inst = read_pmem(core->now_pc - DEFAULT_PC_START);
     for (; n > 0 && npc_STATE; n--) {
         // Execute one instruction
-        cpu_exec_once(read_pmem(core->now_pc - DEFAULT_PC_START));
+        cpu_exec_once(inst);
         // Print current PC
-        // say_pc();
+        say_pc();
+        // show_regs();
+        difftest_step_and_check(core_regs, core->now_pc, core->next_pc, inst);
     }
     if (!npc_STATE) {
         std::cout << "Final PC: " << std::hex << core->now_pc << std::dec << std::endl;

@@ -1,4 +1,6 @@
 #include "dpi-c.h"
+#include "cpu.h"
+#include <iostream>
 
 extern "C" void ebreak_handler() {
     if (npc_STATE) {
