@@ -61,9 +61,9 @@ __EXPORT void difftest_exec(uint64_t n) {
     for (uint64_t i = 0; i < n; i++) {
         // 准备解码结构
         Decode s;
-        s.pc = cpu.pc;           // 当前指令地址
-        s.snpc = cpu.pc;         // 静态下一条指令地址，初始化为当前PC
-        s.dnpc = cpu.pc;         // 动态下一条指令地址，初始化为当前PC
+        s.pc = cpu.pc;   // 当前指令地址
+        s.snpc = cpu.pc; // 静态下一条指令地址，初始化为当前PC
+        s.dnpc = cpu.pc; // 动态下一条指令地址，初始化为当前PC
 
         // 从内存中取指令（RISC-V指令为4字节）
         s.isa.inst = paddr_read(cpu.pc, 4);

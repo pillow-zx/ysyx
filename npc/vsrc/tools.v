@@ -236,3 +236,17 @@ module ysyx_25060173_decoder_6_64 (
   );
 
 endmodule
+
+module ysyx_25060173_decoder_7_128 (
+    input  wire [ 6:0] in,
+    output wire [127:0] out
+);
+
+  ysyx_25060173_decoder #(
+      .INPUT_WIDTH(7)
+  ) dec_7_128 (
+      .in (in),
+      .out(out)
+  );
+
+endmodule

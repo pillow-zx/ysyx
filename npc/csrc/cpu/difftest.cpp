@@ -42,8 +42,10 @@ static void checkregs() {
     update_core_regs(); // Update the core registers before checking
     for (int i = 0; i < NPC_BITS; i++) {
         if (difftest_regs[i] != core_regs[i]) {
-            PRINT_RED_0("Mismatch at register " << i << ": difftest = 0x" << std::hex << difftest_regs[i]
-                                                << ", actual = 0x" << core->__PVT__ysyx_25060173_core->__PVT__u_ysyx_25060173_RegisterFile->__PVT__regfile[i]);
+            PRINT_RED_0("Mismatch at register "
+                        << i << ": difftest = 0x" << std::hex << difftest_regs[i] << ", actual = 0x"
+                        << core->__PVT__ysyx_25060173_core->__PVT__u_ysyx_25060173_RegisterFile->__PVT__regfile[i]);
+            PRINT_RED_0("THE PC = 0x" << std::hex << core->now_pc);
             exit(1);
         }
     }
@@ -53,8 +55,8 @@ void difftest_step_and_check() {
     // for (int i = 0; i < NPC_BITS; i++) {
     //     PRINT_BLUE_0("core_regs[" << i << "] = 0x" << std::hex << core_regs[i] << std::dec);
     // }
-    difftest_exec(1);                       // Execute one instruction in the difftest
-    difftest_regcpy(difftest_regs, false);  // Copy the difftest registers to the local array
-    checkregs();                            // Check if the difftest registers match the core registers
+    difftest_exec(1);                      // Execute one instruction in the difftest
+    difftest_regcpy(difftest_regs, false); // Copy the difftest registers to the local array
+    checkregs();                           // Check if the difftest registers match the core registers
     // Update the core registers from the difftest registers
 }
