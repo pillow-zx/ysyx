@@ -55,7 +55,7 @@ module ysyx_25060173_core (
 
   assign I_imm = inst_ebreak | inst_addi ? inst[31:20] : 12'b0;  // 31-20
   assign S_imm = inst_sw ? {inst[31:25], inst[11:7]} : 12'b0;  // 31-25, 11-7;
-  assign B_imm = inst_beq ? {inst[31], inst[7], inst[30:25], inst[11:8], 1'b0} : 13'b0;// 31,7,30-25,11-8,0
+  assign B_imm = inst_beq ? {inst[31], inst[7], inst[30:25], inst[11:8], 1'b0} : 13'b0;
   assign U_imm = inst[31:12];  // 31-12
   assign J_imm = {inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};  // 31, 19-12, 20, 30-21, 0}
 

@@ -41,7 +41,7 @@ module ysyx_25060173_MuxKeyInternal #(
 
   genvar n;
   generate
-    for (n = 0; n < NR_KEY; n = n + 1) begin
+    for (n = 0; n < NR_KEY; n = n + 1) begin : gen_pair
       assign pair_list[n] = lut[PAIR_LEN*(n+1)-1 : PAIR_LEN*n];
       assign data_list[n] = pair_list[n][DATA_LEN-1 : 0];
       assign key_list[n]  = pair_list[n][PAIR_LEN-1 : DATA_LEN];
@@ -51,7 +51,7 @@ module ysyx_25060173_MuxKeyInternal #(
   reg [DATA_LEN - 1 : 0] lut_out;
   reg hit;
   integer i;
-  always @(*) begin
+  always @* begin
     lut_out = 0;
     hit = 0;
     for (i = 0; i < NR_KEY; i = i + 1) begin
@@ -123,7 +123,11 @@ module ysyx_25060173_mux21 (
     input  wire sel,  // 选择信号
     output wire out   // 输出信号
 );
-  ysyx_25060173_MuxKey #(2, 1, 1) i0 (
+  ysyx_25060173_MuxKey #(
+      .NR_KEY  (2),
+      .KEY_LEN (1),
+      .DATA_LEN(1)
+  ) i0 (
       .out(out),
       .key(sel),
       .default_out(1'b0),  // 默认输出为0
@@ -139,7 +143,11 @@ module ysyx_25060173_mux41 (
     input wire [1:0] sel,
     output wire out
 );
-  ysyx_25060173_MuxKey #(4, 2, 1) i0 (
+  ysyx_25060173_MuxKey #(
+      .NR_KEY  (4),
+      .KEY_LEN (2),
+      .DATA_LEN(1)
+  ) i0 (
       .out(out),
       .key(sel),
       .default_out(1'b0),  // 默认输出为0

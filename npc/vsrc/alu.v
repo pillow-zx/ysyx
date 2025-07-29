@@ -42,7 +42,7 @@ module ysyx_25060173_alu (
   wire        adder_cout;
 
   assign adder_a = alu_src1;
-  assign adder_b = op_sub | op_beq | op_bne | op_bgeu | op_bltu ? ~alu_src2 : alu_src2; // If subtracting, invert the second operand;
+  assign adder_b = op_sub | op_beq | op_bne | op_bgeu | op_bltu ? ~alu_src2 : alu_src2;
   assign adder_cin = op_sub | op_beq | op_bne | op_bgeu | op_bltu ? 1'b1 : 1'b0;
 
   assign {adder_cout, adder_result} = adder_a + adder_b + {{31{1'b0}}, adder_cin};
