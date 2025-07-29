@@ -238,7 +238,7 @@ module ysyx_25060173_decoder_6_64 (
 endmodule
 
 module ysyx_25060173_decoder_7_128 (
-    input  wire [ 6:0] in,
+    input  wire [  6:0] in,
     output wire [127:0] out
 );
 
