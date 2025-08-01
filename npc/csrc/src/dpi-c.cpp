@@ -18,10 +18,11 @@ extern "C" int pmem_read(int addr) {
     }
     uint32_t addrs = addr;
     // std::cout << "Reading memory at address: " << std::hex << addrs << std::dec << std::endl;
-    if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
-        std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
-        exit(1);
-    }
+    // if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
+    //     std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
+    //     exit(1);
+    // }
+    std::cout << "Reading value " << std::hex << read_pmem(addrs) << " from address: " << addrs << std::dec << std::endl;
     return read_pmem(addrs);
 }
 
@@ -32,7 +33,7 @@ extern "C" void pmem_write(int addr, int value) {
     }
     uint32_t values = (uint32_t)value;
     uint32_t addrs = (uint32_t)addr;
-    // std::cout << "Writing value: " << std::hex << values << " to address: " << addrs << std::dec << std::endl;
+    std::cout << "Writing value: " << std::hex << values << " to address: " << addrs << std::dec << std::endl;
     if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
         std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
         exit(1);
@@ -42,4 +43,6 @@ extern "C" void pmem_write(int addr, int value) {
         exit(1);
     }
     write_pmem()[(addrs - DEFAULT_MEM_START) / 4] = values; // Convert to offset from 0x80000000 base address
+    std::cout << "Wrote value: " << std::hex << values << " to address: " << std::hex << addrs << std::dec << std::endl;
+    std::cout << "Read value: " << std::hex << read_pmem(addrs) << std::dec << std::endl; // For debugging purposes
 }

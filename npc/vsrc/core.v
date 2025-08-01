@@ -58,7 +58,7 @@ module ysyx_25060173_core (
     wire [19:0] U_imm;
     wire [20:0] J_imm;
 
-    assign I_imm = inst_ebreak | inst_addi ? inst[31:20] : 12'b0;  // 31-20
+    assign I_imm = inst_ebreak | inst_addi | inst_lw ? inst[31:20] : 12'b0;  // 31-20
     assign S_imm = inst_sw ? {inst[31:25], inst[11:7]} : 12'b0;  // 31-25, 11-7;
     assign B_imm = inst_beq ? {inst[31], inst[7], inst[30:25], inst[11:8], 1'b0} : 13'b0;
     assign U_imm = inst[31:12];  // 31-12
@@ -72,6 +72,8 @@ module ysyx_25060173_core (
     wire inst_jalr;
     wire inst_ebreak;
     wire inst_addi;
+    wire inst_lw;
+    wire inst_lui;
     // S 型指令
     wire inst_sw;
     // B 型指令
@@ -83,7 +85,6 @@ module ysyx_25060173_core (
     wire inst_bne;
     // U 型指令
     wire inst_auipc;
-    wire inst_lui;
     // J 型指令
     wire inst_jal;
 
@@ -103,6 +104,7 @@ module ysyx_25060173_core (
                                           .inst_ebreak(inst_ebreak),
                                           .inst_lui(inst_lui),
                                           .inst_jal(inst_jal),
+                                          .inst_lw(inst_lw),
                                           .inst_jalr(inst_jalr),
                                           .inst_sw(inst_sw)
                                       );
@@ -127,7 +129,7 @@ module ysyx_25060173_core (
     wire [31:0] wdata;
     wire we;
 
-    assign need_I_imm = inst_addi | inst_ebreak | inst_jalr;
+    assign need_I_imm = inst_addi | inst_ebreak | inst_jalr | inst_lw;
     assign need_S_imm = inst_sw;
     assign need_B_imm = inst_beq | inst_bge | inst_bgeu | inst_blt | inst_bltu | inst_bne;
     assign need_U_imm = inst_auipc | inst_lui;
@@ -141,21 +143,29 @@ module ysyx_25060173_core (
            32'b0;  // 立即数扩展
 
     assign we = inst_sub | inst_add | inst_addi | inst_auipc |
-           inst_and | inst_lui | inst_jal | inst_jalr ? 1'b1 : 1'b0;
+           inst_and | inst_lui | inst_jal | inst_jalr | inst_lw ? 1'b1 : 1'b0;
     assign raddr1 = rs1;
     assign raddr2 = rs2;
-    
+
     wire        pmem_en;
+    wire        pmem_re;
     wire [31:0] pmem_addr;
     wire [31:0] pmem_wdata;
+    reg  [31:0] pmem_rdata;
 
     assign pmem_en = inst_sw;
-    assign pmem_addr = inst_sw ? (rdata1 + imm) : 32'b0;
+    assign pmem_re = inst_lw;
+    assign pmem_addr = inst_lw | inst_sw ? (rdata1 + imm) : 32'b0;
     assign pmem_wdata = inst_sw ? rdata2 : 32'b0;
 
     always_comb begin
         if (pmem_en) begin
             pmem_write(pmem_addr, pmem_wdata);
+            pmem_rdata = 32'b0;  // 写操作不返回数据
+        end else if (pmem_re) begin
+            pmem_rdata = pmem_read(pmem_addr);
+        end else begin
+            pmem_rdata = 32'b0;  // 如果不是读操作，返回0
         end
     end
 
@@ -202,6 +212,7 @@ module ysyx_25060173_core (
 
     assign waddr = rd;
     assign wdata = inst_lui ? imm :
+           inst_lw ? pmem_rdata :
            inst_jalr | inst_jal ? pc + 4 : alu_result;
 
     assign result = alu_result;

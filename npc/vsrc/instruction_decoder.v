@@ -14,6 +14,7 @@ module ysyx_25060173_instruction_decoder (
     output wire inst_auipc,
     output wire inst_ebreak,
     output wire inst_lui,
+    output wire inst_lw,
     output wire inst_jal,
     output wire inst_jalr,
     output wire inst_sw
@@ -27,6 +28,7 @@ module ysyx_25060173_instruction_decoder (
   assign inst_and    = (op_14_12 == 3'h7) & (inst[31:25] == 7'h00) & (inst[6:0] == 7'b0110011);
   assign inst_sub    = (op_14_12 == 3'h0) & (inst[31:25] == 7'h20) & (inst[6:0] == 7'b0110011);
   assign inst_add    = (op_14_12 == 3'h0) & (inst[31:25] == 7'h00) & (inst[6:0] == 7'b0110011);
+  assign inst_lw     = (op_14_12 == 3'h2) & (inst[6:0] == 7'b0000011);
   assign inst_addi   = (op_14_12 == 3'h0) & (inst[6:0] == 7'b0010011);
   assign inst_beq    = (op_14_12 == 3'h0) & (inst[6:0] == 7'b1100011);
   assign inst_bge    = (op_14_12 == 3'h5) & (inst[6:0] == 7'b1100011);

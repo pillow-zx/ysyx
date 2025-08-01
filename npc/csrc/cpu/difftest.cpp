@@ -1,5 +1,6 @@
 #include <difftest.h>
 #include <macro.h>
+#include <cpu.h>
 #include "Vysyx_25060173_core___024root.h"
 #include "Vysyx_25060173_core_ysyx_25060173_core.h"
 #include "Vysyx_25060173_core_ysyx_25060173_RegisterFile.h"
@@ -43,7 +44,7 @@ static void checkregs() {
     for (int i = 0; i < NPC_BITS; i++) {
         if (difftest_regs[i] != core_regs[i]) {
             PRINT_RED_0("Mismatch at register "
-                        << i << ": difftest = 0x" << std::hex << difftest_regs[i] << ", actual = 0x"
+                        << regs[i] << ": difftest = 0x" << std::hex << difftest_regs[i] << ", actual = 0x"
                         << core->__PVT__ysyx_25060173_core->__PVT__u_ysyx_25060173_RegisterFile->__PVT__regfile[i]);
             PRINT_RED_0("THE PC = 0x" << std::hex << core->now_pc);
             exit(1);
