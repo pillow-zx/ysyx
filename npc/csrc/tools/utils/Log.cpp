@@ -169,7 +169,7 @@ static char *get_symbol_name(uint32_t pc) {
     for (int i = 0; i < ftrace_file_symtab_num; i++) {
         if (ELF32_ST_TYPE(ftrace_file_symtab[i].st_info) == STT_FUNC) {
             // Convert symbol addresses to relative addresses for comparison
-            uint32_t symbol_start = ftrace_file_symtab[i].st_value - DEFAULT_PC_START;
+            uint32_t symbol_start = ftrace_file_symtab[i].st_value - DEFAULT_MEM_START;
             uint32_t symbol_end = symbol_start + ftrace_file_symtab[i].st_size;
                    
             if (pc >= symbol_start && pc < symbol_end) {
@@ -210,7 +210,7 @@ static void ftrace_elf_start(uint32_t pc, uint32_t dnpc, bool is_call, bool is_r
                 for (int i = 0; i < call_stack_depth; i++) {
                     printf("  ");
                 }
-                std::cout << ANSI_COLOR_BLUE << "call: " << target_symbol << " at 0x" << std::hex << (dnpc + DEFAULT_PC_START)
+                std::cout << ANSI_COLOR_BLUE << "call: " << target_symbol << " at 0x" << std::hex << (dnpc + DEFAULT_MEM_START)
                           << ANSI_COLOR_RESET << std::endl;
 
                 // 将函数信息压入调用栈
@@ -222,7 +222,7 @@ static void ftrace_elf_start(uint32_t pc, uint32_t dnpc, bool is_call, bool is_r
                     call_stack_depth++;
                 } else {
                     std::cout << ANSI_COLOR_BLUE << "Warning: Call stack overflow, ignoring call to " << target_symbol
-                              << " at 0x" << std::hex << (dnpc + DEFAULT_PC_START) << ANSI_COLOR_RESET << std::endl;
+                              << " at 0x" << std::hex << (dnpc + DEFAULT_MEM_START) << ANSI_COLOR_RESET << std::endl;
                 }
             }
         }
@@ -236,7 +236,7 @@ static void ftrace_elf_start(uint32_t pc, uint32_t dnpc, bool is_call, bool is_r
                 printf("  ");
             }
             std::cout << ANSI_COLOR_BLUE << "return: " << call_stack[call_stack_depth].name << " at 0x" << std::hex
-                      << (pc + DEFAULT_PC_START) << ANSI_COLOR_RESET << std::endl;
+                      << (pc + DEFAULT_MEM_START) << ANSI_COLOR_RESET << std::endl;
         }
         // 如果当前符号不匹配，可能是从内联函数或其他情况返回，也尝试处理
         else if (call_stack_depth > 0) {
@@ -245,7 +245,7 @@ static void ftrace_elf_start(uint32_t pc, uint32_t dnpc, bool is_call, bool is_r
                 printf("  ");
             }
             std::cout << ANSI_COLOR_BLUE << "return: " << call_stack[call_stack_depth].name << " at 0x" << std::hex
-                      << (pc + DEFAULT_PC_START) << ANSI_COLOR_RESET << std::endl;
+                      << (pc + DEFAULT_MEM_START) << ANSI_COLOR_RESET << std::endl;
         }
     }
 }
@@ -257,8 +257,8 @@ void ftrace(uint32_t inst) {
 
     // After clock edge, core->now_pc is the next PC
     // The instruction corresponds to the previous PC
-    uint32_t next_pc = core->now_pc - DEFAULT_PC_START;
-    uint32_t current_pc = core->now_pc - DEFAULT_PC_START - 4;  // Previous PC
+    uint32_t next_pc = core->now_pc - DEFAULT_MEM_START;
+    uint32_t current_pc = core->now_pc - DEFAULT_MEM_START - 4;  // Previous PC
     uint32_t pc = current_pc;
     uint32_t dnpc = next_pc;
 

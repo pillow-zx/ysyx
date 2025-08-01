@@ -1,4 +1,5 @@
 // 触发器模板
+/* verilator lint_off DECLFILENAME*/
 module ysyx_25060173_Reg #(
     WIDTH = 1,
     RESET_VAL = 0

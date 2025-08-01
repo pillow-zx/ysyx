@@ -1,3 +1,4 @@
+/* verilator lint_off DECLFILENAME*/
 module ysyx_25060173_alu (
     input  wire [31:0] alu_src1,
     input  wire [31:0] alu_src2,

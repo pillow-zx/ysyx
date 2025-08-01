@@ -1,4 +1,5 @@
 // 32位寄存器文件模块
+/* verilator lint_off DECLFILENAME*/
 module ysyx_25060173_RegisterFile #(
     ADDR_WIDTH = 5,
     DATA_WIDTH = 32

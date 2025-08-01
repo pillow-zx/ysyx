@@ -1,3 +1,4 @@
+/* verilator lint_off DECLFILENAME*/
 module ysyx_25060173_instruction_decoder (
     input wire [31:0] inst,
     output wire inst_bge,

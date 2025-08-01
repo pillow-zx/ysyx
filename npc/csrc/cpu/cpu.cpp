@@ -24,7 +24,7 @@ void show_regs() {
         uint32_t reg_value;
         reg_value = core->__PVT__ysyx_25060173_core->__PVT__u_ysyx_25060173_RegisterFile->__PVT__regfile[i];
         std::string prompt = boost::str(boost::format("%s: 0x%08x") % regs.at(i) % reg_value);
-        PRINT_BLUE_0(prompt);
+        std::cout << "\x1b[1;34m" << prompt << "\x1b[0m" << " ";
         if (count == 8) {
             std::cout << std::endl;
             count = 0;
@@ -82,10 +82,11 @@ extern unsigned int core_regs[NPC_BITS];
 
 void cpu_exec(uint32_t n) {
     for (; n > 0 && npc_STATE; n--) {
-        uint32_t inst = read_pmem(core->now_pc - DEFAULT_PC_START);
+        uint32_t inst = read_pmem(core->now_pc - DEFAULT_MEM_START);
         // Execute one instruction
+        say_pc();
         cpu_exec_once(inst);
-        if (core->now_pc > DEFAULT_PC_START)
+        if (core->now_pc > DEFAULT_MEM_START)
             difftest_step_and_check();
     }
     if (!npc_STATE) {

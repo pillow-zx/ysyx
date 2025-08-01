@@ -6,7 +6,7 @@
 static std::array<uint8_t, CONFIG_MSIZE> pmem __attribute__((aligned(4096)));
 
 static bool in_pmem(uint32_t addr) {
-    return addr < CONFIG_MSIZE;
+    return addr >= DEFAULT_MEM_START && addr < DEFAULT_MEM_START + CONFIG_MSIZE;
 }
 
 
@@ -15,9 +15,10 @@ std::array<uint32_t, CONFIG_MSIZE / 4> &write_pmem() {
 }
 
 uint32_t read_pmem(uint32_t addr) {
-    ASSERT_WITH_MSG_0(in_pmem(addr), "Address out of bounds: " + std::to_string(addr));
+    // ASSERT_WITH_MSG_0(in_pmem(addr), "READ_PMEM: Address out of bounds: " + std::to_string(addr));
+    uint32_t addrs = addr - DEFAULT_MEM_START;
     uint32_t *pmem_word_ptr = reinterpret_cast<uint32_t*>(pmem.data());
-    uint32_t word_indx = addr / sizeof(uint32_t);
+    uint32_t word_indx = (addrs - DEFAULT_MEM_START) / sizeof(uint32_t);
     ASSERT_WITH_MSG_0(word_indx < CONFIG_MSIZE / sizeof(uint32_t), "Word index out of bounds: " + std::to_string(word_indx));
     return pmem_word_ptr[word_indx];
 }
