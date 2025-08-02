@@ -12,18 +12,33 @@ extern "C" void ebreak_handler() {
 }
 
 extern "C" int pmem_read(int addr) {
+    
     if (!npc_STATE) {
         std::cerr << "Error: Attempt to read memory while NPC is not in a valid state." << std::endl;
         exit(1);
     }
     uint32_t addrs = addr;
-    // std::cout << "Reading memory at address: " << std::hex << addrs << std::dec << std::endl;
-    // if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
-    //     std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
-    //     exit(1);
-    // }
+    std::cout << "Reading memory at address: " << std::hex << addrs << std::dec << std::endl;
+    if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
+        std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
+        exit(1);
+    }
     std::cout << "Reading value " << std::hex << read_pmem(addrs) << " from address: " << addrs << std::dec << std::endl;
     return read_pmem(addrs);
+}
+
+extern "C" unsigned int inst_read(unsigned int addr) {
+    if (!npc_STATE) {
+        std::cerr << "Error: Attempt to read instruction while NPC is not in a valid state." << std::endl;
+        exit(1);
+    }
+    uint32_t addrs = addr;
+    std::cout << "Reading instruction at address: " << std::hex << addrs << std::dec << std::endl;
+    if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
+        std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
+        exit(1);
+    }
+    return read_pmem(addrs); // Assuming inst_read is similar to pmem_read
 }
 
 extern "C" void pmem_write(int addr, int value) {

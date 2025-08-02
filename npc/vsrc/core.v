@@ -1,42 +1,34 @@
 import "DPI-C" context function void ebreak_handler();
 import "DPI-C" context function int pmem_read(input int addr);
 import "DPI-C" context function void pmem_write(input int addr, input int data);
+import "DPI-C" context function int unsigned inst_read(input int unsigned addr);
 /* verilator lint_off DECLFILENAME*/
 module ysyx_25060173_core (
         input wire clk,
         input wire reset,
-        input wire [31:0] inst,
         output wire [31:0] result,
         output wire [31:0] next_pc,
         output reg [31:0] now_pc
     );
-    reg rst;
-    always @(posedge clk) begin
-        rst <= ~reset;
-    end
+    wire valid;
 
-    reg valid;
-    always @(posedge clk) begin
-        if (rst) begin
-            valid <= 0;
-        end
-        else begin
-            valid <= 1;
-        end
-    end
+    assign valid = ~reset;
 
     reg  [31:0] pc;
     wire [31:0] nextpc;
     wire        en;
 
     always @(posedge clk) begin
-        if (rst) begin
-            pc <= 32'h80000000;
-        end
-        else if (valid) begin
+        $display("clk=%d, reset=%d, pc=0x%x, nextpc=0x%x", clk, reset, pc, nextpc);
+        if (reset) begin
+            pc <= 32'h80000000;  // 初始化 PC
+        end else begin
             pc <= nextpc;
         end
     end
+
+    wire [31:0] inst;
+    assign inst = ~reset && ~clk ? inst_read(pc) : 32'b0;  // 从内存中读取指令
 
     wire [4:0] op_11_7;
     wire [4:0] op_19_15;
@@ -121,13 +113,13 @@ module ysyx_25060173_core (
     wire need_J_imm;
 
     wire [31:0] imm;
-    wire [4:0] raddr1;
+    wire [ 4:0] raddr1;
     wire [31:0] rdata1;
-    wire [4:0] raddr2;
+    wire [ 4:0] raddr2;
     wire [31:0] rdata2;
-    wire [4:0] waddr;
+    wire [ 4:0] waddr;
     wire [31:0] wdata;
-    wire we;
+    reg         we;
 
     assign need_I_imm = inst_addi | inst_ebreak | inst_jalr | inst_lw;
     assign need_S_imm = inst_sw;
@@ -144,6 +136,7 @@ module ysyx_25060173_core (
 
     assign we = inst_sub | inst_add | inst_addi | inst_auipc |
            inst_and | inst_lui | inst_jal | inst_jalr | inst_lw ? 1'b1 : 1'b0;
+
     assign raddr1 = rs1;
     assign raddr2 = rs2;
 
@@ -160,9 +153,11 @@ module ysyx_25060173_core (
 
     always_comb begin
         if (pmem_en) begin
+            $display("NOTION: now_pc: 0x%x, inst_sw:%d, inst:0x%x", now_pc, inst_sw, inst);
             pmem_write(pmem_addr, pmem_wdata);
             pmem_rdata = 32'b0;  // 写操作不返回数据
         end else if (pmem_re) begin
+            $display("NOTION: now_pc: 0x%x, inst_lw:%d, inst:0x%x", now_pc, inst_lw, inst);
             pmem_rdata = pmem_read(pmem_addr);
         end else begin
             pmem_rdata = 32'b0;  // 如果不是读操作，返回0

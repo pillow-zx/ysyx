@@ -30,7 +30,6 @@ void npc_start() {
             cpu_exec(-1);
         } else if (tokens[0] == "si") {
             int n = (tokens.size() > 1) ? std::stoi(tokens[1]) : 1;
-            say_pc();
             cpu_exec(n);
         } else if (tokens[0] == "info") {
             if (tokens.size() > 1 && tokens[1] == "r") {
@@ -132,7 +131,7 @@ void npc_init(int argc, char **argv) {
     init_cpu();
 
     // Initialize difftest
-    init_difftest(core_regs, write_pmem().data());
+    // init_difftest(core_regs, write_pmem().data());
 
     welcome();
 }

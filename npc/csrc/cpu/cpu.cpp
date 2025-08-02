@@ -40,57 +40,80 @@ void show_regs() {
 }
 
 void reset() {
-    for (int i = 0; i < 10; i++) {
-        core->clk = 0;
-        core->reset = 0;
-        core->eval();
-        // tfp->dump(sim_time++);
-        core->clk = 1;
-        core->eval();
-        // tfp->dump(sim_time++);
-
-        core->clk = 0;
-        core->reset = 1;
-        core->eval();
-        // tfp->dump(sim_time++);
-        core->clk = 1;
-        core->eval();
-        // tfp->dump(sim_time++);
-    }
-}
-
-static void cpu_exec_once(uint32_t inst) {
-    itrace(inst, logfile);
-    // mtrace(pc_index, read_pmem(core->now_pc));
-
     core->clk = 0;
-    core->inst = inst; // Get instruction based on current PC
+    core->reset = 1;
     core->eval();
-
+    // tfp->dump(sim_time++);
     core->clk = 1;
     core->eval();
-
-    // Call ftrace after clock edge to get correct next_pc
-    ftrace(inst);
+    // tfp->dump(sim_time++);
+    core->reset = 0; // 复位信号拉低
 }
+
+// static void cpu_exec_once(uint32_t inst) {
+//     itrace(inst, logfile);
+//     // mtrace(pc_index, read_pmem(core->now_pc));
+
+//     core->clk = 0;
+//     core->inst = inst; // Get instruction based on current PC
+//     core->eval();
+
+//     core->clk = 1;
+//     core->eval();
+
+//     // Call ftrace after clock edge to get correct next_pc
+//     ftrace(inst);
+// }
+
+// void say_pc() {
+//     PRINT_BLUE_0("Current PC: " << std::hex << core->now_pc << std::dec);
+// }
+
+// extern unsigned int core_regs[NPC_BITS];
+
+// #include <iostream>
+// void cpu_exec(uint32_t n) {
+//     for (; n > 0 && npc_STATE; n--) {
+//         uint32_t inst = read_pmem(core->now_pc);
+//         // Execute one instruction
+//         volatile uint32_t num =core->__PVT__ysyx_25060173_core->__PVT__u_ysyx_25060173_RegisterFile->__PVT__regfile[15];
+//         std::cout << num << std::endl;
+//         say_pc();
+//         cpu_exec_once(inst);
+//         if (core->now_pc > DEFAULT_MEM_START)
+//             difftest_step_and_check();
+//     }
+//     if (!npc_STATE) {
+//         std::cout << "Final PC: " << std::hex << core->now_pc << std::dec << std::endl;
+//         return;
+//     }
+// }
 
 void say_pc() {
     PRINT_BLUE_0("Current PC: " << std::hex << core->now_pc << std::dec);
 }
 
-extern unsigned int core_regs[NPC_BITS];
+static void cpu_exec_once() {
+    // mtrace(pc_index, read_pmem(core->now_pc));
+    itrace(read_pmem(core->now_pc), logfile);
+    core->clk = 0;
+    core->eval();
+    say_pc();
+    core->clk = 1;
+    core->eval();
+    say_pc();
+
+    // Call ftrace after clock edge to get correct next_pc
+    // ftrace(core->inst);
+}
 
 void cpu_exec(uint32_t n) {
     for (; n > 0 && npc_STATE; n--) {
-        uint32_t inst = read_pmem(core->now_pc);
-        // Execute one instruction
-        say_pc();
-        cpu_exec_once(inst);
-        if (core->now_pc > DEFAULT_MEM_START)
-            difftest_step_and_check();
-    }
-    if (!npc_STATE) {
-        std::cout << "Final PC: " << std::hex << core->now_pc << std::dec << std::endl;
-        return;
+        cpu_exec_once();
+
+        if (!npc_STATE) {
+            std::cout << "Final PC: " << std::hex << core->now_pc << std::dec << std::endl;
+            return;
+        }
     }
 }
