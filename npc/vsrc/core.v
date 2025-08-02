@@ -64,6 +64,13 @@ module ysyx_25060173_core (
     wire inst_sub;
     wire inst_add;
     wire inst_and;
+    wire inst_sltu;
+    wire inst_xor;
+    wire inst_or;
+    wire inst_slt;
+    wire inst_sra;
+    wire inst_srl;
+    wire inst_sll;
     // I 型指令
     wire inst_jalr;
     wire inst_ebreak;
@@ -98,12 +105,19 @@ module ysyx_25060173_core (
                                           .inst_add(inst_add),
                                           .inst_and(inst_and),
                                           .inst_addi(inst_addi),
+                                          .inst_xor(inst_xor),
                                           .inst_auipc(inst_auipc),
+                                          .inst_srl(inst_srl),
                                           .inst_ebreak(inst_ebreak),
+                                          .inst_or(inst_or),
                                           .inst_slli(inst_slli),
+                                          .inst_sll(inst_sll),
                                           .inst_lui(inst_lui),
                                           .inst_jal(inst_jal),
                                           .inst_sltiu(inst_sltiu),
+                                          .inst_slt(inst_slt),
+                                          .inst_sra(inst_sra),
+                                          .inst_sltu(inst_sltu),
                                           .inst_lw(inst_lw),
                                           .inst_jalr(inst_jalr),
                                           .inst_sw(inst_sw)
@@ -146,7 +160,8 @@ module ysyx_25060173_core (
     // 现在指令在时钟高电平时有效，写使能信号可以直接使用组合逻辑
     assign we = inst_sub | inst_add | inst_addi | inst_auipc |
            inst_and | inst_lui | inst_jal | inst_jalr | inst_lw |
-           inst_sltiu | inst_slli ? 1'b1 : 1'b0;
+           inst_sltiu | inst_slli | inst_sltu | inst_xor | inst_or |
+           inst_slt | inst_sra |  inst_srl | inst_sll ? 1'b1 : 1'b0;
 
     assign raddr1 = rs1;
     assign raddr2 = rs2;
@@ -192,10 +207,10 @@ module ysyx_25060173_core (
     wire [31:0] alu_src1;
     wire [31:0] alu_src2;
     wire [31:0] alu_result;
-    wire [12:0] alu_op;
+    wire [19:0] alu_op;
 
     assign alu_src1   = inst_auipc | inst_jal ? pc : rdata1;
-    assign alu_src2   = need_I_imm | need_S_imm | need_B_imm | need_U_imm | need_J_imm ? imm :
+    assign alu_src2   = need_I_imm | need_S_imm | need_U_imm | need_J_imm ? imm :
                         inst_slli ? {{26{1'b0}} , op_25_20} : rdata2;
     assign alu_op[0]  = inst_addi;  // ALU operation for ADDI
     assign alu_op[1]  = inst_auipc;  // ALU operation for AUIPC
@@ -210,7 +225,13 @@ module ysyx_25060173_core (
     assign alu_op[10] = inst_beq;  // ALU operation for BEQ
     assign alu_op[11] = inst_sltiu;  // ALU operation for SLTIU
     assign alu_op[12] = inst_slli;  // ALU operation for SLLI
-
+    assign alu_op[13] = inst_sltu;  // ALU operation for SLTU
+    assign alu_op[14] = inst_xor;  // ALU operation for XOR
+    assign alu_op[15] = inst_or;  // ALU operation for OR
+    assign alu_op[16] = inst_slt;  // ALU operation for SLT
+    assign alu_op[17] = inst_sra;  // ALU operation for SRA
+    assign alu_op[18] = inst_srl;  // ALU operation for SRL
+    assign alu_op[19] = inst_sll;  // ALU operation for SLL
 
     ysyx_25060173_alu u_alu (
                           .alu_src1(alu_src1),
@@ -223,18 +244,21 @@ module ysyx_25060173_core (
     assign wdata = inst_lui ? imm :
            inst_lw ? pmem_rdata :
            inst_jalr | inst_jal ? pc + 4 :
-           inst_sltiu ? (alu_result[0] ? 32'd1 : 32'd0) : alu_result;
+           inst_sltiu ? (alu_result[0] ? 32'd1 : 32'd0) :
+           inst_sltu ? (alu_result[0] ? 32'd1 : 32'd0) :
+           inst_slt  ? (alu_result[0] ? 32'd1 : 32'd0) :
+           alu_result;
 
     assign result = alu_result;
 
     assign nextpc = inst_jal ? pc + imm :
            inst_jalr ? (rdata1 + imm) & ~1 :
-       inst_bge ? alu_result[0] ? pc + imm : pc + 4 :
-       inst_blt ? alu_result[0] ? pc + imm : pc + 4 :
-       inst_bgeu ? alu_result[0] ? pc + imm : pc + 4 :
-       inst_bltu ? alu_result[0] ? pc + imm : pc + 4 :
-       inst_beq ? (alu_result == 32'b0) ? pc + imm: pc + 4 :
-       inst_bne ? (alu_result != 32'b0) ? pc + imm : pc + 4 :
+           inst_bge ? alu_result[0] ? pc + imm : pc + 4 :
+           inst_blt ? alu_result[0] ? pc + imm : pc + 4 :
+           inst_bgeu ? alu_result[0] ? pc + imm : pc + 4 :
+           inst_bltu ? alu_result[0] ? pc + imm : pc + 4 :
+           inst_beq ? alu_result[0] ? pc + imm : pc + 4 :
+           inst_bne ? alu_result[0] ? pc + 4 : pc + imm :
            pc + 4;
 
     assign next_pc = nextpc;

@@ -4,7 +4,7 @@
 module ysyx_25060173_alu (
         input  wire [31:0] alu_src1,
         input  wire [31:0] alu_src2,
-        input  wire [12:0] alu_op,
+        input  wire [19:0] alu_op,
         output wire [31:0] alu_result
     );
 
@@ -22,6 +22,13 @@ module ysyx_25060173_alu (
     wire op_bltu;   // 无符号小于比较
     wire op_sltiu;  // 无符号小于立即数设置
     wire op_slli;   // 逻辑左移立即数
+    wire op_sltu;   // 无符号小于比较（SLTU）
+    wire op_xor;    // 逻辑异或运算
+    wire op_or;     // 逻辑或运算（新增）
+    wire op_slt;    // 有符号小于比较（SLT）
+    wire op_sra;    // 算术右移（SRA）
+    wire op_srl;    // 逻辑右移（SRL）
+    wire op_sll;    // 逻辑左移（SLL）
 
 
     assign op_addi  = alu_op[0];
@@ -37,6 +44,13 @@ module ysyx_25060173_alu (
     assign op_beq   = alu_op[10];   // 位10：相等比较
     assign op_sltiu = alu_op[11];   // 位11：无符号小于立即数设置
     assign op_slli  = alu_op[12];   // 位12：逻辑左移立即数
+    assign op_sltu  = alu_op[13];   // 位13：无符号小于比较（SLTU）
+    assign op_xor   = alu_op[14];   // 位14：逻辑异或运算
+    assign op_or    = alu_op[15];   // 位15：逻辑或运算（新增）
+    assign op_slt   = alu_op[16];   // 位16：有符号小于比较（SLT）
+    assign op_sra   = alu_op[17];   // 位17：算术右移（SRA）
+    assign op_srl   = alu_op[18];   // 位18：逻辑右移（SRL）
+    assign op_sll   = alu_op[19];   // 位19：逻辑左移（SLL）
 
 
     wire [31:0] add_sub_result;              // 加减运算结果
@@ -44,7 +58,7 @@ module ysyx_25060173_alu (
     wire [31:0] signed_cmp_result;           // 有符号比较结果
     wire [31:0] unsigned_cmp_result;         // 无符号比较/相等比较结果
     wire [31:0] logic_result;                // 逻辑运算结果
-
+    wire [31:0] mv_result;                  //  移位结果
 
     wire [31:0] adder_a;
     wire [31:0] adder_b;
@@ -53,8 +67,8 @@ module ysyx_25060173_alu (
     wire        adder_cout;
 
     assign adder_a = alu_src1;
-    assign adder_b = op_sub | op_beq | op_bne | op_bgeu | op_bltu | op_sltiu ? ~alu_src2 : alu_src2;
-    assign adder_cin = op_sub | op_beq | op_bne | op_bgeu | op_bltu | op_sltiu ? 1'b1 : 1'b0;
+    assign adder_b = op_sub | op_beq | op_bne | op_bgeu | op_bltu | op_sltiu | op_slt ? ~alu_src2 : alu_src2;
+    assign adder_cin = op_sub | op_beq | op_bne | op_bgeu | op_bltu | op_sltiu | op_slt ? 1'b1 : 1'b0;
 
     assign {adder_cout, adder_result} = adder_a + adder_b + {{31{1'b0}}, adder_cin};
 
@@ -74,17 +88,41 @@ module ysyx_25060173_alu (
     assign unsigned_cmp_result[31:1] = 31'b0;  // 高31位清零
     assign unsigned_cmp_result[0] = ~adder_cout;
 
+    // 相等比较结果计算（用于beq和bne指令）
+    // 相等比较逻辑：当两个操作数相等时，减法结果为0
+    wire [31:0] equal_cmp_result;
+    assign equal_cmp_result[31:1] = 31'b0;  // 高31位清零
+    assign equal_cmp_result[0] = (adder_result == 32'b0);  // 当减法结果为0时，表示相等
+
     // 各种运算结果的生成
     assign add_sub_result = adder_result;        // 加减运算直接使用加法器结果
     assign and_result = alu_src1 & alu_src2;     // 逻辑与运算
 
-    assign logic_result = alu_src1 << alu_src2[5:0];
+    assign logic_result = op_slli ? alu_src1 << alu_src2[5:0] :
+                          op_xor ? alu_src1 ^ alu_src2 : // 逻辑异或运算
+                          op_or ? alu_src1 | alu_src2 : // 逻辑或运算
+                          32'b0; // 其他逻辑运算结果清零
+
+
+    // 算术右移运算（SRA）
+    // 算术右移需要考虑符号位，使用算术右移指令
+    // assign mv_result = op_sra ? ({alu_src1[31], alu_src1} >> alu_src2[4:0]) : 
+    //                    op_srl ? (alu_src1 >> alu_src2[4:0]) : // 逻辑右移
+    //                    32'b0; // 其他移位操作结果清零
+
+    assign mv_result = op_sra ? ($signed(alu_src1) >>> alu_src2[4:0]) : // 算术右移
+                       op_srl ? (alu_src1 >> alu_src2[4:0]) : // 逻辑右移
+                       op_sll ? (alu_src1 << alu_src2[4:0]) : // 逻辑左移
+                       32'b0; // 其他移位操作结果清零
+
 
     // 最终结果选择：根据操作类型选择相应的运算结果
     assign alu_result = op_and ? and_result :                                 // 逻辑与运算
-           op_bge | op_blt ? signed_cmp_result :                              // 有符号比较运算
-           op_bgeu | op_bltu | op_beq | op_sltiu ? unsigned_cmp_result :      // 无符号比较运算
-           op_slli ? logic_result :                                           // 逻辑运算立即数
+           op_bge | op_blt | op_slt ? signed_cmp_result :                     // 有符号比较运算
+           op_bgeu | op_bltu | op_sltiu | op_sltu ? unsigned_cmp_result :     // 无符号比较运算
+           op_beq | op_bne ? equal_cmp_result :                               // 相等比较运算（BEQ和BNE）
+           op_slli | op_xor | op_or ? logic_result :                          // 逻辑运算立即数
+           op_sra | op_srl | op_sll ? mv_result :                                             // 算术右移运算
            add_sub_result;                                                    // 默认：加减运算结果
 
 endmodule

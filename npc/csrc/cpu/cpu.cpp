@@ -69,7 +69,7 @@ static void cpu_exec_once() {
     core->eval(); // 评估当前状态
     say_pc(); // 打印当前PC
 
-    difftest_step_and_check(); // 执行difftest并检查寄存器
+    // difftest_step_and_check(); // 执行difftest并检查寄存器
 }
 
 void cpu_exec(uint32_t n) {

@@ -10,15 +10,22 @@ module ysyx_25060173_instruction_decoder (
         output wire inst_add,
         output wire inst_slli,
         output wire inst_and,
+        output wire inst_sll, // 新增逻辑左移指令
         output wire inst_bne,
+        output wire inst_sltu,
+        output wire inst_xor,
+        output wire inst_or, // 新增逻辑或指令
         output wire inst_addi,
         output wire inst_auipc,
         output wire inst_ebreak,
         output wire inst_sltiu,
         output wire inst_lui,
         output wire inst_lw,
+        output wire inst_srl, // 新增逻辑右移指令
         output wire inst_jal,
         output wire inst_jalr,
+        output wire inst_sra, // 新增算术右移指令
+        output wire inst_slt,
         output wire inst_sw
     );
 
@@ -31,6 +38,13 @@ module ysyx_25060173_instruction_decoder (
     assign inst_sub    = (op_14_12 == 3'h0) & (inst[31:25] == 7'h20) & (inst[6:0] == 7'b0110011);
     assign inst_add    = (op_14_12 == 3'h0) & (inst[31:25] == 7'h00) & (inst[6:0] == 7'b0110011);
     assign inst_slli   = (op_14_12 == 3'h1) & (inst[31:25] == 7'h00) & (inst[6:0] == 7'b0010011);
+    assign inst_sltu   = (op_14_12 == 3'h3) & (inst[31:25] == 7'h00) & (inst[6:0] == 7'b0110011);
+    assign inst_xor    = (op_14_12 == 3'h4) & (inst[31:25] == 7'h00) & (inst[6:0] == 7'b0110011);
+    assign inst_or     = (op_14_12 == 3'h6) & (inst[31:25] == 7'h00) & (inst[6:0] == 7'b0110011); // 新增逻辑或指令
+    assign inst_slt    = (op_14_12 == 3'h2) & (inst[31:25] == 7'h00) & (inst[6:0] == 7'b0110011);
+    assign inst_sra    = (op_14_12 == 3'h5) & (inst[31:25] == 7'h20) & (inst[6:0] == 7'b0110011); // 新增算术右移指令
+    assign inst_srl    = (op_14_12 == 3'h5) & (inst[31:25] == 7'h00) & (inst[6:0] == 7'b0110011); // 新增逻辑右移指令
+    assign inst_sll    = (op_14_12 == 3'h1) & (inst[31:25] == 7'h00) & (inst[6:0] == 7'b0110011); // 新增逻辑左移指令
     assign inst_sltiu  = (op_14_12 == 3'h3) & (inst[6:0] == 7'b0010011);
     assign inst_lw     = (op_14_12 == 3'h2) & (inst[6:0] == 7'b0000011);
     assign inst_addi   = (op_14_12 == 3'h0) & (inst[6:0] == 7'b0010011);
