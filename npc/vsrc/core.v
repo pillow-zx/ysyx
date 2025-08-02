@@ -19,28 +19,32 @@ module ysyx_25060173_core (
     wire        en;
 
     always @(posedge clk) begin
-        $display("clk=%d, reset=%d, pc=0x%x, nextpc=0x%x", clk, reset, pc, nextpc);
         if (reset) begin
             pc <= 32'h80000000;  // 初始化 PC
-        end else begin
+        end
+        else begin
             pc <= nextpc;
         end
     end
 
     wire [31:0] inst;
-    assign inst = ~reset && ~clk ? inst_read(pc) : 32'b0;  // 从内存中读取指令
+    // 修改指令读取时序：在时钟高电平时读取指令，这样与寄存器写入时序对齐
+    assign inst = ~reset && clk ? inst_read(pc) : 32'b0;  // 从内存中读取指令
+
 
     wire [4:0] op_11_7;
     wire [4:0] op_19_15;
     wire [4:0] op_24_20;
+    wire [5:0] op_25_20;
     wire [4:0] rd;
     wire [4:0] rs1;
     wire [4:0] rs2;
 
-    assign op_11_7  = inst[11:7];  // 11-7
+    assign op_11_7  = inst[11:7 ];  // 11-7
     assign op_19_15 = inst[19:15];  // 19-15
     assign op_24_20 = inst[24:20];  // 24-20
-    assign rd       = inst[11:7];  // 11-7
+    assign op_25_20 = inst[25:20];  // 31-25
+    assign rd       = inst[11:7 ];  // 11-7
     assign rs1      = inst[19:15];  // 19-15
     assign rs2      = inst[24:20];  // 24-20
 
@@ -50,9 +54,9 @@ module ysyx_25060173_core (
     wire [19:0] U_imm;
     wire [20:0] J_imm;
 
-    assign I_imm = inst_ebreak | inst_addi | inst_lw ? inst[31:20] : 12'b0;  // 31-20
+    assign I_imm = inst_ebreak | inst_addi | inst_lw | inst_jalr | inst_sltiu ? inst[31:20] : 12'b0;  // 31-20
     assign S_imm = inst_sw ? {inst[31:25], inst[11:7]} : 12'b0;  // 31-25, 11-7;
-    assign B_imm = inst_beq ? {inst[31], inst[7], inst[30:25], inst[11:8], 1'b0} : 13'b0;
+    assign B_imm = inst_beq | inst_bne | inst_blt | inst_bge | inst_bltu | inst_bgeu ? {inst[31], inst[7], inst[30:25], inst[11:8], 1'b0} : 13'b0;
     assign U_imm = inst[31:12];  // 31-12
     assign J_imm = {inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};  // 31, 19-12, 20, 30-21, 0}
 
@@ -66,6 +70,8 @@ module ysyx_25060173_core (
     wire inst_addi;
     wire inst_lw;
     wire inst_lui;
+    wire inst_slli;
+    wire inst_sltiu;
     // S 型指令
     wire inst_sw;
     // B 型指令
@@ -94,14 +100,17 @@ module ysyx_25060173_core (
                                           .inst_addi(inst_addi),
                                           .inst_auipc(inst_auipc),
                                           .inst_ebreak(inst_ebreak),
+                                          .inst_slli(inst_slli),
                                           .inst_lui(inst_lui),
                                           .inst_jal(inst_jal),
+                                          .inst_sltiu(inst_sltiu),
                                           .inst_lw(inst_lw),
                                           .inst_jalr(inst_jalr),
                                           .inst_sw(inst_sw)
                                       );
-    always @(posedge clk) begin
-        if (inst_ebreak) begin
+    // 修改ebreak处理时序：在时钟高电平时处理，与指令读取时序同步
+    always @(*) begin
+        if (~reset && clk && inst_ebreak) begin
             ebreak_handler();
         end
     end
@@ -119,9 +128,9 @@ module ysyx_25060173_core (
     wire [31:0] rdata2;
     wire [ 4:0] waddr;
     wire [31:0] wdata;
-    reg         we;
+    wire        we;
 
-    assign need_I_imm = inst_addi | inst_ebreak | inst_jalr | inst_lw;
+    assign need_I_imm = inst_addi | inst_ebreak | inst_jalr | inst_lw | inst_sltiu;
     assign need_S_imm = inst_sw;
     assign need_B_imm = inst_beq | inst_bge | inst_bgeu | inst_blt | inst_bltu | inst_bne;
     assign need_U_imm = inst_auipc | inst_lui;
@@ -134,8 +143,10 @@ module ysyx_25060173_core (
            need_J_imm ? {{11{J_imm[20]}}, J_imm} :
            32'b0;  // 立即数扩展
 
+    // 现在指令在时钟高电平时有效，写使能信号可以直接使用组合逻辑
     assign we = inst_sub | inst_add | inst_addi | inst_auipc |
-           inst_and | inst_lui | inst_jal | inst_jalr | inst_lw ? 1'b1 : 1'b0;
+           inst_and | inst_lui | inst_jal | inst_jalr | inst_lw |
+           inst_sltiu | inst_slli ? 1'b1 : 1'b0;
 
     assign raddr1 = rs1;
     assign raddr2 = rs2;
@@ -153,13 +164,13 @@ module ysyx_25060173_core (
 
     always_comb begin
         if (pmem_en) begin
-            $display("NOTION: now_pc: 0x%x, inst_sw:%d, inst:0x%x", now_pc, inst_sw, inst);
             pmem_write(pmem_addr, pmem_wdata);
             pmem_rdata = 32'b0;  // 写操作不返回数据
-        end else if (pmem_re) begin
-            $display("NOTION: now_pc: 0x%x, inst_lw:%d, inst:0x%x", now_pc, inst_lw, inst);
+        end
+        else if (pmem_re) begin
             pmem_rdata = pmem_read(pmem_addr);
-        end else begin
+        end
+        else begin
             pmem_rdata = 32'b0;  // 如果不是读操作，返回0
         end
     end
@@ -181,10 +192,11 @@ module ysyx_25060173_core (
     wire [31:0] alu_src1;
     wire [31:0] alu_src2;
     wire [31:0] alu_result;
-    wire [10:0] alu_op;
+    wire [12:0] alu_op;
 
     assign alu_src1   = inst_auipc | inst_jal ? pc : rdata1;
-    assign alu_src2   = need_I_imm | need_S_imm | need_B_imm | need_U_imm | need_J_imm ? imm : rdata2;
+    assign alu_src2   = need_I_imm | need_S_imm | need_B_imm | need_U_imm | need_J_imm ? imm :
+                        inst_slli ? {{26{1'b0}} , op_25_20} : rdata2;
     assign alu_op[0]  = inst_addi;  // ALU operation for ADDI
     assign alu_op[1]  = inst_auipc;  // ALU operation for AUIPC
     assign alu_op[2]  = inst_add;  // ALU operation for ADD
@@ -194,8 +206,10 @@ module ysyx_25060173_core (
     assign alu_op[6]  = inst_bge;  // ALU operation for B
     assign alu_op[7]  = inst_bgeu;  // ALU operation for BGEU
     assign alu_op[8]  = inst_blt;  // ALU operation for BLT
-    assign alu_op[9]  = inst_bltu;  // ALU operation for
+    assign alu_op[9]  = inst_bltu;  // ALU operation for BLTU
     assign alu_op[10] = inst_beq;  // ALU operation for BEQ
+    assign alu_op[11] = inst_sltiu;  // ALU operation for SLTIU
+    assign alu_op[12] = inst_slli;  // ALU operation for SLLI
 
 
     ysyx_25060173_alu u_alu (
@@ -208,7 +222,8 @@ module ysyx_25060173_core (
     assign waddr = rd;
     assign wdata = inst_lui ? imm :
            inst_lw ? pmem_rdata :
-           inst_jalr | inst_jal ? pc + 4 : alu_result;
+           inst_jalr | inst_jal ? pc + 4 :
+           inst_sltiu ? (alu_result[0] ? 32'd1 : 32'd0) : alu_result;
 
     assign result = alu_result;
 

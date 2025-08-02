@@ -41,12 +41,12 @@ std::vector<std::string> Stringsplit(const std::string &str, const std::string &
     return tokens;
 }
 
-void show_memory(uint32_t n) {
+void show_memory(uint32_t n, uint32_t start_addr) {
     PRINT_MAGENTA_0("=================================");
     PRINT_MAGENTA_0("=======Memory information=======");
     PRINT_MAGENTA_0("=================================");
     for (uint32_t i = 0; i < n; i++) {
-        uint32_t addr = i * 4;
+        uint32_t addr = i * 4 + start_addr; // Assuming 4-byte words and starting address
         uint32_t value = read_pmem(addr);
         std::string formatted = boost::str(boost::format("0x%08x: %s (0x%08x)") 
                                          % addr 

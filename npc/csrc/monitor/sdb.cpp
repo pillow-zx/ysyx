@@ -43,8 +43,13 @@ void npc_start() {
                 continue;
             }
             uint32_t n = std::stoi(tokens[1]);
-            ASSERT_WITH_MSG_0(std::stoul(tokens[1], nullptr, 0) < 0x80000000, "Invalid memory address");
-            show_memory(n);
+            uint32_t start_addr = static_cast<uint32_t>(std::stoul(tokens[2], nullptr, 16));
+            ASSERT_WITH_MSG_0(std::stoul(tokens[1], nullptr, 0) < (DEFAULT_MEM_START + CONFIG_MSIZE) / 4,
+                              "Invalid memory address");
+            // ASSERT_WITH_MSG_0(std::stoul(tokens[2], nullptr, 16) > (DEFAULT_MEM_START + CONFIG_MSIZE) ||
+            //                       std::stoul(tokens[2], nullptr, 16) < DEFAULT_MEM_START,
+            //                   "Invalid memory address");
+            show_memory(n, start_addr);
         } else {
             std::cout << "Unknown command: " << command << std::endl;
             continue;
@@ -81,6 +86,17 @@ static long load_img() {
     return count;
 }
 
+static void init_itrace() {
+    if (itrace_file.empty()) {
+        std::cerr << "No log file specified. Use -l <filename> to specify a log file." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    std::ofstream ofs;
+    ofs.open(itrace_file, std::ios::trunc); // 清空文件内容
+    ofs.close();
+    std::cout << ANSI_COLOR_GREEN << "Log file initialized: " << itrace_file << ANSI_COLOR_RESET << std::endl;
+}
+
 #include <getopt.h>
 
 extern char *ftrace_file; // 用于存储ELF格式的镜像文件路径
@@ -105,6 +121,7 @@ static int parse_args(int argc, char **argv) {
             case 'l':
                 // Handle log file option
                 itrace_file = optarg;
+                init_itrace();
                 break;
             case 'f':
                 // Handle ftrace file option
@@ -131,7 +148,7 @@ void npc_init(int argc, char **argv) {
     init_cpu();
 
     // Initialize difftest
-    // init_difftest(core_regs, write_pmem().data());
+    init_difftest(core_regs, write_pmem().data());
 
     welcome();
 }

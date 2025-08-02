@@ -140,8 +140,9 @@ static int cmd_x(char *args) {
         return 0;
     }
     sprintf(temp[1], "%x", temps);
-    char *endptr;
-    word_t addr = strtol(temp[1], &endptr, 16);
+    // char *endptr;
+    // word_t addr = strtol(temp[1], &endptr, 16);
+    word_t addr = temps;
     /* 打印内存 */
     for (word_t i = addr; i < num[0] * 4 + addr; i += 4) {
         /* 读取内存 */

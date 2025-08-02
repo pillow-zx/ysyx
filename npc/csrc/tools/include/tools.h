@@ -14,7 +14,7 @@ std::vector<std::string> Stringsplit(const std::string &str, const std::string &
 
 std::vector<uint32_t> get_insts(std::string prompt);
 
-void show_memory(uint32_t n);
+void show_memory(uint32_t n, uint32_t start_addr);
 
 void command_lists();
 
