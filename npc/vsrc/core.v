@@ -16,7 +16,6 @@ module ysyx_25060173_core (
 
     reg  [31:0] pc;
     wire [31:0] nextpc;
-    wire        en;
 
     always @(posedge clk) begin
         if (reset) begin
@@ -35,7 +34,7 @@ module ysyx_25060173_core (
     wire [4:0] op_11_7;
     wire [4:0] op_19_15;
     wire [4:0] op_24_20;
-    wire [5:0] op_25_20;
+    wire [4:0] shamt;    // 移位量，只需要5位
     wire [4:0] rd;
     wire [4:0] rs1;
     wire [4:0] rs2;
@@ -43,7 +42,7 @@ module ysyx_25060173_core (
     assign op_11_7  = inst[11:7 ];  // 11-7
     assign op_19_15 = inst[19:15];  // 19-15
     assign op_24_20 = inst[24:20];  // 24-20
-    assign op_25_20 = inst[25:20];  // 31-25
+    assign shamt    = inst[24:20];  // 移位量：24-20（5位）
     assign rd       = inst[11:7 ];  // 11-7
     assign rs1      = inst[19:15];  // 19-15
     assign rs2      = inst[24:20];  // 24-20
@@ -54,9 +53,9 @@ module ysyx_25060173_core (
     wire [19:0] U_imm;
     wire [20:0] J_imm;
 
-    assign I_imm = inst_ebreak | inst_addi | inst_lw | inst_jalr | inst_sltiu ? inst[31:20] : 12'b0;  // 31-20
-    assign S_imm = inst_sw ? {inst[31:25], inst[11:7]} : 12'b0;  // 31-25, 11-7;
-    assign B_imm = inst_beq | inst_bne | inst_blt | inst_bge | inst_bltu | inst_bgeu ? {inst[31], inst[7], inst[30:25], inst[11:8], 1'b0} : 13'b0;
+    assign I_imm = inst[31:20];  // 31-20
+    assign S_imm = {inst[31:25], inst[11:7]};  // 31-25, 11-7;
+    assign B_imm = {inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
     assign U_imm = inst[31:12];  // 31-12
     assign J_imm = {inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};  // 31, 19-12, 20, 30-21, 0}
 
@@ -74,13 +73,25 @@ module ysyx_25060173_core (
     // I 型指令
     wire inst_jalr;
     wire inst_ebreak;
+    wire inst_xori;
     wire inst_addi;
+    wire inst_srli;
     wire inst_lw;
     wire inst_lui;
+    wire inst_andi;
+    wire inst_ori;
+    wire inst_slti;
     wire inst_slli;
     wire inst_sltiu;
+    wire inst_srai;
+    wire inst_lbu;
+    wire inst_lb;
+    wire inst_lhu;
+    wire inst_lh;
     // S 型指令
     wire inst_sw;
+    wire inst_sb;
+    wire inst_sh;
     // B 型指令
     wire inst_beq;
     wire inst_bge;
@@ -101,16 +112,28 @@ module ysyx_25060173_core (
                                           .inst_blt(inst_blt),
                                           .inst_bltu(inst_bltu),
                                           .inst_sub(inst_sub),
+                                          .inst_srli(inst_srli),
+                                          .inst_lh(inst_lh),
                                           .inst_bne(inst_bne),
                                           .inst_add(inst_add),
                                           .inst_and(inst_and),
+                                          .inst_srai(inst_srai),
+                                          .inst_sh(inst_sh),
+                                          .inst_lb(inst_lb),
                                           .inst_addi(inst_addi),
+                                          .inst_xori(inst_xori),
                                           .inst_xor(inst_xor),
                                           .inst_auipc(inst_auipc),
                                           .inst_srl(inst_srl),
                                           .inst_ebreak(inst_ebreak),
+                                          .inst_lhu(inst_lhu),
+                                          .inst_lbu(inst_lbu),
                                           .inst_or(inst_or),
+                                          .inst_ori(inst_ori),
+                                          .inst_slti(inst_slti),
                                           .inst_slli(inst_slli),
+                                          .inst_sb(inst_sb),
+                                          .inst_andi(inst_andi),
                                           .inst_sll(inst_sll),
                                           .inst_lui(inst_lui),
                                           .inst_jal(inst_jal),
@@ -144,8 +167,10 @@ module ysyx_25060173_core (
     wire [31:0] wdata;
     wire        we;
 
-    assign need_I_imm = inst_addi | inst_ebreak | inst_jalr | inst_lw | inst_sltiu;
-    assign need_S_imm = inst_sw;
+    assign need_I_imm = inst_addi | inst_ebreak | inst_jalr | inst_lw | inst_sltiu |
+                        inst_lbu | inst_andi | inst_lb | inst_lhu | inst_xori | inst_lh |
+                        inst_ori | inst_slti;  // 修复：移位立即数指令单独处理，不使用扩展立即数
+    assign need_S_imm = inst_sw | inst_sb | inst_sh;  // S 型指令需要立即数
     assign need_B_imm = inst_beq | inst_bge | inst_bgeu | inst_blt | inst_bltu | inst_bne;
     assign need_U_imm = inst_auipc | inst_lui;
     assign need_J_imm = inst_jal;
@@ -161,7 +186,9 @@ module ysyx_25060173_core (
     assign we = inst_sub | inst_add | inst_addi | inst_auipc |
            inst_and | inst_lui | inst_jal | inst_jalr | inst_lw |
            inst_sltiu | inst_slli | inst_sltu | inst_xor | inst_or |
-           inst_slt | inst_sra |  inst_srl | inst_sll ? 1'b1 : 1'b0;
+           inst_slt | inst_sra |  inst_srl | inst_sll | inst_andi | 
+           inst_lbu | inst_srli | inst_srai | inst_lb | inst_lhu |
+           inst_xori | inst_lh | inst_ori | inst_slti ? 1'b1 : 1'b0;
 
     assign raddr1 = rs1;
     assign raddr2 = rs2;
@@ -172,10 +199,13 @@ module ysyx_25060173_core (
     wire [31:0] pmem_wdata;
     reg  [31:0] pmem_rdata;
 
-    assign pmem_en = inst_sw;
-    assign pmem_re = inst_lw;
-    assign pmem_addr = inst_lw | inst_sw ? (rdata1 + imm) : 32'b0;
-    assign pmem_wdata = inst_sw ? rdata2 : 32'b0;
+    assign pmem_en = inst_sw | inst_sb | inst_sh;  // 只有存储指令需要使能内存写操作
+    assign pmem_re = inst_lw | inst_lbu | inst_lb | inst_lhu | inst_lh;
+    assign pmem_addr = inst_lw | inst_sw | inst_lbu | inst_lb | inst_lhu | inst_lh | inst_sb | inst_sh ? (rdata1 + imm) : 32'b0;
+    assign pmem_wdata = inst_sw ? rdata2 :
+                        inst_sb ? {24'b0, rdata2[7:0]} :
+                        inst_sh ? {16'b0, rdata2[15:0]} :
+                        32'b0;
 
     always_comb begin
         if (pmem_en) begin
@@ -207,11 +237,12 @@ module ysyx_25060173_core (
     wire [31:0] alu_src1;
     wire [31:0] alu_src2;
     wire [31:0] alu_result;
-    wire [19:0] alu_op;
+    wire [25:0] alu_op;
 
     assign alu_src1   = inst_auipc | inst_jal ? pc : rdata1;
-    assign alu_src2   = need_I_imm | need_S_imm | need_U_imm | need_J_imm ? imm :
-                        inst_slli ? {{26{1'b0}} , op_25_20} : rdata2;
+    assign alu_src2   = inst_slli | inst_srli | inst_srai ? {27'b0, shamt} :  // 移位立即数指令使用移位量
+                        need_I_imm | need_S_imm | need_U_imm | need_J_imm ? imm :  // 其他立即数指令使用扩展后的立即数
+                        rdata2;  // 寄存器-寄存器指令使用rs2
     assign alu_op[0]  = inst_addi;  // ALU operation for ADDI
     assign alu_op[1]  = inst_auipc;  // ALU operation for AUIPC
     assign alu_op[2]  = inst_add;  // ALU operation for ADD
@@ -232,6 +263,12 @@ module ysyx_25060173_core (
     assign alu_op[17] = inst_sra;  // ALU operation for SRA
     assign alu_op[18] = inst_srl;  // ALU operation for SRL
     assign alu_op[19] = inst_sll;  // ALU operation for SLL
+    assign alu_op[20] = inst_andi;  // ALU operation for ANDI
+    assign alu_op[21] = inst_srli;  // ALU operation for SRLI
+    assign alu_op[22] = inst_srai;  // ALU operation for SRAI
+    assign alu_op[23] = inst_xori;  // ALU operation for XORI
+    assign alu_op[24] = inst_ori;   // ALU operation for ORI
+    assign alu_op[25] = inst_slti;  // ALU operation for SLTI
 
     ysyx_25060173_alu u_alu (
                           .alu_src1(alu_src1),
@@ -246,19 +283,23 @@ module ysyx_25060173_core (
            inst_jalr | inst_jal ? pc + 4 :
            inst_sltiu ? (alu_result[0] ? 32'd1 : 32'd0) :
            inst_sltu ? (alu_result[0] ? 32'd1 : 32'd0) :
-           inst_slt  ? (alu_result[0] ? 32'd1 : 32'd0) :
+           inst_slt | inst_slti ? (alu_result[0] ? 32'd1 : 32'd0) :
+           inst_lbu ? {24'b0, pmem_rdata[7:0]} :  // LBU指令处理
+           inst_lb ? {{24{pmem_rdata[7]}} , pmem_rdata[7:0]} :  // LB指令处理
+           inst_lhu ? {16'b0, pmem_rdata[15:0]} :  // LHU指令处理
+           inst_lh ? {{16{pmem_rdata[15]}} , pmem_rdata[15:0]} :  // LH指令处理
            alu_result;
 
     assign result = alu_result;
 
     assign nextpc = inst_jal ? pc + imm :
            inst_jalr ? (rdata1 + imm) & ~1 :
-           inst_bge ? alu_result[0] ? pc + imm : pc + 4 :
-           inst_blt ? alu_result[0] ? pc + imm : pc + 4 :
-           inst_bgeu ? alu_result[0] ? pc + imm : pc + 4 :
-           inst_bltu ? alu_result[0] ? pc + imm : pc + 4 :
-           inst_beq ? alu_result[0] ? pc + imm : pc + 4 :
-           inst_bne ? alu_result[0] ? pc + 4 : pc + imm :
+           inst_bge ? alu_result[0] ? pc + 4 : pc + imm :     // BGE: rs1 >= rs2时跳转 (result[0]=0表示rs1>=rs2)
+           inst_blt ? alu_result[0] ? pc + imm : pc + 4 :     // BLT: rs1 < rs2时跳转 (result[0]=1表示rs1<rs2)
+           inst_bgeu ? alu_result[0] ? pc + 4 : pc + imm :    // BGEU: rs1 >= rs2时跳转 (result[0]=0表示rs1>=rs2)
+           inst_bltu ? alu_result[0] ? pc + imm : pc + 4 :    // BLTU: rs1 < rs2时跳转 (result[0]=1表示rs1<rs2)
+           inst_beq ? alu_result[0] ? pc + imm : pc + 4 :     // BEQ: rs1 = rs2时跳转 (result[0]=1表示相等)
+           inst_bne ? alu_result[0] ? pc + 4 : pc + imm :     // BNE: rs1 ≠ rs2时跳转 (result[0]=0表示不等)
            pc + 4;
 
     assign next_pc = nextpc;

@@ -10,6 +10,8 @@
 #include "Vysyx_25060173_core_ysyx_25060173_core.h"
 #include "Vysyx_25060173_core_ysyx_25060173_RegisterFile.h"
 
+
+bool BATCH_MODE = false; // 是否为批处理模式
 bool npc_STATE = true;
 Vysyx_25060173_core *core = new Vysyx_25060173_core;
 static uint32_t temp_pc = 0x80000000;
@@ -62,12 +64,12 @@ static void cpu_exec_once() {
 
     core->clk = 1; // 拉高时钟信号
     core->eval(); // 评估当前状态
-    say_pc(); // 打印当前PC
+    // say_pc(); // 打印当前PC
 
     
     core->clk = 0; // 拉低时钟信号
     core->eval(); // 评估当前状态
-    say_pc(); // 打印当前PC
+    // say_pc(); // 打印当前PC
 
     // difftest_step_and_check(); // 执行difftest并检查寄存器
 }

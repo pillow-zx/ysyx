@@ -18,6 +18,11 @@ unsigned int core_regs[NPC_BITS + 1] = {0};
 
 void npc_start() {
     while (npc_STATE) {
+        if (BATCH_MODE) {
+            // 批处理模式下直接执行
+            cpu_exec(-1);
+            continue;
+        }
         std::string command = get_string("(npc)>");
         std::vector<std::string> tokens = Stringsplit(command, " ");
         if (tokens.empty())
@@ -103,10 +108,11 @@ extern char *ftrace_file; // 用于存储ELF格式的镜像文件路径
 
 static int parse_args(int argc, char **argv) {
     const struct option table[] = {
-        {"help", no_argument, nullptr, 'h'},
-        {"log", required_argument, nullptr, 'l'},
-        {"ftrace", required_argument, nullptr, 'f'},
-        {"img", required_argument, nullptr, 'i'},
+        {"help",    no_argument,       nullptr, 'h'},
+        {"log",     required_argument, nullptr, 'l'},
+        {"ftrace",  required_argument, nullptr, 'f'},
+        {"img",     required_argument, nullptr, 'i'},
+        {"batch",   no_argument,       nullptr, 'b'},
     };
     int opt;
     while ((opt = getopt_long(argc, argv, "hl:f:i:", table, nullptr)) != -1) {
@@ -118,6 +124,8 @@ static int parse_args(int argc, char **argv) {
                           << "  -l, --log <file>    Log output to specified file\n"
                           << "  -f, --ftrace <file> Enable function tracing with specified ELF file\n";
                 return 0;
+            case 'b':
+                BATCH_MODE = true;
             case 'l':
                 // Handle log file option
                 itrace_file = optarg;
