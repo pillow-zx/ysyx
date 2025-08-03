@@ -21,12 +21,15 @@ all: $(BIN)
 # Binary build target
 $(BIN): verilator-build
 
+# Run Arguments
+ARG = -i$(IMG) -l$(LOG_FILE) -f$(ELF) --batch
+
 # Run targets
 run-env: $(BIN) $(IMG)
-	@echo "Running simulation with args: $(IMG)"
+	@echo "Running simulation with args: $(ARG)"
 
 run: run-env
-	$(BIN) -i$(IMG) -l$(LOG_FILE) -f$(ELF)
+	$(BIN) $(ARG)
 	@echo "Simulation completed."
 
 # Additional targets

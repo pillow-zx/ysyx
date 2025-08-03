@@ -4,4 +4,6 @@
 
 void init_difftest(unsigned int *core_regs, void *pmems);
 
-void difftest_step_and_check();
+void difftest_step();
+
+void checkregs();

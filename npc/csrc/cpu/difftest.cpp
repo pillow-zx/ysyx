@@ -39,7 +39,7 @@ static void update_core_regs() {
     core_regs[NPC_BITS] = core->now_pc; // Update the current PC
 }
 
-static void checkregs() {
+void checkregs() {
     update_core_regs(); // Update the core registers before checking
     for (int i = 0; i < NPC_BITS; i++) {
         if (difftest_regs[i] != core_regs[i]) {
@@ -52,12 +52,11 @@ static void checkregs() {
     }
 }
 
-void difftest_step_and_check() {
+void difftest_step() {
     // for (int i = 0; i < NPC_BITS; i++) {
     //     PRINT_BLUE_0("core_regs[" << i << "] = 0x" << std::hex << core_regs[i] << std::dec);
     // }
     difftest_exec(1);                      // Execute one instruction in the difftest
     difftest_regcpy(difftest_regs, false); // Copy the difftest registers to the local array
-    checkregs();                           // Check if the difftest registers match the core registers
     // Update the core registers from the difftest registers
 }

@@ -16,7 +16,7 @@ module ysyx_25060173_RegisterFile #(
     reg [DATA_WIDTH - 1:0] regfile[(1 << ADDR_WIDTH) - 1:0];
 
     always @(posedge clk) begin
-        if (we) begin
+        if (we && waddr != 0) begin
             regfile[waddr] <= wdata;
         end
         regfile[0] <= 0;  // 保持寄存器0为0

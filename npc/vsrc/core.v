@@ -2,6 +2,12 @@ import "DPI-C" context function void ebreak_handler();
 import "DPI-C" context function int pmem_read(input int addr);
 import "DPI-C" context function void pmem_write(input int addr, input int data);
 import "DPI-C" context function int unsigned inst_read(input int unsigned addr);
+import "DPI-C" context function int pmem_read_byte(input int addr);
+import "DPI-C" context function void pmem_write_byte(input int addr, input int data);
+import "DPI-C" context function int pmem_read_halfword(input int addr);
+import "DPI-C" context function void pmem_write_halfword(input int addr, input int data);
+import "DPI-C" context function int pmem_read_word(input int addr);
+import "DPI-C" context function void pmem_write_word(input int addr, input int data);
 /* verilator lint_off DECLFILENAME*/
 module ysyx_25060173_core (
         input wire clk,
@@ -176,11 +182,11 @@ module ysyx_25060173_core (
     assign need_J_imm = inst_jal;
 
     assign imm = need_I_imm ? {{20{I_imm[11]}}, I_imm} :
-           need_S_imm ? {{20{S_imm[11]}}, S_imm} :
-           need_B_imm ? {{19{B_imm[12]}}, B_imm} :
-           need_U_imm ? {U_imm, 12'b0} :
-           need_J_imm ? {{11{J_imm[20]}}, J_imm} :
-           32'b0;  // 立即数扩展
+                 need_S_imm ? {{20{S_imm[11]}}, S_imm} :
+                 need_B_imm ? {{19{B_imm[12]}}, B_imm} :
+                 need_U_imm ? {U_imm, 12'b0} :
+                 need_J_imm ? {{11{J_imm[20]}}, J_imm} :
+                 32'b0;  // 立即数扩展
 
     // 现在指令在时钟高电平时有效，写使能信号可以直接使用组合逻辑
     assign we = inst_sub | inst_add | inst_addi | inst_auipc |
@@ -209,11 +215,27 @@ module ysyx_25060173_core (
 
     always_comb begin
         if (pmem_en) begin
-            pmem_write(pmem_addr, pmem_wdata);
+            if (inst_sb) begin
+                pmem_write_byte(pmem_addr, pmem_wdata);
+            end else if (inst_sh) begin
+                // 半字写入
+                pmem_write_halfword(pmem_addr, pmem_wdata);
+            end else begin
+                // 字写入
+                pmem_write_word(pmem_addr, pmem_wdata);
+            end
             pmem_rdata = 32'b0;  // 写操作不返回数据
         end
         else if (pmem_re) begin
-            pmem_rdata = pmem_read(pmem_addr);
+            if (inst_lbu || inst_lb) begin
+                pmem_rdata = pmem_read_byte(pmem_addr);
+            end else if (inst_lhu || inst_lh) begin
+                // 半字读取
+                pmem_rdata = pmem_read_halfword(pmem_addr);
+            end else begin
+                // 字读取
+                pmem_rdata = pmem_read_word(pmem_addr);
+            end
         end
         else begin
             pmem_rdata = 32'b0;  // 如果不是读操作，返回0
@@ -279,28 +301,27 @@ module ysyx_25060173_core (
 
     assign waddr = rd;
     assign wdata = inst_lui ? imm :
-           inst_lw ? pmem_rdata :
-           inst_jalr | inst_jal ? pc + 4 :
-           inst_sltiu ? (alu_result[0] ? 32'd1 : 32'd0) :
-           inst_sltu ? (alu_result[0] ? 32'd1 : 32'd0) :
-           inst_slt | inst_slti ? (alu_result[0] ? 32'd1 : 32'd0) :
-           inst_lbu ? {24'b0, pmem_rdata[7:0]} :  // LBU指令处理
-           inst_lb ? {{24{pmem_rdata[7]}} , pmem_rdata[7:0]} :  // LB指令处理
-           inst_lhu ? {16'b0, pmem_rdata[15:0]} :  // LHU指令处理
-           inst_lh ? {{16{pmem_rdata[15]}} , pmem_rdata[15:0]} :  // LH指令处理
-           alu_result;
+                   inst_lw ? pmem_rdata:
+                   inst_jalr | inst_jal ? pc + 4:
+                   inst_sltiu | inst_sltu | inst_slt | inst_slti ? (alu_result[0] ? 32'd1 : 32'd0) :
+                   inst_lbu ? {24'b0, pmem_rdata[7:0]} :
+                   inst_lb ? {{24{pmem_rdata[7]}}, pmem_rdata[7:0]} :
+                   inst_lhu ? {16'b0, pmem_rdata[15:0]}: 
+                   inst_lh ? {{16{pmem_rdata[15]}}, pmem_rdata[15:0]} :
+                   alu_result;  // 默认情况下，使用ALU计算结果                 
 
     assign result = alu_result;
 
+// 修正分支跳转逻辑
     assign nextpc = inst_jal ? pc + imm :
-           inst_jalr ? (rdata1 + imm) & ~1 :
-           inst_bge ? alu_result[0] ? pc + 4 : pc + imm :     // BGE: rs1 >= rs2时跳转 (result[0]=0表示rs1>=rs2)
-           inst_blt ? alu_result[0] ? pc + imm : pc + 4 :     // BLT: rs1 < rs2时跳转 (result[0]=1表示rs1<rs2)
-           inst_bgeu ? alu_result[0] ? pc + 4 : pc + imm :    // BGEU: rs1 >= rs2时跳转 (result[0]=0表示rs1>=rs2)
-           inst_bltu ? alu_result[0] ? pc + imm : pc + 4 :    // BLTU: rs1 < rs2时跳转 (result[0]=1表示rs1<rs2)
-           inst_beq ? alu_result[0] ? pc + imm : pc + 4 :     // BEQ: rs1 = rs2时跳转 (result[0]=1表示相等)
-           inst_bne ? alu_result[0] ? pc + 4 : pc + imm :     // BNE: rs1 ≠ rs2时跳转 (result[0]=0表示不等)
-           pc + 4;
+            inst_jalr ? (rdata1 + imm) & ~1 :
+            inst_bge ? (alu_result[0] == 1'b0) ? pc + imm : pc + 4 :  // BGE: rs1 >= rs2 时跳转
+            inst_blt ? (alu_result[0] == 1'b1) ? pc + imm : pc + 4 :  // BLT: rs1 < rs2 时跳转
+            inst_bgeu ? (alu_result[0] == 1'b0) ? pc + imm : pc + 4 : // BGEU: rs1 >= rs2 时跳转
+            inst_bltu ? (alu_result[0] == 1'b1) ? pc + imm : pc + 4 : // BLTU: rs1 < rs2 时跳转
+            inst_beq ? (alu_result[0] == 1'b1) ? pc + imm : pc + 4 :  // BEQ: 相等时跳转
+            inst_bne ? (alu_result[0] == 1'b0) ? pc + imm : pc + 4 :  // BNE: 不等时跳转
+            pc + 4;
 
     assign next_pc = nextpc;
 

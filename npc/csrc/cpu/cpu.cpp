@@ -10,7 +10,6 @@
 #include "Vysyx_25060173_core_ysyx_25060173_core.h"
 #include "Vysyx_25060173_core_ysyx_25060173_RegisterFile.h"
 
-
 bool BATCH_MODE = false; // 是否为批处理模式
 bool npc_STATE = true;
 Vysyx_25060173_core *core = new Vysyx_25060173_core;
@@ -48,7 +47,7 @@ void reset() {
     core->eval();
 
     core->reset = 0; // 拉低复位信号
-    core->clk = 0; // 拉低时钟信号
+    core->clk = 0;   // 拉低时钟信号
     core->eval();
 }
 
@@ -62,16 +61,17 @@ static void cpu_exec_once() {
 
     ftrace(read_pmem(core->now_pc));
 
+    difftest_step(); // 执行一次指令并检查寄存器
+
+    say_pc();      // 打印当前PC
     core->clk = 1; // 拉高时钟信号
-    core->eval(); // 评估当前状态
-    // say_pc(); // 打印当前PC
+    core->eval();  // 评估当前状态
 
-    
     core->clk = 0; // 拉低时钟信号
-    core->eval(); // 评估当前状态
-    // say_pc(); // 打印当前PC
+    core->eval();  // 评估当前状态
 
-    // difftest_step_and_check(); // 执行difftest并检查寄存器
+    checkregs(); // 检查寄存器是否匹配
+
 }
 
 void cpu_exec(uint32_t n) {

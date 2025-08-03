@@ -126,6 +126,7 @@ static int parse_args(int argc, char **argv) {
                 return 0;
             case 'b':
                 BATCH_MODE = true;
+                break;
             case 'l':
                 // Handle log file option
                 itrace_file = optarg;

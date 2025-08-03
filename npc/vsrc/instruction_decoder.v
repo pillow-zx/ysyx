@@ -80,11 +80,10 @@ module ysyx_25060173_instruction_decoder (
     assign inst_bne    = (op_14_12 == 3'h1) & (inst[6:0] == 7'b1100011);
     assign inst_jalr   = (op_14_12 == 3'h0) & (inst[6:0] == 7'b1100111);
     assign inst_sw     = (op_14_12 == 3'h2) & (inst[6:0] == 7'b0100011);
-    assign inst_ebreak = ((op_14_12 == 3'h0) & (inst[6:0] == 7'b1110011)) || (inst == 32'h0000006f);
+    assign inst_ebreak = (inst == 32'h00100073) || (inst == 32'h0000006f); // EBREAK指令, 这里添加对无限循环的支持
     assign inst_jal    = inst[6:0] == 7'b1101111;
     assign inst_auipc  = inst[6:0] == 7'b0010111;
     assign inst_lui    = inst[6:0] == 7'b0110111;
-
 endmodule
 
 

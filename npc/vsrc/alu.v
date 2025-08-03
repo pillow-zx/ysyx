@@ -77,8 +77,10 @@ module ysyx_25060173_alu (
     wire        adder_cout;
 
     assign adder_a = alu_src1;
-    assign adder_b = op_sub | op_beq | op_bne | op_bgeu | op_bltu | op_sltiu | op_slt | op_sltu | op_slti ? ~alu_src2 : alu_src2;
-    assign adder_cin = op_sub | op_beq | op_bne | op_bgeu | op_bltu | op_sltiu | op_slt | op_sltu | op_slti ? 1'b1 : 1'b0;
+    assign adder_b = op_sub | op_beq | op_bne | op_bgeu | op_bltu | op_sltiu | op_slt | 
+                     op_sltu | op_slti | op_bge | op_blt ? ~alu_src2 : alu_src2;
+    assign adder_cin = op_sub | op_beq | op_bne | op_bgeu | op_bltu | op_sltiu | op_slt |
+                       op_sltu | op_slti | op_bge | op_blt ? 1'b1 : 1'b0;
 
     assign {adder_cout, adder_result} = adder_a + adder_b + {{31{1'b0}}, adder_cin};
 
@@ -107,10 +109,16 @@ module ysyx_25060173_alu (
     // 各种运算结果的生成
     assign add_sub_result = adder_result;               // 加减运算直接使用加法器结果
 
-    assign l_mv_result = op_sra | op_srai ? ($signed(alu_src1) >>> alu_src2[4:0]) : // 算术右移
-                       op_srl | op_srli ? (alu_src1 >> alu_src2[4:0]) : // 逻辑右移
-                       op_sll | op_slli ? (alu_src1 << alu_src2[4:0]) : // 逻辑左移
-                       op_xor | op_xori ? alu_src1 ^ alu_src2 :          // 逻辑异或运算
+    wire [4:0] shift_amount; // 移位操作的移位量
+    assign shift_amount = alu_src2[4:0]; // 取低5位
+
+    wire [31:0] sra_result;
+    assign sra_result = $signed(alu_src1) >>> shift_amount;
+
+    assign l_mv_result = op_sra | op_srai ? sra_result : // 算术右移
+                       op_srl | op_srli ? (alu_src1 >> shift_amount) : // 逻辑右移
+                       op_sll | op_slli ? (alu_src1 << shift_amount) : // 逻辑左移
+                       op_xor | op_xori ? alu_src1 ^ alu_src2 :    // 逻辑异或运算
                        op_or | op_ori ? alu_src1 | alu_src2 :           // 逻辑或运算
                        op_and | op_andi ? alu_src1 & alu_src2 :    // 逻辑与运算
                        32'b0; // 其他移位操作结果清零
