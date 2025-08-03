@@ -43,5 +43,3 @@ make help         # 显示帮助信息
 - **源文件**: `src/` 目录下的 `dpi-c.cpp`, `expr.cpp`
 - **工具模块**: `tools/Log/Log.cpp`, `tools/Tools/tools.cpp`
 - **监控模块**: `monitor/sdb.cpp`
-
-现在您的项目具有了完整、稳定的模块化构建系统，可以可靠地进行开发和调试工作！

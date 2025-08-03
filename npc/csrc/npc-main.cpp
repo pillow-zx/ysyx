@@ -1,7 +1,6 @@
 #include "monitor/sdb.h"
 #include <verilated.h>
 
-
 int main(int argc, char **argv) {
     Verilated::commandArgs(argc, argv);
 

@@ -71,7 +71,6 @@ static void cpu_exec_once() {
     core->eval();  // 评估当前状态
 
     checkregs(); // 检查寄存器是否匹配
-
 }
 
 void cpu_exec(uint32_t n) {

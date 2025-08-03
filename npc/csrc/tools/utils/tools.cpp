@@ -5,7 +5,6 @@
 #include <sstream>
 #include <memory.h>
 
-
 extern bool npc_STATE;
 
 std::string get_string(std::string prompt) {
@@ -48,10 +47,8 @@ void show_memory(uint32_t n, uint32_t start_addr) {
     for (uint32_t i = 0; i < n; i++) {
         uint32_t addr = i * 4 + start_addr; // Assuming 4-byte words and starting address
         uint32_t value = read_pmem(addr);
-        std::string formatted = boost::str(boost::format("0x%08x: %s (0x%08x)") 
-                                         % addr 
-                                         % std::bitset<32>(value).to_string() 
-                                         % value);
+        std::string formatted =
+            boost::str(boost::format("0x%08x: %s (0x%08x)") % addr % std::bitset<32>(value).to_string() % value);
         PRINT_BLUE_0(formatted);
     }
     PRINT_MAGENTA_0("=================================");

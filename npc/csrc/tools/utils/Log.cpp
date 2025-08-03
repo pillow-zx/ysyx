@@ -56,12 +56,12 @@ int ftrace_file_symtab_num;
 // 解析elf文件
 void ftrace_elf_init(char *elf_file_path) {
     std::cout << "Initializing ftrace with ELF file: " << (elf_file_path ? elf_file_path : "NULL") << std::endl;
-    
+
     if (elf_file_path == NULL) {
         PRINT_BLUE_0("Ftrace ELF file is not set, skipping initialization.");
         return;
     }
-    
+
     // 将传入的路径赋值给全局变量
     ftrace_file = elf_file_path;
 
@@ -70,7 +70,7 @@ void ftrace_elf_init(char *elf_file_path) {
         std::cerr << "Failed to open ftrace ELF file: " << elf_file_path << std::endl;
         return;
     }
-    
+
     std::cout << "Successfully opened ELF file for ftrace" << std::endl;
 
     // 读取ELF文件头
@@ -165,13 +165,13 @@ static char *get_symbol_name(uint32_t pc) {
     if (ftrace_file_symtab == NULL || ftrace_file_strtab == NULL) {
         return NULL;
     }
-    
+
     for (int i = 0; i < ftrace_file_symtab_num; i++) {
         if (ELF32_ST_TYPE(ftrace_file_symtab[i].st_info) == STT_FUNC) {
             // Convert symbol addresses to relative addresses for comparison
             uint32_t symbol_start = ftrace_file_symtab[i].st_value - DEFAULT_MEM_START;
             uint32_t symbol_end = symbol_start + ftrace_file_symtab[i].st_size;
-                   
+
             if (pc >= symbol_start && pc < symbol_end) {
                 return ftrace_file_strtab + ftrace_file_symtab[i].st_name;
             }
@@ -210,8 +210,8 @@ static void ftrace_elf_start(uint32_t pc, uint32_t dnpc, bool is_call, bool is_r
                 for (int i = 0; i < call_stack_depth; i++) {
                     printf("  ");
                 }
-                std::cout << ANSI_COLOR_BLUE << "call: " << target_symbol << " at 0x" << std::hex << (dnpc + DEFAULT_MEM_START)
-                          << ANSI_COLOR_RESET << std::endl;
+                std::cout << ANSI_COLOR_BLUE << "call: " << target_symbol << " at 0x" << std::hex
+                          << (dnpc + DEFAULT_MEM_START) << ANSI_COLOR_RESET << std::endl;
 
                 // 将函数信息压入调用栈
                 if (call_stack_depth < CALL_FUNC_TIMES) {
@@ -258,18 +258,18 @@ void ftrace(uint32_t inst) {
     // After clock edge, core->now_pc is the next PC
     // The instruction corresponds to the previous PC
     uint32_t next_pc = core->now_pc - DEFAULT_MEM_START;
-    uint32_t current_pc = core->now_pc - DEFAULT_MEM_START - 4;  // Previous PC
+    uint32_t current_pc = core->now_pc - DEFAULT_MEM_START - 4; // Previous PC
     uint32_t pc = current_pc;
     uint32_t dnpc = next_pc;
 
-    if ((inst & 0x7f) == 0x6f) {  // JAL instruction
+    if ((inst & 0x7f) == 0x6f) { // JAL instruction
         uint32_t rd = (inst >> 7) & 0x1f;
 
         char *target_symbol = get_symbol_name(dnpc);
         if (target_symbol != NULL && rd != 0) {
             is_call = true;
         }
-    } else if ((inst & 0x7f) == 0x67) {  // JALR instruction
+    } else if ((inst & 0x7f) == 0x67) { // JALR instruction
         uint32_t rd = (inst >> 7) & 0x1f;
         uint32_t rs1 = (inst >> 15) & 0x1f;
 

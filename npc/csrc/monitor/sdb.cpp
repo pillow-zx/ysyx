@@ -108,11 +108,9 @@ extern char *ftrace_file; // 用于存储ELF格式的镜像文件路径
 
 static int parse_args(int argc, char **argv) {
     const struct option table[] = {
-        {"help",    no_argument,       nullptr, 'h'},
-        {"log",     required_argument, nullptr, 'l'},
-        {"ftrace",  required_argument, nullptr, 'f'},
-        {"img",     required_argument, nullptr, 'i'},
-        {"batch",   no_argument,       nullptr, 'b'},
+        {"help", no_argument, nullptr, 'h'},         {"log", required_argument, nullptr, 'l'},
+        {"ftrace", required_argument, nullptr, 'f'}, {"img", required_argument, nullptr, 'i'},
+        {"batch", no_argument, nullptr, 'b'},
     };
     int opt;
     while ((opt = getopt_long(argc, argv, "hl:f:i:", table, nullptr)) != -1) {
@@ -124,9 +122,7 @@ static int parse_args(int argc, char **argv) {
                           << "  -l, --log <file>    Log output to specified file\n"
                           << "  -f, --ftrace <file> Enable function tracing with specified ELF file\n";
                 return 0;
-            case 'b':
-                BATCH_MODE = true;
-                break;
+            case 'b': BATCH_MODE = true; break;
             case 'l':
                 // Handle log file option
                 itrace_file = optarg;

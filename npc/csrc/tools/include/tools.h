@@ -1,10 +1,8 @@
 #pragma once
 
-
 #include <string>
 #include <cstdint>
 #include <vector>
-
 
 std::string get_string(std::string prompt);
 
@@ -19,4 +17,3 @@ void show_memory(uint32_t n, uint32_t start_addr);
 void command_lists();
 
 void welcome();
-

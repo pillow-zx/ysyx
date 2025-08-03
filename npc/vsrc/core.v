@@ -174,25 +174,25 @@ module ysyx_25060173_core (
     wire        we;
 
     assign need_I_imm = inst_addi | inst_ebreak | inst_jalr | inst_lw | inst_sltiu |
-                        inst_lbu | inst_andi | inst_lb | inst_lhu | inst_xori | inst_lh |
-                        inst_ori | inst_slti;  // 修复：移位立即数指令单独处理，不使用扩展立即数
+           inst_lbu | inst_andi | inst_lb | inst_lhu | inst_xori | inst_lh |
+           inst_ori | inst_slti;  // 修复：移位立即数指令单独处理，不使用扩展立即数
     assign need_S_imm = inst_sw | inst_sb | inst_sh;  // S 型指令需要立即数
     assign need_B_imm = inst_beq | inst_bge | inst_bgeu | inst_blt | inst_bltu | inst_bne;
     assign need_U_imm = inst_auipc | inst_lui;
     assign need_J_imm = inst_jal;
 
     assign imm = need_I_imm ? {{20{I_imm[11]}}, I_imm} :
-                 need_S_imm ? {{20{S_imm[11]}}, S_imm} :
-                 need_B_imm ? {{19{B_imm[12]}}, B_imm} :
-                 need_U_imm ? {U_imm, 12'b0} :
-                 need_J_imm ? {{11{J_imm[20]}}, J_imm} :
-                 32'b0;  // 立即数扩展
+           need_S_imm ? {{20{S_imm[11]}}, S_imm} :
+           need_B_imm ? {{19{B_imm[12]}}, B_imm} :
+           need_U_imm ? {U_imm, 12'b0} :
+           need_J_imm ? {{11{J_imm[20]}}, J_imm} :
+           32'b0;  // 立即数扩展
 
     // 现在指令在时钟高电平时有效，写使能信号可以直接使用组合逻辑
     assign we = inst_sub | inst_add | inst_addi | inst_auipc |
            inst_and | inst_lui | inst_jal | inst_jalr | inst_lw |
            inst_sltiu | inst_slli | inst_sltu | inst_xor | inst_or |
-           inst_slt | inst_sra |  inst_srl | inst_sll | inst_andi | 
+           inst_slt | inst_sra |  inst_srl | inst_sll | inst_andi |
            inst_lbu | inst_srli | inst_srai | inst_lb | inst_lhu |
            inst_xori | inst_lh | inst_ori | inst_slti ? 1'b1 : 1'b0;
 
@@ -209,18 +209,20 @@ module ysyx_25060173_core (
     assign pmem_re = inst_lw | inst_lbu | inst_lb | inst_lhu | inst_lh;
     assign pmem_addr = inst_lw | inst_sw | inst_lbu | inst_lb | inst_lhu | inst_lh | inst_sb | inst_sh ? (rdata1 + imm) : 32'b0;
     assign pmem_wdata = inst_sw ? rdata2 :
-                        inst_sb ? {24'b0, rdata2[7:0]} :
-                        inst_sh ? {16'b0, rdata2[15:0]} :
-                        32'b0;
+           inst_sb ? {24'b0, rdata2[7:0]} :
+           inst_sh ? {16'b0, rdata2[15:0]} :
+           32'b0;
 
     always_comb begin
         if (pmem_en) begin
             if (inst_sb) begin
                 pmem_write_byte(pmem_addr, pmem_wdata);
-            end else if (inst_sh) begin
+            end
+            else if (inst_sh) begin
                 // 半字写入
                 pmem_write_halfword(pmem_addr, pmem_wdata);
-            end else begin
+            end
+            else begin
                 // 字写入
                 pmem_write_word(pmem_addr, pmem_wdata);
             end
@@ -229,10 +231,12 @@ module ysyx_25060173_core (
         else if (pmem_re) begin
             if (inst_lbu || inst_lb) begin
                 pmem_rdata = pmem_read_byte(pmem_addr);
-            end else if (inst_lhu || inst_lh) begin
+            end
+            else if (inst_lhu || inst_lh) begin
                 // 半字读取
                 pmem_rdata = pmem_read_halfword(pmem_addr);
-            end else begin
+            end
+            else begin
                 // 字读取
                 pmem_rdata = pmem_read_word(pmem_addr);
             end
@@ -263,8 +267,8 @@ module ysyx_25060173_core (
 
     assign alu_src1   = inst_auipc | inst_jal ? pc : rdata1;
     assign alu_src2   = inst_slli | inst_srli | inst_srai ? {27'b0, shamt} :  // 移位立即数指令使用移位量
-                        need_I_imm | need_S_imm | need_U_imm | need_J_imm ? imm :  // 其他立即数指令使用扩展后的立即数
-                        rdata2;  // 寄存器-寄存器指令使用rs2
+           need_I_imm | need_S_imm | need_U_imm | need_J_imm ? imm :  // 其他立即数指令使用扩展后的立即数
+           rdata2;  // 寄存器-寄存器指令使用rs2
     assign alu_op[0]  = inst_addi;  // ALU operation for ADDI
     assign alu_op[1]  = inst_auipc;  // ALU operation for AUIPC
     assign alu_op[2]  = inst_add;  // ALU operation for ADD
@@ -301,27 +305,27 @@ module ysyx_25060173_core (
 
     assign waddr = rd;
     assign wdata = inst_lui ? imm :
-                   inst_lw ? pmem_rdata:
-                   inst_jalr | inst_jal ? pc + 4:
-                   inst_sltiu | inst_sltu | inst_slt | inst_slti ? (alu_result[0] ? 32'd1 : 32'd0) :
-                   inst_lbu ? {24'b0, pmem_rdata[7:0]} :
-                   inst_lb ? {{24{pmem_rdata[7]}}, pmem_rdata[7:0]} :
-                   inst_lhu ? {16'b0, pmem_rdata[15:0]}: 
-                   inst_lh ? {{16{pmem_rdata[15]}}, pmem_rdata[15:0]} :
-                   alu_result;  // 默认情况下，使用ALU计算结果                 
+           inst_lw ? pmem_rdata:
+           inst_jalr | inst_jal ? pc + 4:
+           inst_sltiu | inst_sltu | inst_slt | inst_slti ? (alu_result[0] ? 32'd1 : 32'd0) :
+           inst_lbu ? {24'b0, pmem_rdata[7:0]} :
+           inst_lb ? {{24{pmem_rdata[7]}}, pmem_rdata[7:0]} :
+           inst_lhu ? {16'b0, pmem_rdata[15:0]}:
+           inst_lh ? {{16{pmem_rdata[15]}}, pmem_rdata[15:0]} :
+           alu_result;  // 默认情况下，使用ALU计算结果
 
     assign result = alu_result;
 
-// 修正分支跳转逻辑
+    // 修正分支跳转逻辑
     assign nextpc = inst_jal ? pc + imm :
-            inst_jalr ? (rdata1 + imm) & ~1 :
-            inst_bge ? (alu_result[0] == 1'b0) ? pc + imm : pc + 4 :  // BGE: rs1 >= rs2 时跳转
-            inst_blt ? (alu_result[0] == 1'b1) ? pc + imm : pc + 4 :  // BLT: rs1 < rs2 时跳转
-            inst_bgeu ? (alu_result[0] == 1'b0) ? pc + imm : pc + 4 : // BGEU: rs1 >= rs2 时跳转
-            inst_bltu ? (alu_result[0] == 1'b1) ? pc + imm : pc + 4 : // BLTU: rs1 < rs2 时跳转
-            inst_beq ? (alu_result[0] == 1'b1) ? pc + imm : pc + 4 :  // BEQ: 相等时跳转
-            inst_bne ? (alu_result[0] == 1'b0) ? pc + imm : pc + 4 :  // BNE: 不等时跳转
-            pc + 4;
+           inst_jalr ? (rdata1 + imm) & ~1 :
+       inst_bge ? (alu_result[0] == 1'b0) ? pc + imm : pc + 4 :  // BGE: rs1 >= rs2 时跳转
+       inst_blt ? (alu_result[0] == 1'b1) ? pc + imm : pc + 4 :  // BLT: rs1 < rs2 时跳转
+       inst_bgeu ? (alu_result[0] == 1'b0) ? pc + imm : pc + 4 : // BGEU: rs1 >= rs2 时跳转
+       inst_bltu ? (alu_result[0] == 1'b1) ? pc + imm : pc + 4 : // BLTU: rs1 < rs2 时跳转
+       inst_beq ? (alu_result[0] == 1'b1) ? pc + imm : pc + 4 :  // BEQ: 相等时跳转
+       inst_bne ? (alu_result[0] == 1'b0) ? pc + imm : pc + 4 :  // BNE: 不等时跳转
+           pc + 4;
 
     assign next_pc = nextpc;
 

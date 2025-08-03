@@ -4,7 +4,7 @@
 #include <iostream>
 
 // Define default memory start
-#define DEFAULT_MEM_START 0x80000000
+#define DEFAULT_MEM_START  0x80000000
 
 // Define NPC bits
 #define NPC_BITS           32
@@ -121,9 +121,9 @@
 #define ASSERT_WITH_MSG_0(condition, msg)                                                                              \
     do {                                                                                                               \
         if (!(condition)) {                                                                                            \
-            std::cerr << ANSI_BG_RED << ANSI_COLOR_RED << ANSI_BOLD << "[CRITICAL] " << ANSI_COLOR_RESET             \
+            std::cerr << ANSI_BG_RED << ANSI_COLOR_RED << ANSI_BOLD << "[CRITICAL] " << ANSI_COLOR_RESET               \
                       << "Assertion failed: " << #condition << " at " << __FILE__ << ":" << __LINE__ << std::endl;     \
-            std::cerr << ANSI_BG_RED << ANSI_COLOR_RED << ANSI_BOLD << "[CRITICAL] " << ANSI_COLOR_RESET << msg      \
+            std::cerr << ANSI_BG_RED << ANSI_COLOR_RED << ANSI_BOLD << "[CRITICAL] " << ANSI_COLOR_RESET << msg        \
                       << std::endl;                                                                                    \
             std::abort();                                                                                              \
         }                                                                                                              \

@@ -12,7 +12,6 @@ extern "C" void ebreak_handler() {
 }
 
 extern "C" int pmem_read(int addr) {
-    
     if (!npc_STATE) {
         std::cerr << "Error: Attempt to read memory while NPC is not in a valid state." << std::endl;
         exit(1);
@@ -55,7 +54,7 @@ extern "C" void pmem_write(int addr, int value) {
         std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
         exit(1);
     }
-    
+
     // 检查是否为字节写入（值在0-255范围内）
     if (values <= 0xFF) {
         // 字节写入
@@ -86,7 +85,8 @@ extern "C" int pmem_read_byte(int addr) {
         exit(1);
     }
     uint8_t byte_value = read_pmem_byte(addrs);
-    std::cout << "Reading byte value " << std::hex << (int)byte_value << " from address: " << addrs << std::dec << std::endl;
+    std::cout << "Reading byte value " << std::hex << (int)byte_value << " from address: " << addrs << std::dec
+              << std::endl;
     return (int)byte_value;
 }
 
@@ -103,7 +103,8 @@ extern "C" void pmem_write_byte(int addr, int value) {
         exit(1);
     }
     write_pmem_byte(addrs, byte_value);
-    std::cout << "Wrote byte value: " << std::hex << (int)byte_value << " to address: " << addrs << std::dec << std::endl;
+    std::cout << "Wrote byte value: " << std::hex << (int)byte_value << " to address: " << addrs << std::dec
+              << std::endl;
 }
 
 // 新增：专用的字读取函数
@@ -150,7 +151,8 @@ extern "C" int pmem_read_halfword(int addr) {
         exit(1);
     }
     uint16_t halfword_value = read_pmem_halfword(addrs);
-    std::cout << "Reading halfword value " << std::hex << halfword_value << " from address: " << addrs << std::dec << std::endl;
+    std::cout << "Reading halfword value " << std::hex << halfword_value << " from address: " << addrs << std::dec
+              << std::endl;
     return (int)halfword_value;
 }
 
