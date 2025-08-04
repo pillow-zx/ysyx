@@ -16,7 +16,7 @@
 #include <device/map.h>
 #include <utils.h>
 
-#define KEYDOWN_MASK 0x8000
+#define KEYDOWN_MASK 0x8000 // 按键按下标志位掩码
 
 #ifndef CONFIG_TARGET_AM
 #include <SDL2/SDL.h>
@@ -39,20 +39,22 @@ enum {
 };
 
 #define SDL_KEYMAP(k) keymap[SDL_SCANCODE_ ## k] = NEMU_KEY_ ## k;
-static uint32_t keymap[256] = {};
+static uint32_t keymap[256] = {};   // SDL 键盘扫描码到 NEMU 键码的映射表
 
 static void init_keymap() {
   MAP(NEMU_KEYS, SDL_KEYMAP)
 }
 
+// 设置按键队列, 这是一个循环队列, 通过 key_f 和 key_r 指针来管理
 #define KEY_QUEUE_LEN 1024
 static int key_queue[KEY_QUEUE_LEN] = {};
-static int key_f = 0, key_r = 0;
+static int key_f = 0, key_r = 0;    // key_f 是队首指针，key_r 是队尾指针
 
+// 将按键扫描码入队, 如果队列已满则触发断言
 static void key_enqueue(uint32_t am_scancode) {
-  key_queue[key_r] = am_scancode;
-  key_r = (key_r + 1) % KEY_QUEUE_LEN;
-  Assert(key_r != key_f, "key queue overflow!");
+  key_queue[key_r] = am_scancode;   // 将按键扫描码入队
+  key_r = (key_r + 1) % KEY_QUEUE_LEN;  // 更新队尾指针
+  Assert(key_r != key_f, "key queue overflow!");    // 确保队列未满
 }
 
 static uint32_t key_dequeue() {
@@ -64,9 +66,10 @@ static uint32_t key_dequeue() {
   return key;
 }
 
+/* 发送按键事件, 将按键扫描码入队 */
 void send_key(uint8_t scancode, bool is_keydown) {
   if (nemu_state.state == NEMU_RUNNING && keymap[scancode] != NEMU_KEY_NONE) {
-    uint32_t am_scancode = keymap[scancode] | (is_keydown ? KEYDOWN_MASK : 0);
+    uint32_t am_scancode = keymap[scancode] | (is_keydown ? KEYDOWN_MASK : 0);  // 设置按键状态
     key_enqueue(am_scancode);
   }
 }

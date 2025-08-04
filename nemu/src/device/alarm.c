@@ -20,9 +20,11 @@
 
 #define MAX_HANDLER 8
 
+/* 时钟处理函数数组 */
 static alarm_handler_t handler[MAX_HANDLER] = {};
 static int idx = 0;
 
+/* 添加时钟处理函数到时钟系统中 */
 void add_alarm_handle(alarm_handler_t h) {
   assert(idx < MAX_HANDLER);
   handler[idx ++] = h;

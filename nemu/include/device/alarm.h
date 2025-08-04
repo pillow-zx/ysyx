@@ -16,9 +16,9 @@
 #ifndef __DEVICE_ALARM_H__
 #define __DEVICE_ALARM_H__
 
-#define TIMER_HZ 60
+#define TIMER_HZ 60 // 定时器频率
 
-typedef void (*alarm_handler_t) ();
-void add_alarm_handle(alarm_handler_t h);
+typedef void (*alarm_handler_t) ();  // 定义函数指针类型，用于时钟回调函数，不接受参数且不返回值
+void add_alarm_handle(alarm_handler_t h);  // 添加时钟处理函数到时钟系统中
 
 #endif

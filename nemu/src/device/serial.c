@@ -21,17 +21,20 @@
 
 #define CH_OFFSET 0
 
-static uint8_t *serial_base = NULL;
+static uint8_t *serial_base = NULL; // 串口设备的 I/O 映射基地址
 
-
+// 将字符输出到串口设备
+// 在 AM 模式下使用 putch 函数输出字符，在其他模式下使用 putc 函数输出字符到 stderr
 static void serial_putc(char ch) {
   MUXDEF(CONFIG_TARGET_AM, putch(ch), putc(ch, stderr));
 }
 
+/* 串口 I/O 设备回调函数 */
 static void serial_io_handler(uint32_t offset, int len, bool is_write) {
   assert(len == 1);
   switch (offset) {
     /* We bind the serial port with the host stderr in NEMU. */
+    // 这里将串口设备的 I/O 映射到 stderr 输出
     case CH_OFFSET:
       if (is_write) serial_putc(serial_base[0]);
       else panic("do not support read");
@@ -40,6 +43,7 @@ static void serial_io_handler(uint32_t offset, int len, bool is_write) {
   }
 }
 
+/* 为串口设备分配 I/O 映射空间 */
 void init_serial() {
   serial_base = new_space(8);
 #ifdef CONFIG_HAS_PORT_IO

@@ -23,7 +23,7 @@ word_t vaddr_read(vaddr_t addr, int len);
 void vaddr_write(vaddr_t addr, int len, word_t data);
 
 #define PAGE_SHIFT        12
-#define PAGE_SIZE         (1ul << PAGE_SHIFT)
-#define PAGE_MASK         (PAGE_SIZE - 1)
+#define PAGE_SIZE         (1ul << PAGE_SHIFT)   // 页大小为 4KB
+#define PAGE_MASK         (PAGE_SIZE - 1)       // 页掩码，用于对齐地址
 
 #endif

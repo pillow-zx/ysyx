@@ -120,7 +120,23 @@
 #define unlikely(cond) __builtin_expect(cond, 0)
 #endif
 
-// for AM IOE
+/**
+ * @file macro.h
+ * @brief AM IOE (抽象机器输入/输出环境) 的宏定义
+ *
+ * 此文件为抽象机器中的IO操作提供宏定义。
+ *
+ * @def io_read(reg)
+ * 用于从指定寄存器(reg)读取数据的宏。
+ * 创建一个类型为reg_T的临时变量，通过调用ioe_read()填充数据，
+ * 并返回填充后的结构体。
+ *
+ * @def io_write(reg, ...)
+ * 用于向指定寄存器(reg)写入数据的宏。
+ * 创建一个类型为reg_T的临时变量，使用提供的可变参数初始化，
+ * 并将其传递给ioe_write()函数。
+ */
+// 用于AM IOE (抽象机器输入/输出环境)
 #define io_read(reg)                                                                                                   \
     ({                                                                                                                 \
         reg##_T __io_param;                                                                                            \
