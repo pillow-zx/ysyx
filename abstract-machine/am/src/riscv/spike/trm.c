@@ -20,6 +20,7 @@ void putch(char ch) {
   htif_console_putchar(ch);
 }
 
+/* 退出程序 */
 void halt(int code) {
   printf("Exit with code = %d\n", code);
   htif_poweroff();

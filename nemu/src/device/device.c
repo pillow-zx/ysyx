@@ -89,8 +89,8 @@ void sdl_clear_event_queue() {
 
 /* 初始化设备 */
 void init_device() {
-    IFDEF(CONFIG_TARGET_AM, ioe_init());
-    init_map(); // 初始化 I/O 映射空间
+    IFDEF(CONFIG_TARGET_AM, ioe_init());    // 初始化 I/O 设备
+    init_map(); // 初始化映射空间
 
     IFDEF(CONFIG_HAS_SERIAL, init_serial());    // 初始化串口设备
     IFDEF(CONFIG_HAS_TIMER, init_timer());      // 初始化时钟设备

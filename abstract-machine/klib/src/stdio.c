@@ -75,6 +75,11 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                     }
                     break;
                 }
+                case 'c': {
+                    char ch = (char)va_arg(ap, int);
+                    *p++ = ch;
+                    break;
+                }
                 default:
                     // Handle unknown format specifier by just copying it
                     *p++ = '%';

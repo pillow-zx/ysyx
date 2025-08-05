@@ -18,7 +18,7 @@
 
 #include <cpu/difftest.h>
 
-typedef void (*io_callback_t)(uint32_t, int, bool);
+typedef void (*io_callback_t)(uint32_t, int, bool); // I/O 操作回调函数类型, 接收偏移地址、长度和是否为写操作的参数
 uint8_t *new_space(int size);
 
 

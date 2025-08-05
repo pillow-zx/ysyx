@@ -8,9 +8,9 @@
                 // examples: "arch/x86-qemu.h", "arch/native.h", ...
 
 // Memory protection flags
-#define MMAP_NONE  0x00000000 // no access
-#define MMAP_READ  0x00000001 // can read
-#define MMAP_WRITE 0x00000002 // can write
+#define MMAP_NONE  0x00000000 // no access  // 无访问权限
+#define MMAP_READ  0x00000001 // can read   // 可读权限
+#define MMAP_WRITE 0x00000002 // can write  // 可写权限
 
 // Memory area for [@start, @end)
 typedef struct {

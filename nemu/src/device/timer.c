@@ -39,10 +39,11 @@ static void timer_intr() {
 
 /* 初始化时钟设备 */
 void init_timer() {
-  rtc_port_base = (uint32_t *)new_space(8);
+  rtc_port_base = (uint32_t *)new_space(8); // 注册0x48处长度为8个字节的端口
 #ifdef CONFIG_HAS_PORT_IO
   add_pio_map ("rtc", CONFIG_RTC_PORT, rtc_port_base, 8, rtc_io_handler);
 #else
+/* 注册0xa0000048处长度为8字节的MMIO空间 */
   add_mmio_map("rtc", CONFIG_RTC_MMIO, rtc_port_base, 8, rtc_io_handler);
 #endif
   IFNDEF(CONFIG_TARGET_AM, add_alarm_handle(timer_intr));

@@ -2,8 +2,8 @@
 
 static uint64_t boot_time = 0;
 
-#define CLINT_MMIO 0x2000000ul
-#define TIME_BASE 0xbff8
+#define CLINT_MMIO 0x2000000ul  // 内存映射的CLINT基地址
+#define TIME_BASE 0xbff8        // CLINT中时间寄存器的偏移量
 
 static uint64_t read_time() {
   uint32_t lo = *(volatile uint32_t *)(CLINT_MMIO + TIME_BASE + 0);
