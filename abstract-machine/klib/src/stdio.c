@@ -28,29 +28,68 @@ static void reverse_string(char *str, int len, int is_negative) {
     }
 }
 
-static char *int_to_string(int num) {
+static int is_digit(char c) {
+    return c >= '0' && c <= '9';
+}
+
+static int string_to_int(const char *str) {
+    int num = 0;
+    int sign = 1;
+    if (*str == '-') {
+        sign = -1;
+        str++;
+    }
+    while (is_digit(*str)) {
+        num = num * 10 + (*str - '0');
+        str++;
+    }
+    return num * sign;
+}
+
+static char *int_format(int num, const char *width) {
+    char *ptr = (char *)width + 1;
+    int number = string_to_int(ptr);
     int len = getlength(num);
-    int i = num < 0 ? 1 : 0; // start from index 1 if negative
     static char str[20];
+    int is_negative = 0;
     if (num < 0) {
-        len++;      // for negative sign
-        num = -num; // make it positive for conversion
-        str[0] = '-';
+        is_negative = 1;
+        num = -num;
     }
-    str[len] = '\0';
-
-    // Special case for 0
-    if (num == 0) {
-        str[i] = '0';
-        return str;
+    int i = 0;
+    if (len < number) {
+        for (; i < number - len; i++) {
+            str[i] = width[0]; // Fill with the specified width character
+        }
     }
-
-    while (num > 0) {
+    if (is_negative) {
+        str[i++] = '-';
+    }
+    // Convert the number to string
+    do {
         str[i++] = (num % 10) + '0';
         num /= 10;
-    }
-    reverse_string(str, len, str[0] == '-');
+    } while (num > 0);
+    str[i] = '\0';
+    reverse_string(str, i, is_negative);
     return str;
+}
+
+static char *string_format(const char *str, const char *width) {
+    char *ptr = (char *)width + 1;
+    int number = string_to_int(ptr);
+    static char formatted[100];
+    int len = strlen(str);
+    if (len < number) {
+        int i;
+        for (i = 0; i < number - len; i++) {
+            formatted[i] = width[0]; // Fill with the specified width character
+        }
+        strcpy(formatted + i, str);
+    } else {
+        strcpy(formatted, str);
+    }
+    return formatted;
 }
 
 int vsprintf(char *out, const char *fmt, va_list ap) {
@@ -59,17 +98,25 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
     while (*temp) {
         if (*temp == '%') {
             temp++;
+            char width[10]; // Buffer for format specifier
+            if (is_digit(*temp)) {
+                char *ptr = width;
+                while (is_digit(*temp)) {
+                    *ptr++ = *temp++;
+                }
+                *ptr = '\0'; // Null-terminate the buffer
+            }
             switch (*temp) {
                 case 'd': {
                     int num = va_arg(ap, int);
-                    char *str = int_to_string(num);
+                    char *str = int_format(num, width);
                     while (*str) {
                         *p++ = *str++;
                     }
                     break;
                 }
                 case 's': {
-                    char *str = va_arg(ap, char *);
+                    char *str = string_format(va_arg(ap, char *), width);
                     while (*str) {
                         *p++ = *str++;
                     }
@@ -92,7 +139,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
         }
         temp++;
     }
-    *p = '\0'; // Only set null terminator at the end
+    *p = '\0';      // Only set null terminator at the end
     return p - out; // Return the number of characters written
 }
 

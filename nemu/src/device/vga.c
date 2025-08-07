@@ -34,7 +34,7 @@ static uint32_t screen_size() {
     return screen_width() * screen_height() * sizeof(uint32_t);
 }
 
-static void *vmem = NULL; // VGA 显存指针
+static void *vmem = NULL;                   // VGA 显存指针
 static uint32_t *vgactl_port_base = NULL;   // VGA 控制寄存器基地址
 
 #ifdef CONFIG_VGA_SHOW_SCREEN
@@ -60,6 +60,7 @@ static void init_screen() {
     SDL_RenderPresent(renderer);    // 更新渲染器
 }
 
+/* 更新屏幕 */
 static inline void update_screen() {
     SDL_UpdateTexture(texture, NULL, vmem, SCREEN_W * sizeof(uint32_t));
     SDL_RenderClear(renderer);
@@ -78,12 +79,17 @@ static inline void update_screen() {
 void vga_update_screen() {
     // TODO: call `update_screen()` when the sync register is non-zero,
     // then zero out the sync register
+    // 当同步寄存器非零时调用 `update_screen()`，然后将同步寄存器清零
+    if (vgactl_port_base[1]) {
+        update_screen();
+        vgactl_port_base[1] = 0;
+    }
 }
 
 /* 初始化 VGA 设备 */
 void init_vga() {
-    vgactl_port_base = (uint32_t *)new_space(8);                    // 分配 VGA 控制寄存器空间
-    vgactl_port_base[0] = (screen_width() << 16) | screen_height(); // 设置屏幕宽度和高度
+    vgactl_port_base = (uint32_t *)new_space(8);                  // 分配 VGA 控制寄存器空间
+    vgactl_port_base[0] = (screen_width() << 16) | screen_height();      // 设置屏幕宽度和高度
 #ifdef CONFIG_HAS_PORT_IO
     add_pio_map("vgactl", CONFIG_VGA_CTL_PORT, vgactl_port_base, 8, NULL);
 #else

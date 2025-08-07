@@ -89,16 +89,16 @@ void sdl_clear_event_queue() {
 
 /* 初始化设备 */
 void init_device() {
-    IFDEF(CONFIG_TARGET_AM, ioe_init());    // 初始化 I/O 设备
-    init_map(); // 初始化映射空间
+    IFDEF(CONFIG_TARGET_AM, ioe_init()); // 初始化 I/O 设备
+    init_map();                          // 初始化映射空间
 
-    IFDEF(CONFIG_HAS_SERIAL, init_serial());    // 初始化串口设备
-    IFDEF(CONFIG_HAS_TIMER, init_timer());      // 初始化时钟设备
-    IFDEF(CONFIG_HAS_VGA, init_vga());          // 初始化 VGA 设备
-    IFDEF(CONFIG_HAS_KEYBOARD, init_i8042());   // 初始化 i8042 控制器设备 (ps/2 键盘)
-    IFDEF(CONFIG_HAS_AUDIO, init_audio());      // 初始化音频设备
-    IFDEF(CONFIG_HAS_DISK, init_disk());        // 初始化磁盘设备
-    IFDEF(CONFIG_HAS_SDCARD, init_sdcard());    // 初始化 SD 卡设备
+    IFDEF(CONFIG_HAS_SERIAL, init_serial());  // 初始化串口设备
+    IFDEF(CONFIG_HAS_TIMER, init_timer());    // 初始化时钟设备
+    IFDEF(CONFIG_HAS_VGA, init_vga());        // 初始化 VGA 设备
+    IFDEF(CONFIG_HAS_KEYBOARD, init_i8042()); // 初始化 i8042 控制器设备 (ps/2 键盘)
+    IFDEF(CONFIG_HAS_AUDIO, init_audio());    // 初始化音频设备
+    IFDEF(CONFIG_HAS_DISK, init_disk());      // 初始化磁盘设备
+    IFDEF(CONFIG_HAS_SDCARD, init_sdcard());  // 初始化 SD 卡设备
 
     IFNDEF(CONFIG_TARGET_AM, init_alarm()); // 初始化定时器设备
 }

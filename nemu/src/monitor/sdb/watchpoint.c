@@ -41,6 +41,8 @@ void init_wp_pool() {
     head = NULL;
     free_ = wp_pool;
 }
+
+#ifdef CONFIG_CC_DEBUG
 /* TODO: Implement the functionality of watchpoint */
 WP *new_wp(char *str, bool *success) {
     WP *wp = free_;
@@ -120,3 +122,4 @@ int update_wp() {
     }
     return is_changed;
 }
+#endif // CONFIG_CC_DEBUG

@@ -38,7 +38,7 @@ enum {
   MAP(NEMU_KEYS, NEMU_KEY_NAME)
 };
 
-#define SDL_KEYMAP(k) keymap[SDL_SCANCODE_ ## k] = NEMU_KEY_ ## k;
+#define SDL_KEYMAP(k) keymap[SDL_SCANCODE_ ## k] = NEMU_KEY_ ## k;  // SDL 键盘扫描码到 NEMU 键码的映射
 static uint32_t keymap[256] = {};   // SDL 键盘扫描码到 NEMU 键码的映射表
 
 static void init_keymap() {
@@ -91,6 +91,7 @@ static void i8042_data_io_handler(uint32_t offset, int len, bool is_write) {
   i8042_data_port_base[0] = key_dequeue();
 }
 
+/* 初始化 i8042 数据端口 */
 void init_i8042() {
   i8042_data_port_base = (uint32_t *)new_space(4);
   i8042_data_port_base[0] = NEMU_KEY_NONE;

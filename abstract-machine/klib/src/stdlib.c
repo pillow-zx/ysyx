@@ -34,7 +34,16 @@ void *malloc(size_t size) {
   // Therefore do not call panic() here, else it will yield a dead recursion:
   //   panic() -> putchar() -> (glibc) -> malloc() -> panic()
 #if !(defined(__ISA_NATIVE__) && defined(__NATIVE_USE_KLIB__))
-  panic("Not implemented");
+    void *ptr = heap.start;
+    size = (size_t)ROUNDUP(size, 8);
+    if (!(IN_RANGE(ptr, heap) || IN_RANGE(ptr + size, heap))) {
+      panic("malloc: heap not initialized");
+    }
+    heap.start += size;
+    for (uint64_t *p = (uint64_t *)ptr; p != (uint64_t *)(ptr + size); p++) {
+      *p = 0;
+    }
+    return ptr;
 #endif
   return NULL;
 }

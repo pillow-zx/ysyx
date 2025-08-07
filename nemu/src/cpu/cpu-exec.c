@@ -20,7 +20,35 @@
 #include <locale.h>
 
 // 个人添加的头文件
-#include <../../monitor/sdb/sdb.h>
+#include "../monitor/sdb/sdb.h"
+
+#ifdef CONFIG_DTRACE
+#include "../include/generated/autoconf.h"
+
+#define INRANGE(pc, start, end) ((pc) >= (start) && (pc) < (end))
+
+static void dtrace(vaddr_t pc) {
+    if (nemu_state.state != NEMU_RUNNING) {
+        return; // 如果 nemu 状态不是运行状态，则不进行跟踪
+    }
+    // 检查当前 pc 是否在跟踪范围内
+    if (INRANGE(pc,CONFIG_SERIAL_MMIO, CONFIG_SERIAL_MMIO + 8)) {
+        Log("dtrace: serial port access at " FMT_WORD, pc);
+    } else if (INRANGE(pc, CONFIG_DISK_CTL_MMIO, CONFIG_DISK_CTL_MMIO + 8)) {
+        Log("dtrace: disk control port access at " FMT_WORD, pc);
+    } else if (INRANGE(pc, CONFIG_VGA_CTL_MMIO, CONFIG_VGA_CTL_MMIO + 8)) {
+        Log("dtrace: VGA control port access at " FMT_WORD, pc);
+    } else if (INRANGE(pc, CONFIG_I8042_DATA_MMIO, CONFIG_I8042_DATA_MMIO + 8)) {
+        Log("dtrace: i8042 data port access at " FMT_WORD, pc);
+    } else if (INRANGE(pc, CONFIG_AUDIO_CTL_MMIO, CONFIG_AUDIO_CTL_MMIO + 8)) {
+        Log("dtrace: audio control port access at " FMT_WORD, pc);
+    } else if (INRANGE(pc, CONFIG_RTC_MMIO, CONFIG_RTC_MMIO + 8)) {
+        Log("dtrace: RTC port access at " FMT_WORD, pc);
+    } else {
+        Log("dtrace: unknown port access at " FMT_WORD, pc);
+    }
+}
+#endif
 
 #ifdef CONFIG_FTRACE
 #include <elf.h>
@@ -180,6 +208,8 @@ static void exec_once(Decode *s, vaddr_t pc) {
     s->pc = pc;
     s->snpc = pc;
     isa_exec_once(s); // 执行指令,修改s->snpc,使s->snpc指向下一条指令的地址
+
+    IFDEF(CONFIG_DTRACE, dtrace(pc)); // 调试跟踪
 
 #ifdef CONFIG_FTRACE
     // 检测函数调用和返回

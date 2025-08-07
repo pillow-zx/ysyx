@@ -69,6 +69,7 @@ static int cmd_q(char *args) {
     return -1;
 }
 
+#ifdef CONFIG_CC_DEBUG
 static int cmd_help(char *args);
 
 /* TODO: 单步执行->单步调试功能 */
@@ -222,6 +223,9 @@ static int run_test(char *args) {
     return 0;
 }
 
+
+#endif
+
 /* 内置指令 */
 static struct {
     const char *name;
@@ -229,10 +233,12 @@ static struct {
     int (*handler)(char *);
 } cmd_table[] = {
     /*         指令名                       描述                                              运行的函数*/
-    {"help", "Display information about all supported commands", cmd_help},
     {"c", "Continue the execution of the program", cmd_c},
     {"q", "Exit NEMU", cmd_q},
 
+#ifdef CONFIG_CC_DEBUG
+    {"help", "Display information about all supported commands", cmd_help},
+    {"q", "Exit NEMU", cmd_q}, // 退出nemu
     /* TODO: Add more commands */
     /* 在此处添加更多指令 */
     {"si", "Step into the program", cmd_si},
@@ -244,10 +250,12 @@ static struct {
     {"clear", "Clean screen", cmd_clr},
     {"ls", "List of commands", cmd_help},
     {"test", "Run test for expression", run_test},
+#endif
 };
 
 #define NR_CMD ARRLEN(cmd_table) // 计算cmd_table的长度
 
+#ifdef CONFIG_CC_DEBUG
 static int cmd_help(char *args) {
     /* extract the first argument */
     /* strtok函数将args分割成多个子串，返回第一个子串的指针 */
@@ -274,6 +282,7 @@ static int cmd_help(char *args) {
     }
     return 0;
 }
+#endif
 
 void sdb_set_batch_mode() {
     is_batch_mode = true;

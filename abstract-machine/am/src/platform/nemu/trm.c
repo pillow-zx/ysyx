@@ -4,7 +4,8 @@
 extern char _heap_start;
 int main(const char *args);
 
-Area heap = RANGE(&_heap_start, PMEM_END);
+Area heap = RANGE(&_heap_start, PMEM_END);  // 定义堆的起始和结束地址
+/* mainargs表示传递给main函数的参数 */
 static const char mainargs[MAINARGS_MAX_LEN] = MAINARGS_PLACEHOLDER; // defined in CFLAGS
 
 void putch(char ch) {

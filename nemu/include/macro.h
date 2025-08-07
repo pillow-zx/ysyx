@@ -96,6 +96,11 @@
 // NOTE1: `c` should be defined as a list like:
 //   f(a0) f(a1) f(a2) ...
 // NOTE2: each element in the container can be a tuple
+// 类似函数式编程的宏 (X-macro)
+// 对容器 c 中的每个元素应用函数 f
+// 注意1: c 应该被定义为一个列表，例如：
+//   f(a0) f(a1) f(a2) ...
+// 注意2: 容器中的每个元素可以是一个元组
 #define MAP(c, f)          c(f)
 #define BITMASK(bits)      ((1ull << (bits)) - 1)
 #define BITS(x, hi, lo)    (((x) >> (lo)) & BITMASK((hi) - (lo) + 1)) // 提取整数 x 的高位 hi 到低位 lo 的位

@@ -29,9 +29,11 @@ bool ioe_init() {
     return true;
 }
 
+// 从寄存器读取数据到buf
 void ioe_read(int reg, void *buf) {
     ((handler_t)lut[reg])(buf);
 }
+// 将buf中的数据写入寄存器
 void ioe_write(int reg, void *buf) {
     ((handler_t)lut[reg])(buf);
 }

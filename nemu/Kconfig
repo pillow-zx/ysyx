@@ -159,6 +159,10 @@ config FTRACE
     bool "Enable function trace"
     default n
 
+config DTRACE
+    depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+    bool "Enable device trace"
+    default n
 
 config ITRACE_COND
   depends on ITRACE
