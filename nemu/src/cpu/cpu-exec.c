@@ -32,7 +32,7 @@ static void dtrace(vaddr_t pc) {
         return; // 如果 nemu 状态不是运行状态，则不进行跟踪
     }
     // 检查当前 pc 是否在跟踪范围内
-    if (INRANGE(pc,CONFIG_SERIAL_MMIO, CONFIG_SERIAL_MMIO + 8)) {
+    if (INRANGE(pc, CONFIG_SERIAL_MMIO, CONFIG_SERIAL_MMIO + 8)) {
         Log("dtrace: serial port access at " FMT_WORD, pc);
     } else if (INRANGE(pc, CONFIG_DISK_CTL_MMIO, CONFIG_DISK_CTL_MMIO + 8)) {
         Log("dtrace: disk control port access at " FMT_WORD, pc);

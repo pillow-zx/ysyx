@@ -4,8 +4,8 @@
 // **MAY SUBJECT TO CHANGE IN THE FUTURE**
 
 #define AM_DEVREG(id, reg, perm, ...) \
-  enum { AM_##reg = (id) }; \
-  typedef struct { __VA_ARGS__; } AM_##reg##_T;
+    enum { AM_##reg = (id) }; \
+    typedef struct { __VA_ARGS__; } AM_##reg##_T;
 
 /* 调用宏 设备标识 寄存器名    权限   可变参数 ---- RD只读, WR可写 */
 AM_DEVREG( 1, UART_CONFIG,  RD, bool present);
@@ -13,18 +13,18 @@ AM_DEVREG( 2, UART_TX,      WR, char data);
 AM_DEVREG( 3, UART_RX,      RD, char data);
 AM_DEVREG( 4, TIMER_CONFIG, RD, bool present, has_rtc);
 AM_DEVREG( 5, TIMER_RTC,    RD, int year, month, day, hour, minute, second);    // 系统实时时钟
-AM_DEVREG( 6, TIMER_UPTIME, RD, uint64_t us);               // 系统运行时间（微秒）
+AM_DEVREG( 6, TIMER_UPTIME, RD, uint64_t us);                 // 系统运行时间（微秒）
 AM_DEVREG( 7, INPUT_CONFIG, RD, bool present);
-AM_DEVREG( 8, INPUT_KEYBRD, RD, bool keydown; int keycode); // 键盘输入事件, keydown 为true表示按下, false表示松开, keycode 为按键代码
+AM_DEVREG( 8, INPUT_KEYBRD, RD, bool keydown; int keycode);   // 键盘输入事件, keydown 为true表示按下, false表示松开, keycode 为按键代码
 AM_DEVREG( 9, GPU_CONFIG,   RD, bool present, has_accel; int width, height, vmemsz);    // GPU 显示控制器, present 表示是否存在, has_accel 表示是否支持加速, width 和 height 分别表示分辨率宽度和高度, vmemsz 表示显存大小
-AM_DEVREG(10, GPU_STATUS,   RD, bool ready);   // GPU 状态, ready 表示 GPU 是否就绪
+AM_DEVREG(10, GPU_STATUS,   RD, bool ready);                  // GPU 状态, ready 表示 GPU 是否就绪
 AM_DEVREG(11, GPU_FBDRAW,   WR, int x, y; void *pixels; int w, h; bool sync); // GPU 帧缓冲控制器, x 和 y 表示绘制位置, pixels 指向像素数据, w 和 h 分别表示宽度和高度, sync 为 true 时表示同步绘制
 AM_DEVREG(12, GPU_MEMCPY,   WR, uint32_t dest; void *src; int size);    // GPU 内存拷贝, dest 为目标地址, src 指向源数据, size 为拷贝大小
-AM_DEVREG(13, GPU_RENDER,   WR, uint32_t root);   // GPU 渲染, root 为渲染树的根节点
-AM_DEVREG(14, AUDIO_CONFIG, RD, bool present; int bufsize);
-AM_DEVREG(15, AUDIO_CTRL,   WR, int freq, channels, samples);
-AM_DEVREG(16, AUDIO_STATUS, RD, int count);
-AM_DEVREG(17, AUDIO_PLAY,   WR, Area buf);
+AM_DEVREG(13, GPU_RENDER,   WR, uint32_t root);               // GPU 渲染, root 为渲染树的根节点
+AM_DEVREG(14, AUDIO_CONFIG, RD, bool present; int bufsize);   // present 表示音频设备是否存在, bufsize 表示音频缓冲区大小
+AM_DEVREG(15, AUDIO_CTRL,   WR, int freq, channels, samples); // 设置音频控制器的参数, freq 表示采样率, channels 表示声道数, samples 表示每个声道的采样数
+AM_DEVREG(16, AUDIO_STATUS, RD, int count);                   // buffered audio samples count, 表示缓冲区中音频样本的数量
+AM_DEVREG(17, AUDIO_PLAY,   WR, Area buf);                    // 播放音频数据, buf 指向音频数据缓冲区
 AM_DEVREG(18, DISK_CONFIG,  RD, bool present; int blksz, blkcnt);
 AM_DEVREG(19, DISK_STATUS,  RD, bool ready);
 AM_DEVREG(20, DISK_BLKIO,   WR, bool write; void *buf; int blkno, blkcnt);
@@ -36,40 +36,40 @@ AM_DEVREG(24, NET_RX,       WR, Area buf);
 // Input
 
 #define AM_KEYS(_) \
-  _(ESCAPE) _(F1) _(F2) _(F3) _(F4) _(F5) _(F6) _(F7) _(F8) _(F9) _(F10) _(F11) _(F12) \
-  _(GRAVE) _(1) _(2) _(3) _(4) _(5) _(6) _(7) _(8) _(9) _(0) _(MINUS) _(EQUALS) _(BACKSPACE) \
-  _(TAB) _(Q) _(W) _(E) _(R) _(T) _(Y) _(U) _(I) _(O) _(P) _(LEFTBRACKET) _(RIGHTBRACKET) _(BACKSLASH) \
-  _(CAPSLOCK) _(A) _(S) _(D) _(F) _(G) _(H) _(J) _(K) _(L) _(SEMICOLON) _(APOSTROPHE) _(RETURN) \
-  _(LSHIFT) _(Z) _(X) _(C) _(V) _(B) _(N) _(M) _(COMMA) _(PERIOD) _(SLASH) _(RSHIFT) \
-  _(LCTRL) _(APPLICATION) _(LALT) _(SPACE) _(RALT) _(RCTRL) \
-  _(UP) _(DOWN) _(LEFT) _(RIGHT) _(INSERT) _(DELETE) _(HOME) _(END) _(PAGEUP) _(PAGEDOWN)
+    _(ESCAPE) _(F1) _(F2) _(F3) _(F4) _(F5) _(F6) _(F7) _(F8) _(F9) _(F10) _(F11) _(F12) \
+    _(GRAVE) _(1) _(2) _(3) _(4) _(5) _(6) _(7) _(8) _(9) _(0) _(MINUS) _(EQUALS) _(BACKSPACE) \
+    _(TAB) _(Q) _(W) _(E) _(R) _(T) _(Y) _(U) _(I) _(O) _(P) _(LEFTBRACKET) _(RIGHTBRACKET) _(BACKSLASH) \
+    _(CAPSLOCK) _(A) _(S) _(D) _(F) _(G) _(H) _(J) _(K) _(L) _(SEMICOLON) _(APOSTROPHE) _(RETURN) \
+    _(LSHIFT) _(Z) _(X) _(C) _(V) _(B) _(N) _(M) _(COMMA) _(PERIOD) _(SLASH) _(RSHIFT) \
+    _(LCTRL) _(APPLICATION) _(LALT) _(SPACE) _(RALT) _(RCTRL) \
+    _(UP) _(DOWN) _(LEFT) _(RIGHT) _(INSERT) _(DELETE) _(HOME) _(END) _(PAGEUP) _(PAGEDOWN)
 
 #define AM_KEY_NAMES(key) AM_KEY_##key,
 enum {
-  AM_KEY_NONE = 0,
-  AM_KEYS(AM_KEY_NAMES)
+    AM_KEY_NONE = 0,
+    AM_KEYS(AM_KEY_NAMES)
 };
 
 // GPU
 
-#define AM_GPU_TEXTURE  1
-#define AM_GPU_SUBTREE  2
-#define AM_GPU_NULL     0xffffffff
+#define AM_GPU_TEXTURE 1
+#define AM_GPU_SUBTREE 2
+#define AM_GPU_NULL    0xffffffff
 
 typedef uint32_t gpuptr_t;
 
 struct gpu_texturedesc {
-  uint16_t w, h;
-  gpuptr_t pixels;
+    uint16_t w, h;
+    gpuptr_t pixels;
 } __attribute__((packed));
 
 struct gpu_canvas {
-  uint16_t type, w, h, x1, y1, w1, h1;
-  gpuptr_t sibling;
-  union {
-    gpuptr_t child;
-    struct gpu_texturedesc texture;
-  };
+    uint16_t type, w, h, x1, y1, w1, h1;
+    gpuptr_t sibling;
+    union {
+        gpuptr_t child;
+        struct gpu_texturedesc texture;
+    };
 } __attribute__((packed));
 
 #endif
