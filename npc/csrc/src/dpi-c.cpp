@@ -36,7 +36,7 @@ extern "C" int pmem_read(int addr) {
     
     // Otherwise, check normal memory bounds
     if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
-        std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
+        std::cerr << "pmem_read: Error: Address out of bounds: " << addrs << " (0x" << std::hex << addrs << std::dec << ")" << std::endl;
         exit(1);
     }
     // 对于字节访问，直接读取字节并返回
@@ -51,9 +51,9 @@ extern "C" unsigned int inst_read(unsigned int addr) {
         exit(1);
     }
     uint32_t addrs = addr;
-    // std::cout << "Reading instruction at address: " << std::hex << addrs << std::dec << std::endl;
+    // Otherwise, check normal memory bounds
     if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
-        std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
+        std::cerr << "inst_read: Error: Address out of bounds: " << addrs << " (0x" << std::hex << addrs << std::dec << ")" << std::endl;
         exit(1);
     }
     return read_pmem(addrs); // Assuming inst_read is similar to pmem_read
@@ -75,7 +75,7 @@ extern "C" void pmem_write(int addr, int value) {
     
     // Otherwise, check normal memory bounds
     if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
-        std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
+        std::cerr << "pmem_write: Error: Address out of bounds: " << addrs << " (0x" << std::hex << addrs << std::dec << ")" << std::endl;
         exit(1);
     }
 
@@ -109,7 +109,7 @@ extern "C" int pmem_read_byte(int addr) {
     
     // Otherwise, check normal memory bounds
     if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
-        std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
+        std::cerr << "pmem_read_byte: Error: Address out of bounds: " << addrs << " (0x" << std::hex << addrs << std::dec << ")" << std::endl;
         exit(1);
     }
     uint8_t byte_value = read_pmem_byte(addrs);
@@ -133,7 +133,7 @@ extern "C" void pmem_write_byte(int addr, int value) {
     
     // Otherwise, check normal memory bounds
     if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
-        std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
+        std::cerr << "pmem_write_byte: FUNCTION_DEBUG: Address out of bounds: " << addrs << " (0x" << std::hex << addrs << std::dec << ")" << std::endl;
         exit(1);
     }
     write_pmem_byte(addrs, byte_value);
@@ -146,8 +146,16 @@ extern "C" int pmem_read_word(int addr) {
         exit(1);
     }
     uint32_t addrs = addr;
+    
+    // Check if it's MMIO address first
+    if (is_mmio_addr(addrs)) {
+        uint32_t result = mmio_read(addrs, 4);  // 读取4字节
+        return (int)result;
+    }
+    
+    // Otherwise, check normal memory bounds
     if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
-        std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
+        std::cerr << "pmem_read_word: Address out of bounds: " << addrs << " (0x" << std::hex << addrs << std::dec << ")" << std::endl;
         exit(1);
     }
     uint32_t word_value = read_pmem(addrs);
@@ -163,8 +171,16 @@ extern "C" void pmem_write_word(int addr, int value) {
     }
     uint32_t values = (uint32_t)value;
     uint32_t addrs = (uint32_t)addr;
+    
+    // Check if it's MMIO address first
+    if (is_mmio_addr(addrs)) {
+        mmio_write(addrs, 4, values);  // 写入4字节
+        return;
+    }
+    
+    // Otherwise, check normal memory bounds
     if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
-        std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
+        std::cerr << "pmem_write_word: Address out of bounds: " << addrs << " (0x" << std::hex << addrs << std::dec << ")" << std::endl;
         exit(1);
     }
     write_pmem()[(addrs - DEFAULT_MEM_START) / 4] = values;
@@ -178,8 +194,16 @@ extern "C" int pmem_read_halfword(int addr) {
         exit(1);
     }
     uint32_t addrs = addr;
+    
+    // Check if it's MMIO address first
+    if (is_mmio_addr(addrs)) {
+        uint32_t result = mmio_read(addrs, 2);  // 读取2字节
+        return (int)(result & 0xFFFF);
+    }
+    
+    // Otherwise, check normal memory bounds
     if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
-        std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
+        std::cerr << "pmem_read_halfword: Address out of bounds: " << addrs << " (0x" << std::hex << addrs << std::dec << ")" << std::endl;
         exit(1);
     }
     uint16_t halfword_value = read_pmem_halfword(addrs);
@@ -196,8 +220,16 @@ extern "C" void pmem_write_halfword(int addr, int value) {
     }
     uint16_t values = (uint16_t)(value & 0xFFFF);
     uint32_t addrs = (uint32_t)addr;
+    
+    // Check if it's MMIO address first
+    if (is_mmio_addr(addrs)) {
+        mmio_write(addrs, 2, values);  // 写入2字节
+        return;
+    }
+    
+    // Otherwise, check normal memory bounds
     if (addrs < DEFAULT_MEM_START || addrs >= DEFAULT_MEM_START + CONFIG_MSIZE) {
-        std::cerr << "Error: Address out of bounds: " << addrs << std::endl;
+        std::cerr << "pmem_write_halfword: Address out of bounds: " << addrs << " (0x" << std::hex << addrs << std::dec << ")" << std::endl;
         exit(1);
     }
     write_pmem_halfword(addrs, values);

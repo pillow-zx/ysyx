@@ -1,6 +1,7 @@
 #include <device.h>
 #include <alarm.h>
 #include <map.h>
+#include <macro.h>
 
 extern bool npc_STATE;
 

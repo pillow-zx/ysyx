@@ -317,8 +317,11 @@ module ysyx_25060173_core (
     assign result = alu_result;
 
     // 修正分支跳转逻辑
+    wire [31:0] jalr_target = (rdata1 + imm) & ~1;
+    wire jalr_valid = (jalr_target >= 32'h80000000) && (jalr_target < 32'h88000000);  // 检查是否在有效内存范围内
+    
     assign nextpc = inst_jal ? pc + imm :
-           inst_jalr ? (rdata1 + imm) & ~1 :
+           inst_jalr ? (jalr_valid ? jalr_target : pc + 4) :  // 如果JALR目标无效，则继续顺序执行
        inst_bge ? (alu_result[0] == 1'b0) ? pc + imm : pc + 4 :  // BGE: rs1 >= rs2 时跳转
        inst_blt ? (alu_result[0] == 1'b1) ? pc + imm : pc + 4 :  // BLT: rs1 < rs2 时跳转
        inst_bgeu ? (alu_result[0] == 1'b0) ? pc + imm : pc + 4 : // BGEU: rs1 >= rs2 时跳转

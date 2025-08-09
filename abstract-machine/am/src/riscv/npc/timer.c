@@ -1,9 +1,23 @@
 #include <am.h>
+#include <riscv/riscv.h>
 
 void __am_timer_init() {}
 
+#define RTC_ADDR 0xa0000048
+
+#define RTC_ADDR_LOW RTC_ADDR
+#define RTC_ADDR_HIGH (RTC_ADDR + 4)
+
 void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime) {
-    uptime->us = 0;
+    uint32_t low, high1, high2;
+
+    do {
+        high1 = inl(RTC_ADDR_HIGH);
+        low = inl(RTC_ADDR_LOW);
+        high2 = inl(RTC_ADDR_HIGH);
+    } while (high1 != high2);  // 确保读取的高32位一致, 避免读取到不一致的值
+
+    uptime->us = ((uint64_t)high1 << 32) | low;  // 将高32位和低32位合并为64位
 }
 
 void __am_timer_rtc(AM_TIMER_RTC_T *rtc) {
