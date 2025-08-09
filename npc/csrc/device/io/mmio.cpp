@@ -28,7 +28,7 @@ void add_mmio_map(const char *name, uint32_t addr, void *space, uint32_t len, io
             return;
         }
     }
-    maps[nr_maps++] = (IOMap){.name = name, .low = left, .high = right, .space = space, .callback = callback};
+    maps[nr_maps] = (IOMap){.name = name, .low = left, .high = right, .space = space, .callback = callback};
     std::cout << "Added MMIO map: " << name << " [0x" << std::hex << left << " - 0x" << right << "]\n";
     nr_maps++;
 }

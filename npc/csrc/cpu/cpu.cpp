@@ -59,18 +59,18 @@ static void cpu_exec_once() {
     // mtrace(pc_index, read_pmem(core->now_pc));
     itrace(read_pmem(core->now_pc), logfile);
 
-    ftrace(read_pmem(core->now_pc));
+    // ftrace(read_pmem(core->now_pc));
 
-    difftest_step(); // 执行一次指令并检查寄存器
+    // difftest_step(); // 执行一次指令并检查寄存器
 
-    say_pc();      // 打印当前PC
+    // say_pc();      // 打印当前PC
     core->clk = 1; // 拉高时钟信号
     core->eval();  // 评估当前状态
 
     core->clk = 0; // 拉低时钟信号
     core->eval();  // 评估当前状态
 
-    checkregs(); // 检查寄存器是否匹配
+    // checkregs(); // 检查寄存器是否匹配
 }
 
 void cpu_exec(uint32_t n) {

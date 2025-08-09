@@ -1,12 +1,13 @@
 #include <device.h>
-#include <cpu.h>
 #include <alarm.h>
 #include <map.h>
+
+extern bool npc_STATE;
 
 static uint32_t *rtc_port_base = nullptr;
 
 static void rtc_io_handler(uint32_t offset, int len, bool is_write) {
-    assert(offset == 0  || len == 4); // RTC typically uses 4-byte access
+    assert(len == 4 && "RTC typically uses 4-byte access"); 
     // RTC IO handler implementation
     if (!is_write && offset == 4) {
         uint64_t us = get_time();
@@ -16,10 +17,10 @@ static void rtc_io_handler(uint32_t offset, int len, bool is_write) {
 }
 
 static void timer_intr() {
-    if (npc_STATE) {
-        extern void dev_raise_intr();
-        dev_raise_intr();
-    }
+    // if (npc_STATE) {
+    //     extern void dev_raise_intr();
+    //     dev_raise_intr();
+    // }
 }
 
 

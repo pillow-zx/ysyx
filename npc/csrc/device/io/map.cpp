@@ -21,7 +21,7 @@ static void check_bound(IOMap *map, uint32_t addr) {
     if (map == nullptr) {
         throw std::runtime_error("IOMap is null");
     } else {
-        if (addr < map->low || addr >= map->high) {
+        if (addr < map->low || addr > map->high) {
             throw std::out_of_range("Address out of bounds");
         }
     }
@@ -43,7 +43,7 @@ uint32_t map_read(uint32_t addr, int len, IOMap *map) {
     assert(len >= 1 && len <= 8 && "Invalid read length");
     check_bound(map, addr);
     uint32_t offset = addr - map->low;
-    invoke_callback(map->callback, addr, len, false);
+    invoke_callback(map->callback, offset, len, false);
     uint32_t ret = 0;
     switch (len) {
         case 1: ret = *(uint8_t *)((uint8_t *)map->space + offset); break;
@@ -64,5 +64,5 @@ void map_write(uint32_t addr, int len, uint32_t data, IOMap *map) {
         case 4: *(uint32_t *)((uint8_t *)map->space + offset) = data; break;
         default: throw std::invalid_argument("Invalid write length");
     }
-    invoke_callback(map->callback, addr, len, true);
+    invoke_callback(map->callback, offset, len, true);
 }

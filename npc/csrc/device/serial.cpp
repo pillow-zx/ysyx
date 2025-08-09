@@ -6,13 +6,17 @@
 static uint8_t *serial_base = nullptr;
 
 static void serial_puts(char ch) {
-    std::cout << ch;
+    printf("%c", ch);
+    fflush(stdout);
 }
 
 static void serial_io_handler(uint32_t offset, int len, bool is_write) {
     assert(len == 1);
     switch (offset) {
-        case CH_OFFSET: if (is_write) serial_puts(serial_base[0]); break;
+        case CH_OFFSET:
+            if (is_write)
+                serial_puts(serial_base[0]);
+            break;
         default: LOG_ERROR("Unknown serial offset: 0x%x", offset); break;
     }
 }

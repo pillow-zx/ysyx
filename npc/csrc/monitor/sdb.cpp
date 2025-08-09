@@ -151,12 +151,12 @@ void npc_init(int argc, char **argv) {
 
     long img_size = load_img();
 
+    init_device();
+
     init_cpu();
 
     // Initialize difftest
     init_difftest(core_regs, write_pmem().data());
-
-    init_device();
 
     welcome();
 }
