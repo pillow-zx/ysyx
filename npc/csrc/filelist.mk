@@ -13,8 +13,11 @@ MEM_CSRCS = $(abspath $(shell find $(CSRC_DIR)/memory -name "*.c" -or -name "*.c
 # Src source files
 SRC_CSRCS = $(abspath $(shell find $(CSRC_DIR)/src -name "*.c" -or -name "*.cc" -or -name "*.cpp"))
 
+# Device source files
+DEV_CSRCS = $(abspath $(shell find $(CSRC_DIR)/device -name "*.c" -or -name "*.cc" -or -name "*.cpp"))
+
 # Add cpu and src sources to main CSRCS
-CSRCS += $(CPU_CSRCS) $(MEM_CSRCS)
+CSRCS += $(CPU_CSRCS) $(MEM_CSRCS) $(DEV_CSRCS)
 CSRCS += $(SRC_CSRCS)
 
 # Tools source files

@@ -3,11 +3,44 @@
 #include <boost/format.hpp>
 #include <iostream>
 
+
+
+
+/* IO设备宏 */
+/* ==================================================================================== */
+
+// IO_SPACE
+#define IO_SPACE_MAX       (32 * 1024 * 1024)  // 32MB
+#define PAGE_SHIFT         12                  // 4KB pages
+#define PAGE_SIZE          (1ul << PAGE_SHIFT) // 4KB
+#define PAGE_MASK          (PAGE_SIZE - 1)     // 0xFFF
+#define SERIAL_MMIO        (0xa00003f8)        // MMIO地址
+#define RTC_MMIO           (0xa0000048)        // RTC MMIO地址
+
+
+/* ==================================================================================== */
+
+
+
+/* 硬件设备宏 */
+/* ===================================================================================== */
+
+
 // Define default memory start
 #define DEFAULT_MEM_START  0x80000000
 
 // Define NPC bits
 #define NPC_BITS           32
+
+
+
+
+
+/* ======================================================================================== */
+
+/* Log宏 */
+
+/* ========================================================================================== */
 
 // ANSI颜色代码（粗体版本）
 #define ANSI_COLOR_RED     "\x1b[1;31m" // 红色

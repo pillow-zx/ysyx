@@ -23,7 +23,7 @@
  * 每一个设备的 I/O 映射都需要一个 IOMap 结构体,
  * 这里创建一个 IOMap 结构体数组来来存储所有设备的 I/O 映射 */
 static IOMap maps[NR_MAP] = {}; // I/O 映射数组, 用于存储所有的 I/O 映射
-static int nr_map = 0;  // 当前 I/O 映射数量及索引
+static int nr_map = 0;          // 当前 I/O 映射数量及索引
 
 static IOMap *fetch_mmio_map(paddr_t addr) {
     int mapid = find_mapid_by_addr(maps, nr_map, addr);

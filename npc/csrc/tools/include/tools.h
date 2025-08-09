@@ -17,3 +17,5 @@ void show_memory(uint32_t n, uint32_t start_addr);
 void command_lists();
 
 void welcome();
+
+uint64_t get_time();

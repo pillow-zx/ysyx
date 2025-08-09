@@ -5,6 +5,7 @@
 #include <fstream>
 #include <tools.h>
 #include <difftest.h>
+#include <device.h>
 #include <cpu.h>
 #include <macro.h>
 #include <Log.h>
@@ -154,6 +155,8 @@ void npc_init(int argc, char **argv) {
 
     // Initialize difftest
     init_difftest(core_regs, write_pmem().data());
+
+    init_device();
 
     welcome();
 }
