@@ -1,16 +1,63 @@
-# NPC Project Main Makefile
+# VERILATOR
+VERILATOR = verilator
+VERILATOR_CFLAGS += -MMD --build -cc --trace\
+				-O2 --x-assign fast --x-initial fast --noassert
 
-# Set default goal explicitly before including any other files
-.DEFAULT_GOAL := default
+# Find all Verilog source files
+VSRCS = $(shell find $(VSRC_DIR) -name "*.v")
+
+# Verilator build rules
+verilator-build: $(VSRCS) $(SRC)
+	@echo "Building with Verilator..."
+	@rm -rf $(OBJ_DIR)
+	$(VERILATOR) $(VERILATOR_CFLAGS) \
+		--top-module $(TOPNAME) $(VSRCS) $(SRC) \
+		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
+		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
 
 # Project configuration
-include config.mk
+TOPNAME = cpu
+PROJECT_NAME = npc
+
+# Directory structure
+BUILD_DIR = $(NPC_HOME)/build
+OBJ_DIR = $(BUILD_DIR)/obj_dir
+BIN = $(BUILD_DIR)/$(TOPNAME)
+
+
+# Create build directories
+$(shell mkdir -p $(BUILD_DIR))
+$(shell mkdir -p $(OBJ_DIR))
+
 
 # Source files configuration
-include source.mk
+INC_PATH ?=
 
-# Verilator configuration
-include verilator.mk
+# MAIN SOURCE FILE
+MAIN = $(abspath $(shell pwd)/csrc/npc-main.cc)
+
+include $(NPC_HOME)/csrc/filelist.mk
+
+# SRC
+SRC = $(MEM_SRC) $(MONITOR_SRC) $(CPU_SRC) $(DEV_SRC) $(MAIN)
+
+# INCLUDE SOURCES FILES
+INCFLAGS += $(addprefix -I, $(INC_PATH))
+CXXFLAGS += $(INCFLAGS) -std=c++17 -g
+
+# Boost library
+BOOST_INCLUDE = -DBOOST_ALL_DYN_LINK
+BOOST_LIB = -lboost_program_options
+
+# Capstone library
+CAPSTONE_LIB = -lcapstone
+CAPSTONE_CFLAGS = -I/usr/include/capstone
+
+# Difftest library
+DIFFTEST_LIB = $(abspath $(NPC_HOME)/lib/libdifftest.a)
+
+CXXFLAGS += -I$(BOOST_INCLUDE) $(CAPSTONE_CFLAGS)
+LDFLAGS += $(BOOST_LIB) $(CAPSTONE_LIB) $(DIFFTEST_LIB)
 
 # Default target
 default: all
@@ -21,45 +68,21 @@ all: $(BIN)
 # Binary build target
 $(BIN): verilator-build
 
+# Log file
+LOG_FILE ?= $(BUILD_DIR)/log.txt
+
 # Run Arguments
-ARG = -i$(IMG) -l$(LOG_FILE) -f$(ELF) --batch
+ARG ?= --image=$(IMG) --log=$(LOG_FILE) --elf=$(ELF) --batch
 
 # Run targets
-run-env: $(BIN) $(IMG)
+run: $(BIN)
 	@echo "Running simulation with args: $(ARG)"
-
-run: run-env
 	$(BIN) $(ARG)
 	@echo "Simulation completed."
 
-# Additional targets
-wave: $(WAVE)
-	@gtkwave $(WAVE) &
-
-# Clean target
+# Clean targets
 clean:
-	@echo "Cleaning build directory..."
+	@echo "Cleaning up..."
 	@rm -rf $(BUILD_DIR)
 
-# Info targets
-info:
-	@echo "Project: $(PROJECT_NAME)"
-	@echo "Top module: $(TOPNAME)"
-	@echo "Build directory: $(BUILD_DIR)"
-	@echo "Binary: $(BIN)"
-	@echo "Verilog sources: $(words $(VSRCS)) files"
-	@echo "C/C++ sources: $(words $(CSRCS)) files"
-
-help:
-	@echo "Available targets:"
-	@echo "  all/default  - Build the project"
-	@echo "  run          - Build and run simulation"
-	@echo "  clean        - Clean build files"
-	@echo "  wave         - Open waveform viewer"
-	@echo "  info         - Show project information"
-	@echo "  help         - Show this help"
-
-.PHONY: default all clean info help run run-env wave
-
 -include ../Makefile
-

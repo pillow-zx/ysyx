@@ -60,13 +60,20 @@ void add_mmio_map(const char *name, paddr_t addr, void *space, uint32_t len, io_
     nr_map++;
 }
 
-/* bus interface */
-// 读取指定地址的 I/O 映射空间
 word_t mmio_read(paddr_t addr, int len) {
-    return map_read(addr, len, fetch_mmio_map(addr));
+    assert(len >= 1 && len <= 4);
+    IOMap *map = fetch_mmio_map(addr);
+    if (map == NULL) {
+        panic("MMIO address " FMT_PADDR " is not mapped", addr);
+    }
+    return map_read(addr, len, map);
 }
 
-// 写入指定地址的 I/O 映射空间
 void mmio_write(paddr_t addr, int len, word_t data) {
-    map_write(addr, len, data, fetch_mmio_map(addr));
+    assert(len >= 1 && len <= 4);
+    IOMap *map = fetch_mmio_map(addr);
+    if (map == NULL) {
+        panic("MMIO address " FMT_PADDR " is not mapped", addr);
+    }
+    map_write(addr, len, data, map);
 }

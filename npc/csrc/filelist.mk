@@ -1,29 +1,11 @@
-# File list for source files and headers
+CPU_SRC = $(abspath $(shell find $(NPC_HOME)/csrc/src/cpu -name "*.cc"))
+MONITOR_SRC = $(abspath $(shell find $(NPC_HOME)/csrc/src/monitor -name "*.cc"))
+MONITOR_SRC += $(abspath $(shell find $(NPC_HOME)/csrc/src/monitor/sdb -name "*.cc"))
+MEM_SRC = $(abspath $(shell find $(NPC_HOME)/csrc/src/memory -name "*.cc"))
+DEV_SRC = $(abspath $(shell find $(NPC_HOME)/csrc/src/device -name "*.cc"))
+DEV_SRC += $(abspath $(shell find $(NPC_HOME)/csrc/src/device/io -name "*.cc"))
 
-# Base include paths
-SRC_INC_PATH = $(abspath $(CSRC_DIR)/include)
-INC_PATH += $(SRC_INC_PATH)
-
-# Cpu source files
-CPU_CSRCS = $(abspath $(shell find $(CSRC_DIR)/cpu -name "*.c" -or -name "*.cc" -or -name "*.cpp"))
-
-# Memory source files
-MEM_CSRCS = $(abspath $(shell find $(CSRC_DIR)/memory -name "*.c" -or -name "*.cc" -or -name "*.cpp"))
-
-# Src source files
-SRC_CSRCS = $(abspath $(shell find $(CSRC_DIR)/src -name "*.c" -or -name "*.cc" -or -name "*.cpp"))
-
-# Device source files
-DEV_CSRCS = $(abspath $(shell find $(CSRC_DIR)/device -name "*.c" -or -name "*.cc" -or -name "*.cpp"))
-
-# Add cpu and src sources to main CSRCS
-CSRCS += $(CPU_CSRCS) $(MEM_CSRCS) $(DEV_CSRCS)
-CSRCS += $(SRC_CSRCS)
-
-# Tools source files
-include $(CSRC_DIR)/tools/tools.mk
-
-# Monitor source files
-include $(CSRC_DIR)/monitor/monitor.mk
+# INCLUDE PATHS
+INC_PATH = $(abspath $(NPC_HOME)/csrc/src/include)
 
 

@@ -11,7 +11,7 @@
 !README.md
 build/
 work/
-.vscode/
-.cache/
-.build/
+/.vscode
+/.cache
+/.build
 ./.gitignore

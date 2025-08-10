@@ -1,6 +1,6 @@
 // 32位寄存器文件模块
 /* verilator lint_off DECLFILENAME*/
-module ysyx_25060173_RegisterFile #(
+module regfile #(
         ADDR_WIDTH = 5,
         DATA_WIDTH = 32
     ) (
@@ -13,7 +13,7 @@ module ysyx_25060173_RegisterFile #(
         input  wire [ADDR_WIDTH - 1:0] waddr,
         input  wire [DATA_WIDTH - 1:0] wdata
     );
-    reg [DATA_WIDTH - 1:0] regfile[(1 << ADDR_WIDTH) - 1:0];
+    reg [DATA_WIDTH - 1:0] regfile[(1 << ADDR_WIDTH) - 1 : 0];
 
     always @(posedge clk) begin
         if (we && waddr != 0) begin
