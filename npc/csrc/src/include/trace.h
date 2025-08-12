@@ -74,7 +74,7 @@ class Traces {
     void itrace_handle(uint32_t pc, uint32_t inst) {
         // 使用 CS_OPT_DETAIL 启用详细模式，以获取操作数等信息
         cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
-        
+
         count = cs_disasm(handle, reinterpret_cast<const uint8_t *>(&inst), sizeof(inst), pc, 0, &insn);
 
         if (count > 0) {
@@ -106,18 +106,21 @@ class Traces {
 
         ftrace_file_header = (Elf32_Ehdr *)malloc(sizeof(Elf32_Ehdr));
         size_t ret = fread(ftrace_file_header, sizeof(Elf32_Ehdr), 1, fp);
-        if (ret != 1) { /* handle read error */ }
+        if (ret != 1) { /* handle read error */
+        }
         fseek(fp, ftrace_file_header->e_shoff, SEEK_SET);
         ftrace_section_header = (Elf32_Shdr *)malloc(ftrace_file_header->e_shnum * sizeof(Elf32_Shdr));
         ret = fread(ftrace_section_header, sizeof(Elf32_Shdr), ftrace_file_header->e_shnum, fp);
-        if (ret != ftrace_file_header->e_shnum) { /* handle read error */ }
+        if (ret != ftrace_file_header->e_shnum) { /* handle read error */
+        }
 
         for (int i = 0; i < ftrace_file_header->e_shnum; i++) {
             if (ftrace_section_header[i].sh_type == SHT_SYMTAB) {
                 fseek(fp, ftrace_section_header[i].sh_offset, SEEK_SET);
                 ftrace_file_symtab = (Elf32_Sym *)malloc(ftrace_section_header[i].sh_size);
                 ret = fread(ftrace_file_symtab, ftrace_section_header[i].sh_size, 1, fp);
-                if (ret != 1) { /* handle read error */ }
+                if (ret != 1) { /* handle read error */
+                }
                 ftrace_file_symtab_num = ftrace_section_header[i].sh_size / sizeof(Elf32_Sym);
 
                 int strtab_index = ftrace_section_header[i].sh_link;
@@ -125,7 +128,8 @@ class Traces {
                     fseek(fp, ftrace_section_header[strtab_index].sh_offset, SEEK_SET);
                     ftrace_file_strtab = (char *)malloc(ftrace_section_header[strtab_index].sh_size);
                     ret = fread(ftrace_file_strtab, ftrace_section_header[strtab_index].sh_size, 1, fp);
-                    if (ret != 1) { /* handle read error */ }
+                    if (ret != 1) { /* handle read error */
+                    }
                 }
                 break;
             }
@@ -140,8 +144,9 @@ class Traces {
         // 设置 Capstone 选项以获取详细信息
         cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
         cs_insn *insn = nullptr;
-        size_t disasm_count = cs_disasm(handle, reinterpret_cast<const uint8_t *>(&inst), sizeof(inst), core->rootp->cpu__DOT__pc, 0, &insn);
-        
+        size_t disasm_count = cs_disasm(handle, reinterpret_cast<const uint8_t *>(&inst), sizeof(inst),
+                                        core->rootp->cpu__DOT__pc, 0, &insn);
+
         if (disasm_count > 0) {
             // Capstone JALR 指令的 ID
             if (insn->id == RISCV_INS_JAL) {
@@ -153,16 +158,16 @@ class Traces {
                 if (insn->detail && insn->detail->riscv.op_count == 2) {
                     const cs_riscv_op &op0 = insn->detail->riscv.operands[0];
                     const cs_riscv_op &op1 = insn->detail->riscv.operands[1];
-                    
-                    if (op0.type == RISCV_OP_REG && op0.reg == RISCV_REG_X0 && 
-                        op1.type == RISCV_OP_REG && op1.reg == RISCV_REG_X1) {
+
+                    if (op0.type == RISCV_OP_REG && op0.reg == RISCV_REG_X0 && op1.type == RISCV_OP_REG &&
+                        op1.reg == RISCV_REG_X1) {
                         is_ret = true;
                     }
                 }
             }
             cs_free(insn, disasm_count);
         }
-        
+
         ftrace_elf_start(core->rootp->cpu__DOT__pc, core->rootp->cpu__DOT__nextpc, is_call, is_ret);
     }
 
@@ -174,7 +179,8 @@ class Traces {
         for (int i = 0; i < ftrace_file_symtab_num; i++) {
             // 修正：通过符号地址范围来查找函数名
             if (ELF32_ST_TYPE(ftrace_file_symtab[i].st_info) == STT_FUNC) {
-                if (pc >= ftrace_file_symtab[i].st_value && pc < ftrace_file_symtab[i].st_value + ftrace_file_symtab[i].st_size) {
+                if (pc >= ftrace_file_symtab[i].st_value &&
+                    pc < ftrace_file_symtab[i].st_value + ftrace_file_symtab[i].st_size) {
                     return ftrace_file_strtab + ftrace_file_symtab[i].st_name;
                 }
             }

@@ -11,16 +11,15 @@ Cpu cpu;
 
 /* Trace init */
 Traces MyTrace;
-std::string image; 
+std::string image;
 std::string elf_file;
 std::string log_file;
 
-Elf32_Ehdr *ftrace_file_header = nullptr; // ELF header for ftrace
+Elf32_Ehdr *ftrace_file_header = nullptr;    // ELF header for ftrace
 Elf32_Shdr *ftrace_section_header = nullptr; // Section header for ftrace
-Elf32_Sym  *ftrace_file_symtab = nullptr; // Symbol table for ftrace
-char *ftrace_file_strtab = nullptr; // String table for ftrace
-int ftrace_file_symtab_num = 0; // Size of the symbol table for ftrace
-
+Elf32_Sym *ftrace_file_symtab = nullptr;     // Symbol table for ftrace
+char *ftrace_file_strtab = nullptr;          // String table for ftrace
+int ftrace_file_symtab_num = 0;              // Size of the symbol table for ftrace
 
 /* verilog */
 Vcpu *core = new Vcpu();

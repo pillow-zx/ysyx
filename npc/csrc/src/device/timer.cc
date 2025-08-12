@@ -1,4 +1,3 @@
-#include "cpu.h"
 #include <ctime>
 #include <device.h>
 
@@ -13,7 +12,8 @@ static uint64_t get_time_internal() {
 }
 
 uint64_t get_time() {
-    if (boot_time == 0) boot_time = get_time_internal();
+    if (boot_time == 0)
+        boot_time = get_time_internal();
     uint64_t now = get_time_internal();
     return now - boot_time;
 }
@@ -28,8 +28,7 @@ auto rtc_io_callback = [](uint32_t offset, int len, bool is_write) {
     }
 };
 
-static void timer_intr() {
-}
+static void timer_intr() {}
 
 void init_timer() {
     rtc_port_base = (uint32_t *)new_space(8);

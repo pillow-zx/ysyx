@@ -5,7 +5,6 @@
 #include <stddef.h>
 #include <cassert>
 #include <functional>
-#include <iostream>
 
 struct IOMap {
     const char *name;
@@ -38,7 +37,8 @@ extern uint8_t *p_space;
 
 extern std::function<uint8_t *(int)> new_space;
 
-void add_mmio_map(const char *name, uint32_t addr, void *space, uint32_t len, std::function<void(uint32_t, int, bool)> callback);
+void add_mmio_map(const char *name, uint32_t addr, void *space, uint32_t len,
+                  std::function<void(uint32_t, int, bool)> callback);
 
 uint32_t mmio_read(uint32_t addr, int len);
 void mmio_write(uint32_t addr, uint32_t data, int len);

@@ -3,7 +3,6 @@
 #include <sys/time.h>
 #include <cstring>
 
-
 #define MAX_HANDLER 8
 
 static alarm_handler_t handler[MAX_HANDLER] = {};
@@ -31,8 +30,8 @@ void init_alarm() {
 
     struct itimerval timer = {};
     timer.it_value.tv_sec = 0;
-    timer.it_value.tv_usec = 100000 / TIMER_HZ;  // 1s
-    timer.it_interval = timer.it_value; // Repeat every 100 ms
+    timer.it_value.tv_usec = 100000 / TIMER_HZ; // 1s
+    timer.it_interval = timer.it_value;         // Repeat every 100 ms
     ret = setitimer(ITIMER_REAL, &timer, nullptr);
     assert(ret == 0);
 }

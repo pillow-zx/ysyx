@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <cpu.h>
 
 class Memory {

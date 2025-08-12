@@ -13,7 +13,6 @@ std::function<uint8_t *(int)> new_space = [](int size) -> uint8_t * {
     return p;
 };
 
-
 static void check_bound(IOMap *map, uint32_t addr) {
     if (map == nullptr) {
         throw std::runtime_error("IOMap is null");

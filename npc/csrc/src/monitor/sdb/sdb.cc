@@ -36,7 +36,6 @@ void show_registers() {
     }
 }
 
-
 void show_memory(size_t addr, size_t len) {
     if (len < 1) {
         std::cerr << "Error: Length must be greater than 0." << std::endl;
@@ -47,7 +46,8 @@ void show_memory(size_t addr, size_t len) {
         return;
     }
     for (size_t i = 0; i < len; i++) {
-        std::cout << "Memory[" << std::hex << (addr + i) << "] = " << std::bitset<32>(memory.read_data(addr + i, 4)) << std::endl;
+        std::cout << "Memory[" << std::hex << (addr + i) << "] = " << std::bitset<32>(memory.read_data(addr + i, 4))
+                  << std::endl;
     }
 }
 
@@ -61,4 +61,3 @@ std::vector<std::string> get_commands(std::string prompt) {
     std::vector<std::string> tokens = split_string(command, ' ');
     return tokens;
 }
-

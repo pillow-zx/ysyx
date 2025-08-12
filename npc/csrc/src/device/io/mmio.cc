@@ -19,7 +19,8 @@ static void report_mmio_overlap(uint32_t addr, IOMap *map) {
     }
 }
 
-void add_mmio_map(const char *name, uint32_t addr, void *space, uint32_t len, std::function<void(uint32_t, int, bool)> callback) {
+void add_mmio_map(const char *name, uint32_t addr, void *space, uint32_t len,
+                  std::function<void(uint32_t, int, bool)> callback) {
     assert(nr_maps < NR_MAPS);
     uint32_t left = addr, right = addr + len - 1;
     for (int i = 0; i < nr_maps; i++) {
