@@ -46,7 +46,7 @@ $(OBJ_DIR)/%.o: %.cc
 	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c -o $@ $<
 	$(call call_fixdep, $(@:.o=.d), $@)
 
-# Depencies
+# Dependencies
 -include $(OBJS:.o=.d)
 
 # Some convenient rules
