@@ -127,7 +127,7 @@ module cpu(
 
             /* I-type */
             7'b0010011: begin
-                we       = 1'b1; 
+                we       = 1'b1;
                 alu_src1 = rdata1;
                 alu_src2 = imm;
                 wb_sel   = 2'b00; // ALU result
@@ -148,21 +148,21 @@ module cpu(
 
             /* Load */
             7'b0000011: begin
-                we = 1'b1; 
+                we = 1'b1;
                 mem_re = 1'b1;
                 alu_src1 = rdata1;
                 alu_src2 = imm;
                 alu_op = 4'b0000; // ADD
                 wb_sel = 2'b01; // Memory data
                 case (funct3)
-                    3'b000: begin 
-                        mem_size = 3'd1; 
+                    3'b000: begin
+                        mem_size = 3'd1;
                     end // LB
-                    3'b001: begin 
-                        mem_size = 3'd2; 
+                    3'b001: begin
+                        mem_size = 3'd2;
                     end // LH
-                    3'b010: begin 
-                        mem_size = 3'd4; 
+                    3'b010: begin
+                        mem_size = 3'd4;
                     end
                     3'b100: begin
                         mem_size = 3'd1;
@@ -256,7 +256,7 @@ module cpu(
     logic [1:0] wb_sel;
 
     always_comb begin
-        case(wb_sel) 
+        case(wb_sel)
             2'b00: wdata = alu_result;
             2'b01: wdata = mem_rdata_ext;
             2'b10: wdata = pc + 4; // JALR

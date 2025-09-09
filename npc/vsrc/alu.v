@@ -31,7 +31,7 @@ module alu(
             4'b0100: begin // SLTU
                 alu_result = (alu_src1 < alu_src2) ? 32'b1 : 32'b0;
             end
-                
+
             4'b0101: begin // XOR
                 alu_result = alu_src1 ^ alu_src2;
             end
