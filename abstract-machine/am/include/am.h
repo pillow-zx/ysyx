@@ -31,6 +31,9 @@ typedef struct {
         EVENT_IRQ_TIMER,
         EVENT_IRQ_IODEV,
     } event;
+    //  `cause`：表示事件发生的原因，通常是一个数值编码，具体含义依赖于事件类型。
+    //  `ref`：参考值，通常用于传递与事件相关的附加信息，比如出错地址、中断号等。
+    //  `msg`：指向字符串的指针，用于描述事件的详细信息或错误信息，便于调试和日志记录。
     uintptr_t cause, ref;
     const char *msg;
 } Event;

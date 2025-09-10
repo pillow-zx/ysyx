@@ -11,6 +11,6 @@
 !.gitignore
 !init.sh
 /fceux-am
-/am-kernels
 /.nvim
 /.vscode/nvboard
+/am-kernels
