@@ -1,17 +1,17 @@
 /***************************************************************************************
-* Copyright (c) 2014-2024 Zihao Yu, Nanjing University
-*
-* NEMU is licensed under Mulan PSL v2.
-* You can use this software according to the terms and conditions of the Mulan PSL v2.
-* You may obtain a copy of Mulan PSL v2 at:
-*          http://license.coscl.org.cn/MulanPSL2
-*
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-*
-* See the Mulan PSL v2 for more details.
-***************************************************************************************/
+ * Copyright (c) 2014-2024 Zihao Yu, Nanjing University
+ *
+ * NEMU is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *          http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the Mulan PSL v2 for more details.
+ ***************************************************************************************/
 
 #include <memory/host.h>
 #include <memory/paddr.h>
@@ -20,7 +20,7 @@
 
 #if defined(CONFIG_PMEM_MALLOC)
 static uint8_t *pmem = NULL;
-#else // CONFIG_PMEM_GARRAY
+#else  // CONFIG_PMEM_GARRAY
 // pmem 是一个大小为 CONFIG_MSIZE（大小为128MB） 的静态数组，代表物理内存
 // PG_ALIGN 是一个属性修饰符，确保数组按页边界对齐（ 4KB 对齐）
 // = {} 将数组初始化为全零
@@ -40,16 +40,12 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 
 /* 这两个函数实现了 NEMU 中客户机物理地址和主机虚拟地址之间的转换，是虚拟机内存模拟的核心组件。*/
 // 原式为： uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
-uint8_t *guest_to_host(paddr_t paddr) {
-    return pmem + (paddr - CONFIG_MBASE);
-}
+uint8_t *guest_to_host(paddr_t paddr) { return pmem + (paddr - CONFIG_MBASE); }
 // 将客户机（模拟的系统）物理地址转换为主机（运行 NEMU 的系统）虚拟地址。
 // paddr_t paddr：客户机物理地址
 // uint8_t*：对应的主机虚拟地址指针
 // 主机地址 = pmem起始地址 + (客户机地址 - CONFIG_MBASE)
-paddr_t host_to_guest(uint8_t *haddr) {
-    return haddr - pmem + CONFIG_MBASE;
-}
+paddr_t  host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 // 将主机虚拟地址转换为客户机物理地址。
 // uint8_t* haddr：主机虚拟地址指针
 // paddr_t：对应的客户机物理地址
@@ -60,13 +56,10 @@ static word_t pmem_read(paddr_t addr, int len) {
     return ret;
 }
 
-static void pmem_write(paddr_t addr, int len, word_t data) {
-    host_write(guest_to_host(addr), len, data);
-}
+static void pmem_write(paddr_t addr, int len, word_t data) { host_write(guest_to_host(addr), len, data); }
 
 static void out_of_bound(paddr_t addr) {
-    panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD, addr,
-          PMEM_LEFT, PMEM_RIGHT, cpu.pc);
+    panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD, addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
 }
 
 /* 初始化内存 */
@@ -80,7 +73,7 @@ void init_mem() {
 }
 
 extern char iringbuf[64][128];
-extern int iringbuf_head;
+extern int  iringbuf_head;
 
 #ifdef CONFIG_ITRACE
 static void iringbuf_show() {
@@ -92,9 +85,7 @@ static void iringbuf_show() {
 #endif
 
 #ifdef CONFIG_MTRACE
-static void mtrace(char *str, paddr_t addr, int len) {
-    printf("\033[1;34m[memory trace] %s = " FMT_PADDR ", len = %d\033[0m\n", str, addr, len);
-}
+static void mtrace(char *str, paddr_t addr, int len) { printf("\033[1;34m[memory trace] %s = " FMT_PADDR ", len = %d\033[0m\n", str, addr, len); }
 #endif
 
 /* 读取物理地址的数据 */

@@ -61,6 +61,13 @@ static void restart() {
     /* The zero register is always 0. */
     /* 把0号寄存器始终设置为0 */
     cpu.gpr[0] = 0;
+    
+    /* Initialize CSR registers */
+    /* 初始化CSR寄存器 */
+    cpu.csr.mstatus = 0x1800;  // 设置为0x1800
+    cpu.csr.mtvec = 0;         // 异常向量地址初始化为0
+    cpu.csr.mepc = 0;          // 异常PC初始化为0
+    cpu.csr.mcause = 0;        // 异常原因初始化为0
 }
 
 void init_isa() {

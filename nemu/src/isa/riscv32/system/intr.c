@@ -15,12 +15,23 @@
 
 #include <isa.h>
 
+// 根据RISC-V特权架构规范，ecall指令会根据执行时的特权级别产生不同的异常原因：
+// 用户模式执行ecall：
+// mcause = 8 (Environment call from U-mode)
+// 监督者模式执行ecall：
+// mcause = 9 (Environment call from S-mode)
+// 机器模式执行ecall：
+// mcause = 11 (Environment call from M-mode)
+
+// 函数会被操作系统，用于处理中断或异常，
 word_t isa_raise_intr(word_t NO, vaddr_t epc) {
     /* TODO: Trigger an interrupt/exception with ``NO''.
-   * Then return the address of the interrupt/exception vector.
-   */
-
-    return 0;
+     * Then return the address of the interrupt/exception vector.
+     */
+    printf("Welcome to isa_raise_intr\n");
+    cpu.csr.mepc = epc;
+    cpu.csr.mcause = NO;
+    return cpu.csr.mtvec;  // 返回异常向量地址
 }
 
 word_t isa_query_intr() {

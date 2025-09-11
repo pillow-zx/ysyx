@@ -2,6 +2,7 @@
 #include <riscv/riscv.h>
 #include <klib.h>
 
+// 回调函数：获取一个待处理事件与相关上下文，返回处理后的上下文
 static Context *(*user_handler)(Event, Context *) = NULL;
 
 Context *__am_irq_handle(Context *c) {
@@ -21,10 +22,12 @@ Context *__am_irq_handle(Context *c) {
 extern void __am_asm_trap(void);
 
 bool cte_init(Context *(*handler)(Event, Context *)) {
-    // initialize exception entry
+    // initialize exception entry 初始化异常入口为mtvec
+    //  asm volatile：告诉编译器不要优化或删除这段内联汇编代码。
+    //  "csrw mtvec, %0"：RISC-V汇编指令，将一个值写入mtvec寄存器。
+    //  "r"(__am_asm_trap)：把__am_asm_trap的地址作为输入传递给汇编代码。
     asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
-
-    // register event handler
+    
     user_handler = handler;
 
     return true;

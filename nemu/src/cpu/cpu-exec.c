@@ -155,7 +155,7 @@ static void ftrace_elf_start(vaddr_t pc, vaddr_t dnpc, bool is_call, bool is_ret
  */
 #define MAX_INST_TO_PRINT 10
 
-CPU_state cpu = {};
+CPU_state cpu = {}; // 初始化cpu状态, mstatus初始化为0x1800以通过difftest
 uint64_t g_nr_guest_inst = 0;     // g_nr_guest_inst用于记录cpu运行的指令数
 static uint64_t g_timer = 0;      // unit: us    // g_timer用于记录cpu运行的时间，默认为0
 static bool g_print_step = false; // g_print_step用于控制是否打印指令跟踪信息
