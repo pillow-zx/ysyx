@@ -69,6 +69,18 @@ static void NEMEMRET(Decode *s) {
 #define CR   csr_read
 #define CW   csr_write
 
+static void NEMUMRET(Decode *s) {
+    s->dnpc = cpu.csr.mepc;  // 设置下一条指令地址为mepc
+    word_t mstatus = cpu.csr.mstatus;
+    word_t mpie = (mstatus >> 7) & 0x1;  // 提取MPIE位
+    mstatus = (mstatus & ~(1 << 3)) | (mpie << 3);  // 将MPIE恢复到MIE位 (Machine Interrupt Enable, bit 3)
+    mstatus |= (1 << 7); // 设置MPIE为1 (规范要求)
+    // 处理MPP位 (Machine Previous Privilege, bits 11-12)
+    // 由于项目不涉及特权级切换，这部分保持原样或清零
+    mstatus &= ~(3 << 11);  // 清除MPP位，表示返回到用户模式
+    cpu.csr.mstatus = mstatus;
+}
+
 
 enum {
     TYPE_I,
@@ -210,7 +222,7 @@ static int decode_exec(Decode *s) {
     INSTPAT("??????? ????? ????? 011 ????? 11100 11", csrrc, I, word_t t = CR(imm); CW(imm, CR(imm) & ~src1); R(rd) = t);  // csrrc: rd = CSR[imm]; CSR[imm] = CSR[imm] & ~rs1
 
     /// 自陷指令
-    INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, I, isa_raise_intr(8, s->dnpc));  // ecall: environment call
+    INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, I, s->dnpc = isa_raise_intr(11, s->pc));  // ecall: environment call
     /// 跳转与链接指令
     INSTPAT("??????? ????? ????? 100 ????? 00000 11", lbu, I, R(rd) = Mr(src1 + imm, 1));  // lbu: rd = mem[rs1+imm] (byte, unsigned)
     INSTPAT("??????? ????? ????? 000 ????? 00100 11", addi, I, R(rd) = src1 + imm);        // addi: rd = rs1 + imm
@@ -258,7 +270,8 @@ static int decode_exec(Decode *s) {
 
     // N型指令
     INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, NEMUTRAP(s->pc, R(10)));  // ebreak: environment break
-    INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, N, NEMEMRET(s));               // mret: return from machine-mode trap
+
+    INSTPAT("0000000 00010 00000 000 00000 11100 11", mret, N, NEMUMRET(s));               // mret: machine mode return
     INSTPAT_END();
 
     R(0) = 0;  // reset $zero to 0

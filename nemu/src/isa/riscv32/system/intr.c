@@ -28,10 +28,15 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
     /* TODO: Trigger an interrupt/exception with ``NO''.
      * Then return the address of the interrupt/exception vector.
      */
-    printf("Welcome to isa_raise_intr\n");
-    cpu.csr.mepc = epc;
-    cpu.csr.mcause = NO;
-    return cpu.csr.mtvec;  // 返回异常向量地址
+    cpu.csr.mcause = NO;  // 设置异常原因寄存器
+    cpu.csr.mepc = epc;   // 保存异常发生时的pc
+    // 处理mstatus寄存器
+    word_t mstatus = cpu.csr.mstatus;
+    word_t mie = (mstatus >> 3) & 1;
+    mstatus = (mstatus & ~(1 << 7)) | (mie << 7);  // MIE -> MPIE
+    mstatus &= ~(1 << 3);  // 清除MIE
+    cpu.csr.mstatus = mstatus;
+    return cpu.csr.mtvec; // 返回异常处理程序的入口地址
 }
 
 word_t isa_query_intr() {
