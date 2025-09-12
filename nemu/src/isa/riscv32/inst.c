@@ -51,18 +51,6 @@ static void csr_write(word_t csr, word_t val) {
 // MPIE : bit 7 -> mask 0x80 (Machine Previous Interrupt Enable)
 // MPP : bits 12:11 -> mask 0x1800 (Machine Previous Privilege, 2 bits)
 
-/* mret: return from machine-mode trap */
-static void NEMEMRET(Decode *s) {
-    s->dnpc = cpu.csr.mepc;
-    {
-        word_t m = cpu.csr.mstatus;
-        m = (m & ~0x8) | ((m & 0x80) >> 4);
-        m = (m & ~0x80) | (1 << 7);
-        m = m & ~0x1800;
-        cpu.csr.mstatus = m;
-    }
-}
-
 #define R(i) gpr(i)       // 获取寄存器i的值，原函数在reg.c中定义
 #define Mr   vaddr_read   // 内存读函数，原函数在memory/vaddr.c中定义
 #define Mw   vaddr_write  // 内存写函数，原函数在memory/vaddr.c中定义
