@@ -40,32 +40,40 @@ f(30) f(31)
 .align 3
 .globl __am_asm_trap
 __am_asm_trap:
-  addi sp, sp, -CONTEXT_SIZE
+    # 创建上下文栈空间
+    addi sp, sp, -CONTEXT_SIZE
 
-  MAP(REGS, PUSH)
+    # 把通用寄存器压入栈
+    MAP(REGS, PUSH)
 
-  csrr t0, mcause
-  csrr t1, mstatus
-  csrr t2, mepc
+    # 保存 mcause, mstatus, mepc
+    csrr t0, mcause
+    csrr t1, mstatus
+    csrr t2, mepc
 
-  STORE t0, OFFSET_CAUSE(sp)
-  STORE t1, OFFSET_STATUS(sp)
-  STORE t2, OFFSET_EPC(sp)
+    STORE t0, OFFSET_CAUSE(sp)
+    STORE t1, OFFSET_STATUS(sp)
+    STORE t2, OFFSET_EPC(sp)
 
-  # set mstatus.MPRV to pass difftest
-  li a0, (1 << 17)
-  or t1, t1, a0
-  csrw mstatus, t1
+    # set mstatus.MPRV to pass difftest 
+    # 设置difftest相关状态以通过difftest
+    li a0, (1 << 17)
+    or t1, t1, a0
+    csrw mstatus, t1
 
-  mv a0, sp
-  call __am_irq_handle
+    # 调用C语言中断处理函数
+    mv a0, sp 
+    call __am_irq_handle
 
-  LOAD t1, OFFSET_STATUS(sp)
-  LOAD t2, OFFSET_EPC(sp)
-  csrw mstatus, t1
-  csrw mepc, t2
+    # 恢复 mstatus, mepc
+    LOAD t1, OFFSET_STATUS(sp)
+    LOAD t2, OFFSET_EPC(sp)
+    csrw mstatus, t1
+    csrw mepc, t2
 
-  MAP(REGS, POP)
+    # 把通用寄存器从栈中弹出
+    MAP(REGS, POP)
 
-  addi sp, sp, CONTEXT_SIZE
-  mret
+    # 恢复栈指针，返回
+    addi sp, sp, CONTEXT_SIZE
+    mret

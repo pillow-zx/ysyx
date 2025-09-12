@@ -11,6 +11,7 @@
 include/config
 include/generated
 compile_commands.json
+/.zed/
 /.vscode/
 /.cache/
 /.idea/

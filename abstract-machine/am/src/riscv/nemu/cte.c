@@ -6,13 +6,22 @@
 static Context *(*user_handler)(Event, Context *) = NULL;
 
 Context *__am_irq_handle(Context *c) {
+    printf("Welcome to __am_irq_handle\n");
     if (user_handler) {
-        Event ev = {0};
+        Event ev = {0}; // 创建一个事件并将所有成员变量初始化为0
         switch (c->mcause) {
             default: ev.event = EVENT_ERROR; break;
         }
 
+        for (int i = 0; i < NR_REGS; i++) {
+            printf("%lx ", c->gpr[i]);
+        }
+        printf("\n%lx %lx %lx\n", c->mepc, c->mcause, c->mstatus);
         c = user_handler(ev, c);
+        for (int i = 0; i < NR_REGS; i++) {
+            printf("%lx ", c->gpr[i]);
+        }
+        printf("\n%lx %lx %lx\n", c->mepc, c->mcause, c->mstatus);
         assert(c != NULL);
     }
 

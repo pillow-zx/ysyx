@@ -40,6 +40,29 @@ static void csr_write(word_t csr, word_t val) {
     }
 }
 
+/* mret 执行过程及解析 */
+// PC ← mepc (跳回异常发生时保存的返回地址)
+// MIE ← MPIE —— 把之前保存的中断使能位恢复到 MIE（这样返回后的中断使能与进入 trap 前一致）
+// MPIE ← 1 —— 将 MPIE 置 1（为下一次 trap 保存状态）
+// MPP ← 0 —— 清除 MPP 字段（规范中把 MPP 清为 U-mode 编码 / 0，或视具体实现清零）
+
+/* 关键掩码 */
+// MIE : bit 3 -> mask 0x8 (Machine Interrupt Enable)
+// MPIE : bit 7 -> mask 0x80 (Machine Previous Interrupt Enable)
+// MPP : bits 12:11 -> mask 0x1800 (Machine Previous Privilege, 2 bits)
+
+/* mret: return from machine-mode trap */
+static void NEMEMRET(Decode *s) {
+    s->dnpc = cpu.csr.mepc;
+    {
+        word_t m = cpu.csr.mstatus;
+        m = (m & ~0x8) | ((m & 0x80) >> 4);
+        m = (m & ~0x80) | (1 << 7);
+        m = m & ~0x1800;
+        cpu.csr.mstatus = m;
+    }
+}
+
 #define R(i) gpr(i)       // 获取寄存器i的值，原函数在reg.c中定义
 #define Mr   vaddr_read   // 内存读函数，原函数在memory/vaddr.c中定义
 #define Mw   vaddr_write  // 内存写函数，原函数在memory/vaddr.c中定义
@@ -97,10 +120,10 @@ enum {
 // s: Decode结构体指针, rd: 目标寄存器, src1: 源寄存器1的值, src2: 源寄存器2的值, imm: 立即数, type: 指令类型
 // type可以是TYPE_I, TYPE_U, TYPE_S, TYPE_N等，表示不同的指令类型
 static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_t *imm, int type) {
-    uint32_t i   = s->isa.inst;
+    uint32_t i = s->isa.inst;
     int      rs1 = BITS(i, 19, 15);
     int      rs2 = BITS(i, 24, 20);
-    *rd          = BITS(i, 11, 7);
+    *rd = BITS(i, 11, 7);
     switch (type) {
         // I型指令: 立即数指令
         case TYPE_I:
@@ -139,7 +162,7 @@ static int decode_exec(Decode *s) {
 #define INSTPAT_INST(s) ((s)->isa.inst)  // 获取当前指令
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */)             \
     {                                                                    \
-        int    rd   = 0;                                                 \
+        int    rd = 0;                                                   \
         word_t src1 = 0, src2 = 0, imm = 0;                              \
         decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type)); \
         __VA_ARGS__;                                                     \
@@ -235,6 +258,7 @@ static int decode_exec(Decode *s) {
 
     // N型指令
     INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, NEMUTRAP(s->pc, R(10)));  // ebreak: environment break
+    INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, N, NEMEMRET(s));               // mret: return from machine-mode trap
     INSTPAT_END();
 
     R(0) = 0;  // reset $zero to 0

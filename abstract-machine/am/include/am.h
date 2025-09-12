@@ -4,13 +4,13 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include ARCH_H // this macro is defined in $CFLAGS
-                // examples: "arch/x86-qemu.h", "arch/native.h", ...
+#include ARCH_H  // this macro is defined in $CFLAGS
+                 // examples: "arch/x86-qemu.h", "arch/native.h", ...
 
 // Memory protection flags
-#define MMAP_NONE  0x00000000 // no access  // 无访问权限
-#define MMAP_READ  0x00000001 // can read   // 可读权限
-#define MMAP_WRITE 0x00000002 // can write  // 可写权限
+#define MMAP_NONE  0x00000000  // no access  // 无访问权限
+#define MMAP_READ  0x00000001  // can read   // 可读权限
+#define MMAP_WRITE 0x00000002  // can write  // 可写权限
 
 // Memory area for [@start, @end)
 typedef struct {
@@ -23,26 +23,26 @@ typedef struct Context Context;
 // An event of type @event, caused by @cause of pointer @ref
 typedef struct {
     enum {
-        EVENT_NULL = 0,
-        EVENT_YIELD,
-        EVENT_SYSCALL,
-        EVENT_PAGEFAULT,
-        EVENT_ERROR,
-        EVENT_IRQ_TIMER,
-        EVENT_IRQ_IODEV,
+        EVENT_NULL = 0,   // 空事件
+        EVENT_YIELD,      // 让出CPU事件
+        EVENT_SYSCALL,    // 系统调用事件
+        EVENT_PAGEFAULT,  // 页面错误事件
+        EVENT_ERROR,      // 一般错误事件
+        EVENT_IRQ_TIMER,  // 定时器中断事件
+        EVENT_IRQ_IODEV,  // I/O设备中断事件
     } event;
     //  `cause`：表示事件发生的原因，通常是一个数值编码，具体含义依赖于事件类型。
     //  `ref`：参考值，通常用于传递与事件相关的附加信息，比如出错地址、中断号等。
     //  `msg`：指向字符串的指针，用于描述事件的详细信息或错误信息，便于调试和日志记录。
-    uintptr_t cause, ref;
+    uintptr_t   cause, ref;
     const char *msg;
 } Event;
 
 // A protected address space with user memory @area
 // and arch-dependent @ptr
 typedef struct {
-    int pgsize;
-    Area area;
+    int   pgsize;
+    Area  area;
     void *ptr;
 } AddrSpace;
 
@@ -52,8 +52,8 @@ extern "C" {
 
 // ----------------------- TRM: Turing Machine -----------------------
 extern Area heap;
-void putch(char ch);
-void halt(int code) __attribute__((__noreturn__));
+void        putch(char ch);
+void        halt(int code) __attribute__((__noreturn__));
 
 // -------------------- IOE: Input/Output Devices --------------------
 bool ioe_init(void);
@@ -62,24 +62,24 @@ void ioe_write(int reg, void *buf);
 #include "amdev.h"
 
 // ---------- CTE: Interrupt Handling and Context Switching ----------
-bool cte_init(Context *(*handler)(Event ev, Context *ctx));
-void yield(void);
-bool ienabled(void);
-void iset(bool enable);
+bool     cte_init(Context *(*handler)(Event ev, Context *ctx));
+void     yield(void);
+bool     ienabled(void);
+void     iset(bool enable);
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg);
 
 // ----------------------- VME: Virtual Memory -----------------------
-bool vme_init(void *(*pgalloc)(int), void (*pgfree)(void *));
-void protect(AddrSpace *as);
-void unprotect(AddrSpace *as);
-void map(AddrSpace *as, void *vaddr, void *paddr, int prot);
+bool     vme_init(void *(*pgalloc)(int), void (*pgfree)(void *));
+void     protect(AddrSpace *as);
+void     unprotect(AddrSpace *as);
+void     map(AddrSpace *as, void *vaddr, void *paddr, int prot);
 Context *ucontext(AddrSpace *as, Area kstack, void *entry);
 
 // ---------------------- MPE: Multi-Processing ----------------------
 bool mpe_init(void (*entry)());
-int cpu_count(void);
-int cpu_current(void);
-int atomic_xchg(int *addr, int newval);
+int  cpu_count(void);
+int  cpu_current(void);
+int  atomic_xchg(int *addr, int newval);
 
 #ifdef __cplusplus
 }
