@@ -32,7 +32,11 @@ void isa_reg_display() {
         printf("%-16s0x%-16x%d\n", regs[i], value,
                value); // 打印寄存器名称、值（十六进制）和值（十进制）
     }
-    printf("pc:0x%-16x%d\n", cpu.pc, cpu.pc); // 打印程序计数器pc的值
+    printf("%-16s0x%-16x%d\n", "mstatus", cpu.csr.mstatus, cpu.csr.mstatus); // 打印mstatus寄存器的值
+    printf("%-16s0x%-16x%d\n", "mtvec", cpu.csr.mtvec, cpu.csr.mtvec);       // 打印mtvec寄存器
+    printf("%-16s0x%-16x%d\n", "mepc", cpu.csr.mepc, cpu.csr.mepc);          // 打印mepc寄存器的值
+    printf("%-16s0x%-16x%d\n", "mcause", cpu.csr.mcause, cpu.csr.mcause);    // 打印mcause寄存器
+    printf("%-16s0x%-16x%d\n", "pc", cpu.pc, cpu.pc); // 打印程序计数器pc的值
 }
 
 // 获取寄存器的值

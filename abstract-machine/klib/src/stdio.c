@@ -92,13 +92,61 @@ static char *string_format(const char *str, const char *width) {
     return formatted;
 }
 
+static char *hex_format(unsigned int num, const char *width) {
+    static char str[20];
+    int i = 0;
+    
+    // Handle zero case
+    if (num == 0) {
+        str[i++] = '0';
+    } else {
+        // Convert to hex
+        while (num > 0) {
+            int digit = num % 16;
+            if (digit < 10) {
+                str[i++] = digit + '0';
+            } else {
+                str[i++] = digit - 10 + 'a';
+            }
+            num /= 16;
+        }
+    }
+    
+    // Apply width formatting if needed and width is specified
+    if (width[0] != '\0') {
+        char *ptr = (char *)width + 1;
+        int number = string_to_int(ptr);
+        if (i < number) {
+            for (int j = i; j < number; j++) {
+                str[j] = width[0]; // Fill with the specified width character
+            }
+            i = number;
+        }
+    }
+    
+    str[i] = '\0';
+    
+    // Reverse the string
+    int start = 0;
+    int end = i - 1;
+    while (start < end) {
+        char temp = str[start];
+        str[start] = str[end];
+        str[end] = temp;
+        start++;
+        end--;
+    }
+    
+    return str;
+}
+
 int vsprintf(char *out, const char *fmt, va_list ap) {
     char *p = out;
     char *temp = (char *)fmt;
     while (*temp) {
         if (*temp == '%') {
             temp++;
-            char width[10]; // Buffer for format specifier
+            char width[10] = {0}; // Initialize buffer for format specifier
             if (is_digit(*temp)) {
                 char *ptr = width;
                 while (is_digit(*temp)) {
@@ -117,6 +165,14 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                 }
                 case 's': {
                     char *str = string_format(va_arg(ap, char *), width);
+                    while (*str) {
+                        *p++ = *str++;
+                    }
+                    break;
+                }
+                case 'x': {
+                    unsigned int num = va_arg(ap, unsigned int);
+                    char *str = hex_format(num, width);
                     while (*str) {
                         *p++ = *str++;
                     }

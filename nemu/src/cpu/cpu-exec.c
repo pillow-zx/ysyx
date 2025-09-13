@@ -1,17 +1,17 @@
 /***************************************************************************************
-* Copyright (c) 2014-2024 Zihao Yu, Nanjing University
-*
-* NEMU is licensed under Mulan PSL v2.
-* You can use this software according to the terms and conditions of the Mulan PSL v2.
-* You may obtain a copy of Mulan PSL v2 at:
-*          http://license.coscl.org.cn/MulanPSL2
-*
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-*
-* See the Mulan PSL v2 for more details.
-***************************************************************************************/
+ * Copyright (c) 2014-2024 Zihao Yu, Nanjing University
+ *
+ * NEMU is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *          http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the Mulan PSL v2 for more details.
+ ***************************************************************************************/
 
 #include "utils.h"
 #include <cpu/cpu.h>
@@ -29,7 +29,7 @@
 
 static void dtrace(vaddr_t pc) {
     if (nemu_state.state != NEMU_RUNNING) {
-        return; // 如果 nemu 状态不是运行状态，则不进行跟踪
+        return;  // 如果 nemu 状态不是运行状态，则不进行跟踪
     }
     // 检查当前 pc 是否在跟踪范围内
     if (INRANGE(pc, CONFIG_SERIAL_MMIO, CONFIG_SERIAL_MMIO + 8)) {
@@ -52,14 +52,14 @@ static void dtrace(vaddr_t pc) {
 
 #ifdef CONFIG_FTRACE
 #include <elf.h>
-extern char *ftrace_file;
+extern char       *ftrace_file;
 extern Elf32_Ehdr *ftrace_file_header;
 extern Elf32_Shdr *ftrace_file_sections;
-extern char *ftrace_file_strtab;
-extern Elf32_Sym *ftrace_file_symtab;
-extern int ftrace_file_symtab_num;
+extern char       *ftrace_file_strtab;
+extern Elf32_Sym  *ftrace_file_symtab;
+extern int         ftrace_file_symtab_num;
 
-#define CALL_FUNC_TIMES 20 // 定义调用函数的次数, 这里设置为20次, 也可以根据需要调整
+#define CALL_FUNC_TIMES 20  // 定义调用函数的次数, 这里设置为20次, 也可以根据需要调整
 
 // 获取与pc匹配的符号名称
 static char *get_symbol_name(vaddr_t pc) {
@@ -71,13 +71,13 @@ static char *get_symbol_name(vaddr_t pc) {
             return ftrace_file_strtab + ftrace_file_symtab[i].st_name;
         }
     }
-    return NULL; // 如果没有找到匹配的符号名称，则返回NULL
+    return NULL;  // 如果没有找到匹配的符号名称，则返回NULL
 }
 
 // 函数调用栈，用于跟踪调用和返回
 static struct {
     vaddr_t pc;
-    char name[64];
+    char    name[64];
 } call_stack[CALL_FUNC_TIMES];
 static int call_stack_depth = 0;
 
@@ -90,9 +90,8 @@ static int call_stack_depth = 0;
 
 // ftrace_elf_start函数用于跟踪程序中的函数调用和返回
 static void ftrace_elf_start(vaddr_t pc, vaddr_t dnpc, bool is_call, bool is_ret) {
-    if (ftrace_file == NULL || ftrace_file_header == NULL || ftrace_file_sections == NULL ||
-        ftrace_file_strtab == NULL || ftrace_file_symtab == NULL) {
-        return; // 如果跟踪文件或相关数据未初始化，则直接返回
+    if (ftrace_file == NULL || ftrace_file_header == NULL || ftrace_file_sections == NULL || ftrace_file_strtab == NULL || ftrace_file_symtab == NULL) {
+        return;  // 如果跟踪文件或相关数据未初始化，则直接返回
     }
 
     if (is_call) {
@@ -115,8 +114,7 @@ static void ftrace_elf_start(vaddr_t pc, vaddr_t dnpc, bool is_call, bool is_ret
                 // 将函数信息压入调用栈
                 if (call_stack_depth < CALL_FUNC_TIMES) {
                     call_stack[call_stack_depth].pc = dnpc;
-                    strncpy(call_stack[call_stack_depth].name, target_symbol,
-                            sizeof(call_stack[call_stack_depth].name) - 1);
+                    strncpy(call_stack[call_stack_depth].name, target_symbol, sizeof(call_stack[call_stack_depth].name) - 1);
                     call_stack[call_stack_depth].name[sizeof(call_stack[call_stack_depth].name) - 1] = '\0';
                     call_stack_depth++;
                 } else {
@@ -146,7 +144,7 @@ static void ftrace_elf_start(vaddr_t pc, vaddr_t dnpc, bool is_call, bool is_ret
     }
 }
 
-#endif // CONFIG_FTRACE
+#endif  // CONFIG_FTRACE
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -155,18 +153,18 @@ static void ftrace_elf_start(vaddr_t pc, vaddr_t dnpc, bool is_call, bool is_ret
  */
 #define MAX_INST_TO_PRINT 10
 
-CPU_state cpu = {}; // 初始化cpu状态, mstatus初始化为0x1800以通过difftest
-uint64_t g_nr_guest_inst = 0;     // g_nr_guest_inst用于记录cpu运行的指令数
-static uint64_t g_timer = 0;      // unit: us    // g_timer用于记录cpu运行的时间，默认为0
-static bool g_print_step = false; // g_print_step用于控制是否打印指令跟踪信息
+CPU_state       cpu = {};              // 初始化cpu状态, mstatus初始化为0x1800以通过difftest
+uint64_t        g_nr_guest_inst = 0;   // g_nr_guest_inst用于记录cpu运行的指令数
+static uint64_t g_timer = 0;           // unit: us    // g_timer用于记录cpu运行的时间，默认为0
+static bool     g_print_step = false;  // g_print_step用于控制是否打印指令跟踪信息
 
-char iringbuf[64][128] = {}; // iringbuf用于存储指令跟踪日志
-int iringbuf_head = 0;       // iringbuf_head用于指示iring
+char iringbuf[64][128] = {};  // iringbuf用于存储指令跟踪日志
+int  iringbuf_head = 0;       // iringbuf_head用于指示iring
 
 #ifdef CONFIG_ITRACE
 static void iringbuf_write(Decode *s) {
     if (s->logbuf[0] == '\0') {
-        return; // 如果日志缓冲区为空，则不进行任何操作
+        return;  // 如果日志缓冲区为空，则不进行任何操作
     }
     if (iringbuf_head < sizeof(iringbuf) / sizeof(iringbuf[0])) {
         snprintf(iringbuf[iringbuf_head], sizeof(iringbuf[0]), "%s", s->logbuf);
@@ -198,18 +196,18 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
     if (g_print_step) {
         IFDEF(CONFIG_ITRACE, puts(_this->logbuf));
     }
-    IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc)); // 步进调试
-    IFDEF(CONFIG_WATCHPOINT, check_wp_update());            // 检查监视点是否被触发
+    IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));  // 步进调试
+    IFDEF(CONFIG_WATCHPOINT, check_wp_update());             // 检查监视点是否被触发
 }
 
-/* 执行一次cpu的指令 */ // pc为实际执行指令地址, dnpc为下一次要执行的指令地址
+/* 执行一次cpu的指令 */  // pc为实际执行指令地址, dnpc为下一次要执行的指令地址
 // execute->exec_once->isa_exec_once->encode
 static void exec_once(Decode *s, vaddr_t pc) {
     s->pc = pc;
     s->snpc = pc;
-    isa_exec_once(s); // 执行指令,修改s->snpc,使s->snpc指向下一条指令的地址
+    isa_exec_once(s);  // 执行指令,修改s->snpc,使s->snpc指向下一条指令的地址
 
-    IFDEF(CONFIG_DTRACE, dtrace(pc)); // 调试跟踪
+    IFDEF(CONFIG_DTRACE, dtrace(pc));  // 调试跟踪
 
 #ifdef CONFIG_FTRACE
     // 检测函数调用和返回
@@ -220,16 +218,16 @@ static void exec_once(Decode *s, vaddr_t pc) {
     uint32_t instruction = s->isa.inst;
 
     // 检测JAL指令 (无条件跳转并链接)
-    if ((instruction & 0x7f) == 0x6f) { // JAL opcode
+    if ((instruction & 0x7f) == 0x6f) {  // JAL opcode
         uint32_t rd = (instruction >> 7) & 0x1f;
         // 任何跳转到函数地址的JAL指令都可能是函数调用
-        char *target_symbol = get_symbol_name(s->dnpc);
-        if (target_symbol != NULL && rd != 0) { // rd != 0 表示会保存返回地址
+        char    *target_symbol = get_symbol_name(s->dnpc);
+        if (target_symbol != NULL && rd != 0) {  // rd != 0 表示会保存返回地址
             is_call = true;
         }
     }
     // 检测JALR指令 (间接跳转并链接)
-    else if ((instruction & 0x7f) == 0x67) { // JALR opcode
+    else if ((instruction & 0x7f) == 0x67) {  // JALR opcode
         uint32_t rd = (instruction >> 7) & 0x1f;
         uint32_t rs1 = (instruction >> 15) & 0x1f;
 
@@ -247,8 +245,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
         // 其他返回模式：rd == 0 且从当前函数返回
         else if (rd == 0) {
             char *current_symbol = get_symbol_name(pc);
-            if (current_symbol != NULL && call_stack_depth > 0 &&
-                strcmp(call_stack[call_stack_depth - 1].name, current_symbol) == 0) {
+            if (current_symbol != NULL && call_stack_depth > 0 && strcmp(call_stack[call_stack_depth - 1].name, current_symbol) == 0) {
                 is_ret = true;
             }
         }
@@ -256,13 +253,12 @@ static void exec_once(Decode *s, vaddr_t pc) {
 
     ftrace_elf_start(pc, s->dnpc, is_call, is_ret);
 #endif
-
-    cpu.pc = s->dnpc; // 更新pc
+    cpu.pc = s->dnpc;  // 更新pc
 #ifdef CONFIG_ITRACE
     char *p = s->logbuf;
     p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-    int ilen = s->snpc - s->pc;
-    int i;
+    int      ilen = s->snpc - s->pc;
+    int      i;
     uint8_t *inst = (uint8_t *)&s->isa.inst;
 #ifdef CONFIG_ISA_x86
     for (i = 0; i < ilen; i++) {
@@ -273,15 +269,13 @@ static void exec_once(Decode *s, vaddr_t pc) {
     }
     int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
     int space_len = ilen_max - ilen;
-    if (space_len < 0)
-        space_len = 0;
+    if (space_len < 0) space_len = 0;
     space_len = space_len * 3 + 1;
     memset(p, ' ', space_len);
     p += space_len;
 
     void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-    disassemble(p, s->logbuf + sizeof(s->logbuf) - p, MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst,
-                ilen);
+    disassemble(p, s->logbuf + sizeof(s->logbuf) - p, MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst, ilen);
 #endif
 }
 
@@ -339,9 +333,7 @@ void cpu_exec(uint64_t n) {
     switch (nemu_state.state) {
         case NEMU_END:
         case NEMU_ABORT:
-        case NEMU_QUIT:
-            printf("Program execution has ended. To restart the program, exit NEMU and run again.\n");
-            return;
+        case NEMU_QUIT: printf("Program execution has ended. To restart the program, exit NEMU and run again.\n"); return;
         default: nemu_state.state = NEMU_RUNNING;
     }
 
@@ -364,8 +356,7 @@ void cpu_exec(uint64_t n) {
         case NEMU_ABORT:
             Log("nemu: %s at pc = " FMT_WORD,
                 (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED)
-                                                : (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN)
-                                                                            : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
+                                                : (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
                 nemu_state.halt_pc);
             // fall through
         case NEMU_QUIT: statistic();

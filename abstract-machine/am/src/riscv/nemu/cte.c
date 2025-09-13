@@ -6,22 +6,15 @@
 static Context *(*user_handler)(Event, Context *) = NULL;
 
 Context *__am_irq_handle(Context *c) {
-    printf("Welcome to __am_irq_handle\n");
     if (user_handler) {
-        Event ev = {0}; // 创建一个事件并将所有成员变量初始化为0
+        Event ev = {0};  // 创建一个事件并将所有成员变量初始化为0
         switch (c->mcause) {
+            case 0xb:
+                ev.event = EVENT_YIELD;  // 事件类型为EVENT_YIELD
+                break;
             default: ev.event = EVENT_ERROR; break;
         }
-
-        for (int i = 0; i < NR_REGS; i++) {
-            printf("%lx ", c->gpr[i]);
-        }
-        printf("\n%lx %lx %lx\n", c->mepc, c->mcause, c->mstatus);
         c = user_handler(ev, c);
-        for (int i = 0; i < NR_REGS; i++) {
-            printf("%lx ", c->gpr[i]);
-        }
-        printf("\n%lx %lx %lx\n", c->mepc, c->mcause, c->mstatus);
         assert(c != NULL);
     }
 
@@ -36,15 +29,13 @@ bool cte_init(Context *(*handler)(Event, Context *)) {
     //  "csrw mtvec, %0"：RISC-V汇编指令，将一个值写入mtvec寄存器。
     //  "r"(__am_asm_trap)：把__am_asm_trap的地址作为输入传递给汇编代码。
     asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
-    
+
     user_handler = handler;
 
     return true;
 }
 
-Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-    return NULL;
-}
+Context *kcontext(Area kstack, void (*entry)(void *), void *arg) { return NULL; }
 
 void yield() {
 #ifdef __riscv_e
@@ -54,8 +45,6 @@ void yield() {
 #endif
 }
 
-bool ienabled() {
-    return false;
-}
+bool ienabled() { return false; }
 
 void iset(bool enable) {}

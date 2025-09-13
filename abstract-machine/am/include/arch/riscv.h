@@ -8,9 +8,6 @@
 #endif
 
 struct Context {
-    // TODO: fix the order of these members to match trap.S
-    // uintptr_t mepc, mcause, gpr[NR_REGS], mstatus;
-    // void *pdir;
     uintptr_t gpr[NR_REGS];  // 通用寄存器数组
     uintptr_t mcause;        // 异常原因
     uintptr_t mstatus;       // 机器状态
