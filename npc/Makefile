@@ -85,4 +85,8 @@ clean:
 	@echo "Cleaning up..."
 	@rm -rf $(BUILD_DIR)
 
+# gdb target
+gdb: $(BIN)
+	gdb --tui --args $(BIN) $(ARG)
+
 -include ../Makefile

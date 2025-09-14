@@ -42,7 +42,7 @@ run: run-env
 
 gdb: run-env
 	$(call git_commit, "gdb NEMU")
-	gdb -s $(BINARY) --args $(NEMU_EXEC)
+	gdb --tui -s $(BINARY) --args $(NEMU_EXEC)
 
 cgdb: run-env
 	$(call git_commit, "cgdb NEMU")

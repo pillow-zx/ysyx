@@ -48,7 +48,7 @@ class Cpu {
         core->eval();  // Evaluate the model
 
         MyTrace.itrace_handle(core->rootp->cpu__DOT__pc, core->rootp->cpu__DOT__inst);
-        // MyTrace.ftrace_handle(core->rootp->cpu__DOT__inst);
+        MyTrace.ftrace_handle(core->rootp->cpu__DOT__inst);
 
         // difftest_step(); // Call difftest step to check registers
 

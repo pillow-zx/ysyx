@@ -31,6 +31,9 @@ class Traces {
     cs_insn *insn;
     size_t count;
 
+
+    bool itrace_enable = false;
+
   public:
     Traces() {
         insn = nullptr;
@@ -58,7 +61,10 @@ class Traces {
         ftrace_file_strtab = nullptr;
     }
 
-    void itrace_init(std::string filename) {
+    void itrace_init(std::string filename = "") {
+        if (filename.empty()) {
+            return;
+        }
         itrace_file.open(filename);
         if (!itrace_file.is_open()) {
             std::cerr << "Error opening trace file: " << filename << std::endl;
@@ -69,9 +75,13 @@ class Traces {
             std::cerr << "Failed to initialize Capstone disassembler" << std::endl;
             throw std::runtime_error("Capstone initialization failed");
         }
+        itrace_enable = true;
     }
 
     void itrace_handle(uint32_t pc, uint32_t inst) {
+        if (!itrace_enable) {
+            return;
+        }
         // 使用 CS_OPT_DETAIL 启用详细模式，以获取操作数等信息
         cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 
@@ -96,8 +106,13 @@ class Traces {
     } call_stack[CALL_FUNC_TIMES];
     int call_stack_top = 0;
 
+    bool ftrace_enable = false;
+
   public:
-    void ftrace_init(std::string filename) {
+    void ftrace_init(std::string filename = "") {
+        if (filename.empty()) {
+            return;
+        }
         fp = fopen(filename.c_str(), "rb");
         if (!fp) {
             std::cerr << "Error opening trace file: " << filename << std::endl;
@@ -136,9 +151,13 @@ class Traces {
         }
         fclose(fp);
         fp = nullptr;
+        ftrace_enable = true;
     }
 
     void ftrace_handle(uint32_t inst) {
+        if (!ftrace_enable) {
+            return;
+        }
         bool is_call = false, is_ret = false;
 
         // 设置 Capstone 选项以获取详细信息

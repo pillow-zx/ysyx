@@ -145,6 +145,7 @@ module cpu (
                     end
                     3'b110: alu_op = 4'b1000;  // ORI
                     3'b111: alu_op = 4'b1001;  // ANDI
+                    default: alu_op = 4'b0000;
                 endcase
             end
 

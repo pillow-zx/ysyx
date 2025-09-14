@@ -50,12 +50,12 @@ void npc_init(int argc, char *argv[]) {
 
     memory.init(image); // Initialize memory with the program image
 
-    MyTrace.itrace_init(log_file); // Initialize trace with the log file
-    MyTrace.ftrace_init(elf_file); // Initialize ftrace with the ELF file
+     MyTrace.itrace_init(log_file); // Initialize trace with the log file
+     MyTrace.ftrace_init(elf_file); // Initialize ftrace with the ELF file
 
-    init_device(); // Initialize device components
+     init_device(); // Initialize device components
 
-    init_difftest();
+     init_difftest();
 }
 
 void npc_start() {

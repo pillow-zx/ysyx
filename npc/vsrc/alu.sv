@@ -25,11 +25,11 @@ module alu (
             end
 
             4'b0011: begin  // SLT
-                alu_result = ($signed(alu_src1) < $signed(alu_src2)) ? 32'b1 : 32'b0;
+                alu_result = ($signed(alu_src1) < $signed(alu_src2)) ? 32'd1 : 32'b0;
             end
 
             4'b0100: begin  // SLTU
-                alu_result = (alu_src1 < alu_src2) ? 32'b1 : 32'b0;
+                alu_result = (alu_src1 < alu_src2) ? 32'd1 : 32'b0;
             end
 
             4'b0101: begin  // XOR
