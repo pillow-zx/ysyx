@@ -58,8 +58,7 @@ static void csr_write(word_t csr, word_t val) {
 #define CW   csr_write
 
 static void NEMUMRET(Decode *s) {
-    cpu.csr.mepc += 4;
-    s->dnpc = cpu.csr.mepc;  // 设置下一条指令地址为mepc
+    s->dnpc = cpu.csr.mepc + 4;  // 设置下一条指令地址为mepc
     word_t mstatus = cpu.csr.mstatus;
     word_t mpie = (mstatus >> 7) & 0x1;             // 提取MPIE位
     mstatus = (mstatus & ~(1 << 3)) | (mpie << 3);  // 将MPIE恢复到MIE位 (Machine Interrupt Enable, bit 3)
