@@ -150,7 +150,7 @@ static int cmd_x(char *args) {
         word_t data = vaddr_read(i, 4);
         /* 打印内存 */
         // printf("0x%08x: 0x%08x\n", addr + i, data);
-        printf("\033[34m0x%08x\033[0m: 0x%08x\n", addr + i, data);
+        printf("\033[34m0x%08x\033[0m: 0x%08x\n", i, data);
     }
     return 0;
 }

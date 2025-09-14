@@ -45,7 +45,7 @@ void csr_write(word_t csr, word_t val) {
     }
 }
 
-
+#ifdef CONFIG_ETRACE
 // RISC-V异常代码定义
 #define CAUSE_MISALIGNED_FETCH    0
 #define CAUSE_FETCH_ACCESS        1
@@ -74,6 +74,7 @@ static void etrace_start(word_t NO, vaddr_t epc) {
         }
     }
 }
+#endif
 
 
 // 函数会被操作系统，用于处理中断或异常，
@@ -81,7 +82,10 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
     /* TODO: Trigger an interrupt/exception with ``NO''.
      * Then return the address of the interrupt/exception vector.
      */
+
+#ifdef CONFIG_ETRACE
     etrace_start(NO, epc);
+#endif
     cpu.csr.mcause = NO;  // 设置异常原因寄存器
     cpu.csr.mepc = epc;   // 保存异常发生时的pc
     // 处理mstatus寄存器

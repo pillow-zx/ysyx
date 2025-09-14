@@ -45,7 +45,7 @@ static void dtrace(vaddr_t pc) {
     } else if (INRANGE(pc, CONFIG_RTC_MMIO, CONFIG_RTC_MMIO + 8)) {
         Log("dtrace: RTC port access at " FMT_WORD, pc);
     } else {
-        Log("dtrace: unknown port access at " FMT_WORD, pc);
+        // Log("dtrace: unknown port access at " FMT_WORD, pc);
     }
 }
 #endif
