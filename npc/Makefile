@@ -4,7 +4,7 @@ VERILATOR_CFLAGS += -MMD --build -cc --trace\
 				-O2 --x-assign fast --x-initial fast --noassert
 
 # Find all Verilog source files
-VSRCS = $(shell find $(VSRC_DIR) -name "*.v")
+VSRCS = $(shell find $(VSRC_DIR) -name "*.sv")
 
 # Verilator build rules
 verilator-build: $(VSRCS) $(SRC)
