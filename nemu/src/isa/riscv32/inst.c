@@ -19,27 +19,6 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 
-// CSR访问函数
-static word_t csr_read(word_t csr) {
-    switch (csr) {
-        case CSR_MSTATUS: return cpu.csr.mstatus;
-        case CSR_MTVEC: return cpu.csr.mtvec;
-        case CSR_MEPC: return cpu.csr.mepc;
-        case CSR_MCAUSE: return cpu.csr.mcause;
-        default: printf("Error: Unsupported CSR read at 0x%x\n", csr); assert(0);
-    }
-}
-
-static void csr_write(word_t csr, word_t val) {
-    switch (csr) {
-        case CSR_MSTATUS: cpu.csr.mstatus = val; break;
-        case CSR_MTVEC: cpu.csr.mtvec = val; break;
-        case CSR_MEPC: cpu.csr.mepc = val; break;
-        case CSR_MCAUSE: cpu.csr.mcause = val; break;
-        default: printf("Error: Unsupported CSR write at 0x%x\n", csr); assert(0);
-    }
-}
-
 /* mret 执行过程及解析 */
 // PC ← mepc (跳回异常发生时保存的返回地址)
 // MIE ← MPIE —— 把之前保存的中断使能位恢复到 MIE（这样返回后的中断使能与进入 trap 前一致）
@@ -209,7 +188,7 @@ static int decode_exec(Decode *s) {
     INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs, I, word_t t = CR(imm); CW(imm, CR(imm) | src1); R(rd) = t);   // csrrs: rd = CSR[imm]; CSR[imm] = CSR[imm] | rs1
     INSTPAT("??????? ????? ????? 011 ????? 11100 11", csrrc, I, word_t t = CR(imm); CW(imm, CR(imm) & ~src1); R(rd) = t);  // csrrc: rd = CSR[imm]; CSR[imm] = CSR[imm] & ~rs1
 
-    /// 自陷指令
+    /// 自陷指令, 因为目前的nemu为一个裸机系统，所有代码都运行在Machine模式, 所以把NO设置为11
     INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall, I, s->dnpc = isa_raise_intr(11, s->pc));  // ecall: environment call
     /// 跳转与链接指令
     INSTPAT("??????? ????? ????? 100 ????? 00000 11", lbu, I, R(rd) = Mr(src1 + imm, 1));  // lbu: rd = mem[rs1+imm] (byte, unsigned)

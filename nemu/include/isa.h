@@ -34,6 +34,8 @@ void init_isa();
 extern CPU_state cpu;
 void isa_reg_display();
 word_t isa_reg_str2val(const char *name, bool *success);
+word_t csr_read(word_t csr);
+void csr_write(word_t csr, word_t val);
 
 // exec
 struct Decode;
