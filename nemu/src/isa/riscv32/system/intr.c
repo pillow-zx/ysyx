@@ -14,7 +14,6 @@
  ***************************************************************************************/
 
 #include <isa.h>
-#include "debug.h"
 
 // 根据RISC-V特权架构规范，ecall指令会根据执行时的特权级别产生不同的异常原因：
 // 用户模式执行ecall：
@@ -64,13 +63,80 @@ void csr_write(word_t csr, word_t val) {
 
 static void etrace_start(word_t NO, vaddr_t epc) {
     switch (NO) {
+        case CAUSE_MISALIGNED_FETCH: {
+            Log("[ETRACE] MISALIGNED_FETCH -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
+        case CAUSE_FETCH_ACCESS: {
+            Log("[ETRACE] FETCH_ACCESS -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
+        case CAUSE_ILLEGAL_INSTRUCTION: {
+            Log("[ETRACE] ILLEGAL_INSTRUCTION -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
+        case CAUSE_BREAKPOINT: {
+            Log("[ETRACE] BREAKPOINT -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
+        case CAUSE_MISALIGNED_LOAD: {
+            Log("[ETRACE] MISALIGNED_LOAD -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
+        case CAUSE_LOAD_ACCESS: {
+            Log("[ETRACE] LOAD_ACCESS -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
+        case CAUSE_MISALIGNED_STORE: {
+            Log("[ETRACE] MISALIGNED_STORE -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
+        case CAUSE_STORE_ACCESS: {
+            Log("[ETRACE] STORE_ACCESS -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
+        case CAUSE_USER_ECALL: {
+            Log("[ETRACE] USER_ECALL -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
+        case CAUSE_SUPERVISOR_ECALL: {
+            Log("[ETRACE] SUPERVISOR_ECALL -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
         case CAUSE_MACHINE_ECALL: {
             Log("[ETRACE] MACHINE_ECALL -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
                 csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
+        case CAUSE_FETCH_PAGE_FAULT: {
+            Log("[ETRACE] FETCH_PAGE_FAULT -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
+        case CAUSE_LOAD_PAGE_FAULT: {
+            Log("[ETRACE] LOAD_PAGE_FAULT -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
+        }
+        case CAUSE_STORE_PAGE_FAULT: {
+            Log("[ETRACE] STORE_PAGE_FAULT -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", epc, csr_read(CSR_MCAUSE), csr_read(CSR_MSTATUS),
+                csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
         }
         default: {
             Log("[ETRACE] UNSUPPORTED EXCEPTION NO: %d -> pc = 0x%08x mcause: 0x%08x, mstatus: 0x%08x, mtvec: 0x%08x, mepc: 0x%08x", NO, epc, csr_read(CSR_MCAUSE),
                 csr_read(CSR_MSTATUS), csr_read(CSR_MTVEC), csr_read(CSR_MEPC));
+            break;
         }
     }
 }
@@ -83,11 +149,9 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
      * Then return the address of the interrupt/exception vector.
      */
 
-#ifdef CONFIG_ETRACE
-    etrace_start(NO, epc);
-#endif
     cpu.csr.mcause = NO;  // 设置异常原因寄存器
     cpu.csr.mepc = epc;   // 保存异常发生时的pc
+    IFDEF(CONFIG_ETRACE, etrace_start(NO, epc);)
     // 处理mstatus寄存器
     word_t mstatus = cpu.csr.mstatus;
     word_t mie = (mstatus >> 3) & 1;

@@ -44,7 +44,7 @@ static void NEMUMRET(Decode *s) {
     mstatus |= (1 << 7);                            // 设置MPIE为1 (规范要求)
     // 处理MPP位 (Machine Previous Privilege, bits 11-12)
     // 由于项目不涉及特权级切换，这部分保持原样或清零
-    mstatus &= ~(3 << 11);  // 清除MPP位，表示返回到用户模式
+    // mstatus &= ~(3 << 11);  // 清除MPP位，表示返回到用户模式
     cpu.csr.mstatus = mstatus;
 }
 
