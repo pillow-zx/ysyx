@@ -7,8 +7,11 @@
 
 static int getlength(int num) {
     int len = 0;
-    if (num == 0)
-        return 1;
+    if (num == 0) return 1;
+    if (num < 0) {
+        len = 1;
+        num = -num;
+    }
     while (num != 0) {
         num /= 10;
         len++;
@@ -28,9 +31,7 @@ static void reverse_string(char *str, int len, int is_negative) {
     }
 }
 
-static int is_digit(char c) {
-    return c >= '0' && c <= '9';
-}
+static int is_digit(char c) { return c >= '0' && c <= '9'; }
 
 static int string_to_int(const char *str) {
     int num = 0;
@@ -47,19 +48,19 @@ static int string_to_int(const char *str) {
 }
 
 static char *int_format(int num, const char *width) {
-    char *ptr = (char *)width + 1;
-    int number = string_to_int(ptr);
-    int len = getlength(num);
+    char       *ptr = (char *)width + 1;
+    int         number = string_to_int(ptr);
+    int         len = getlength(num);
     static char str[20];
-    int is_negative = 0;
+    int         is_negative = 0;
     if (num < 0) {
         is_negative = 1;
         num = -num;
     }
     int i = 0;
     if (len < number) {
-        for (; i < number - len; i++) {
-            str[i] = width[0]; // Fill with the specified width character
+        while (i < number - len) {
+            str[i++] = width[0];  // Fill with the specified width character
         }
     }
     if (is_negative) {
@@ -76,14 +77,14 @@ static char *int_format(int num, const char *width) {
 }
 
 static char *string_format(const char *str, const char *width) {
-    char *ptr = (char *)width + 1;
-    int number = string_to_int(ptr);
+    char       *ptr = (char *)width + 1;
+    int         number = string_to_int(ptr);
     static char formatted[100];
-    int len = strlen(str);
+    int         len = strlen(str);
     if (len < number) {
         int i;
         for (i = 0; i < number - len; i++) {
-            formatted[i] = width[0]; // Fill with the specified width character
+            formatted[i] = width[0];  // Fill with the specified width character
         }
         strcpy(formatted + i, str);
     } else {
@@ -94,8 +95,8 @@ static char *string_format(const char *str, const char *width) {
 
 static char *hex_format(unsigned int num, const char *width) {
     static char str[20];
-    int i = 0;
-    
+    int         i = 0;
+
     // Handle zero case
     if (num == 0) {
         str[i++] = '0';
@@ -111,21 +112,21 @@ static char *hex_format(unsigned int num, const char *width) {
             num /= 16;
         }
     }
-    
+
     // Apply width formatting if needed and width is specified
     if (width[0] != '\0') {
         char *ptr = (char *)width + 1;
-        int number = string_to_int(ptr);
+        int   number = string_to_int(ptr);
         if (i < number) {
             for (int j = i; j < number; j++) {
-                str[j] = width[0]; // Fill with the specified width character
+                str[j] = width[0];  // Fill with the specified width character
             }
             i = number;
         }
     }
-    
+
     str[i] = '\0';
-    
+
     // Reverse the string
     int start = 0;
     int end = i - 1;
@@ -136,7 +137,7 @@ static char *hex_format(unsigned int num, const char *width) {
         start++;
         end--;
     }
-    
+
     return str;
 }
 
@@ -146,17 +147,17 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
     while (*temp) {
         if (*temp == '%') {
             temp++;
-            char width[10] = {0}; // Initialize buffer for format specifier
+            char width[10] = {0};  // Initialize buffer for format specifier
             if (is_digit(*temp)) {
                 char *ptr = width;
                 while (is_digit(*temp)) {
                     *ptr++ = *temp++;
                 }
-                *ptr = '\0'; // Null-terminate the buffer
+                *ptr = '\0';  // Null-terminate the buffer
             }
             switch (*temp) {
                 case 'd': {
-                    int num = va_arg(ap, int);
+                    int   num = va_arg(ap, int);
                     char *str = int_format(num, width);
                     while (*str) {
                         *p++ = *str++;
@@ -172,7 +173,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                 }
                 case 'x': {
                     unsigned int num = va_arg(ap, unsigned int);
-                    char *str = hex_format(num, width);
+                    char        *str = hex_format(num, width);
                     while (*str) {
                         *p++ = *str++;
                     }
@@ -195,8 +196,8 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
         }
         temp++;
     }
-    *p = '\0';      // Only set null terminator at the end
-    return p - out; // Return the number of characters written
+    *p = '\0';       // Only set null terminator at the end
+    return p - out;  // Return the number of characters written
 }
 
 int sprintf(char *out, const char *fmt, ...) {
@@ -209,7 +210,7 @@ int sprintf(char *out, const char *fmt, ...) {
 
 int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
     int ret = vsprintf(out, fmt, ap);
-    return ret < n ? ret : n; // Ensure we do not write more than n characters
+    return ret < n ? ret : n;  // Ensure we do not write more than n characters
 }
 
 int snprintf(char *out, size_t n, const char *fmt, ...) {
@@ -223,11 +224,11 @@ int printf(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
 
-    char buffer[1024]; // Temporary buffer for output
-    int ret = vsprintf(buffer, fmt, ap);
+    char buffer[4096];  // Temporary buffer for output
+    int  ret = vsprintf(buffer, fmt, ap);
     va_end(ap);
 
-    putstr(buffer); // Output to console
+    putstr(buffer);  // Output to console
 
     return ret;
 }
