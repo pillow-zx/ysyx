@@ -1,17 +1,17 @@
 /***************************************************************************************
-* Copyright (c) 2014-2024 Zihao Yu, Nanjing University
-*
-* NEMU is licensed under Mulan PSL v2.
-* You can use this software according to the terms and conditions of the Mulan PSL v2.
-* You may obtain a copy of Mulan PSL v2 at:
-*          http://license.coscl.org.cn/MulanPSL2
-*
-* THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-* EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-* MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-*
-* See the Mulan PSL v2 for more details.
-***************************************************************************************/
+ * Copyright (c) 2014-2024 Zihao Yu, Nanjing University
+ *
+ * NEMU is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *          http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ *
+ * See the Mulan PSL v2 for more details.
+ ***************************************************************************************/
 
 #ifndef __DEBUG_H__
 #define __DEBUG_H__
@@ -21,9 +21,7 @@
 #include <utils.h>
 
 // LOG的输出为 蓝色的format + 程序文件名 + 行号 + 函数名
-#define Log(format, ...) \
-    _Log(ANSI_FMT("[%s:%d %s] " format, ANSI_FG_BLUE) "\n", \
-        __FILE__, __LINE__, __func__, ## __VA_ARGS__)
+#define Log(format, ...) _Log(ANSI_FMT("[%s:%d %s] " format, ANSI_FG_BLUE) "\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__)
 
 // __LINE__  ：当前程序行的行号，表示为十进制整型常量
 // __FILE__  ：当前源文件名，表示字符串型常量
@@ -53,22 +51,21 @@
 
 // MUXDEF 宏用于根据条件选择不同的宏定义
 // Assert 宏的在CONFIG_TARGET_AM下的定义时直接输出红色的信息，否则输出红色的错误信息到标准错误流
-#define Assert(cond, format, ...) \
-  do { \
-    if (!(cond)) { \
-    MUXDEF(CONFIG_TARGET_AM, \
-        printf(ANSI_FMT(format, ANSI_FG_RED) "\n", ## __VA_ARGS__), \
-        (fflush(stdout), fprintf(stderr, ANSI_FMT(format, ANSI_FG_RED) "\n", ##  __VA_ARGS__))); \
-    IFNDEF(CONFIG_TARGET_AM, extern FILE* log_fp; fflush(log_fp)); \
-    extern void assert_fail_msg(); \
-    assert_fail_msg(); \
-    assert(cond); \
-    } \
-  } while (0)
+#define Assert(cond, format, ...)                                                                         \
+    do {                                                                                                  \
+        if (!(cond)) {                                                                                    \
+            MUXDEF(CONFIG_TARGET_AM, printf(ANSI_FMT(format, ANSI_FG_RED) "\n", ##__VA_ARGS__),           \
+                   (fflush(stdout), fprintf(stderr, ANSI_FMT(format, ANSI_FG_RED) "\n", ##__VA_ARGS__))); \
+            IFNDEF(CONFIG_TARGET_AM, extern FILE * log_fp; fflush(log_fp));                               \
+            extern void assert_fail_msg();                                                                \
+            assert_fail_msg();                                                                            \
+            assert(cond);                                                                                 \
+        }                                                                                                 \
+    } while (0)
 
 // panic 宏的功能是直接调用 Assert 宏，传入一个条件值为0（假），表示程序发生了错误
-#define panic(format, ...) Assert(0, format, ## __VA_ARGS__)
+#define panic(format, ...) Assert(0, format, ##__VA_ARGS__)
 
-#define TODO() panic("please implement me")
+#define TODO()             panic("please implement me")
 
 #endif
