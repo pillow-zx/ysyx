@@ -55,15 +55,18 @@ __am_asm_trap:
     STORE t1, OFFSET_STATUS(sp)
     STORE t2, OFFSET_EPC(sp)
 
-    # set mstatus.MPRV to pass difftest 
+    # set mstatus.MPRV to pass difftest
     # 设置difftest相关状态以通过difftest
     li a0, (1 << 17)
     or t1, t1, a0
     csrw mstatus, t1
 
     # 调用C语言中断处理函数
-    mv a0, sp 
+    # 通过a0 - a7 寄存器来传递函数参数
+    mv a0, sp
     call __am_irq_handle
+
+    # 将栈顶指针切换到新进程的上下文
 
     # 恢复 mstatus, mepc
     LOAD t1, OFFSET_STATUS(sp)

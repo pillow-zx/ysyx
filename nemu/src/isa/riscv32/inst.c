@@ -44,7 +44,7 @@ static void NEMUMRET(Decode *s) {
     mstatus |= (1 << 7);                            // 设置MPIE为1 (规范要求)
     // 处理MPP位 (Machine Previous Privilege, bits 11-12)
     // 由于项目不涉及特权级切换，这部分保持原样或清零
-    // mstatus &= ~(3 << 11);  // 清除MPP位，表示返回到用户模式
+    mstatus &= ~(3 << 11);  // 清除MPP位，表示返回到用户模式
     cpu.csr.mstatus = mstatus;
 }
 
@@ -100,8 +100,8 @@ enum {
 // type可以是TYPE_I, TYPE_U, TYPE_S, TYPE_N等，表示不同的指令类型
 static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_t *imm, int type) {
     uint32_t i = s->isa.inst;
-    int      rs1 = BITS(i, 19, 15);
-    int      rs2 = BITS(i, 24, 20);
+    int rs1 = BITS(i, 19, 15);
+    int rs2 = BITS(i, 24, 20);
     *rd = BITS(i, 11, 7);
     switch (type) {
         // I型指令: 立即数指令
@@ -141,7 +141,7 @@ static int decode_exec(Decode *s) {
 #define INSTPAT_INST(s) ((s)->isa.inst)  // 获取当前指令
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */)             \
     {                                                                    \
-        int    rd = 0;                                                   \
+        int rd = 0;                                                      \
         word_t src1 = 0, src2 = 0, imm = 0;                              \
         decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type)); \
         __VA_ARGS__;                                                     \
@@ -238,7 +238,6 @@ static int decode_exec(Decode *s) {
     // N型指令
     INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak, N, NEMUTRAP(s->pc, R(10)));  // ebreak: environment break
 
-    // INSTPAT("0000000 00010 00000 000 00000 11100 11", mret, N, NEMUMRET(s));               // mret: machine mode return
     INSTPAT("0011000 00010 00000 000 00000 11100 11", mret, N, NEMUMRET(s));
     INSTPAT_END();
 
