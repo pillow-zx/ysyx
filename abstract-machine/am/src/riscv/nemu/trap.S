@@ -68,11 +68,15 @@ __am_asm_trap:
 
     # 将栈顶指针切换到新进程的上下文
 
-    # 恢复 mstatus, mepc
+    # 恢复mstatus
     LOAD t1, OFFSET_STATUS(sp)
     LOAD t2, OFFSET_EPC(sp)
     csrw mstatus, t1
+    # 将mpec + 4
+    addi t2, t2, 4
+    # 恢复mepc
     csrw mepc, t2
+
 
     # 把通用寄存器从栈中弹出
     MAP(REGS, POP)
