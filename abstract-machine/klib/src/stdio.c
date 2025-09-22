@@ -48,11 +48,11 @@ static int string_to_int(const char *str) {
 }
 
 static char *int_format(int num, const char *width) {
-    char       *ptr = (char *)width + 1;
-    int         number = string_to_int(ptr);
-    int         len = getlength(num);
+    char *ptr = (char *)width + 1;
+    int number = string_to_int(ptr);
+    int len = getlength(num);
     static char str[20];
-    int         is_negative = 0;
+    int is_negative = 0;
     if (num < 0) {
         is_negative = 1;
         num = -num;
@@ -77,10 +77,10 @@ static char *int_format(int num, const char *width) {
 }
 
 static char *string_format(const char *str, const char *width) {
-    char       *ptr = (char *)width + 1;
-    int         number = string_to_int(ptr);
+    char *ptr = (char *)width + 1;
+    int number = string_to_int(ptr);
     static char formatted[100];
-    int         len = strlen(str);
+    int len = strlen(str);
     if (len < number) {
         int i;
         for (i = 0; i < number - len; i++) {
@@ -95,7 +95,7 @@ static char *string_format(const char *str, const char *width) {
 
 static char *hex_format(unsigned int num, const char *width) {
     static char str[20];
-    int         i = 0;
+    int i = 0;
 
     // Handle zero case
     if (num == 0) {
@@ -116,7 +116,7 @@ static char *hex_format(unsigned int num, const char *width) {
     // Apply width formatting if needed and width is specified
     if (width[0] != '\0') {
         char *ptr = (char *)width + 1;
-        int   number = string_to_int(ptr);
+        int number = string_to_int(ptr);
         if (i < number) {
             for (int j = i; j < number; j++) {
                 str[j] = width[0];  // Fill with the specified width character
@@ -157,7 +157,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
             }
             switch (*temp) {
                 case 'd': {
-                    int   num = va_arg(ap, int);
+                    int num = va_arg(ap, int);
                     char *str = int_format(num, width);
                     while (*str) {
                         *p++ = *str++;
@@ -173,7 +173,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
                 }
                 case 'x': {
                     unsigned int num = va_arg(ap, unsigned int);
-                    char        *str = hex_format(num, width);
+                    char *str = hex_format(num, width);
                     while (*str) {
                         *p++ = *str++;
                     }
@@ -225,7 +225,7 @@ int printf(const char *fmt, ...) {
     va_start(ap, fmt);
 
     char buffer[4096];  // Temporary buffer for output
-    int  ret = vsprintf(buffer, fmt, ap);
+    int ret = vsprintf(buffer, fmt, ap);
     va_end(ap);
 
     putstr(buffer);  // Output to console

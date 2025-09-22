@@ -14,8 +14,7 @@ size_t strlen(const char *s) {
 
 char *strcpy(char *dst, const char *src) {
     char *d = dst;
-    while ((*d++ = *src++))
-        ;
+    while ((*d++ = *src++));
     return dst;
 }
 
@@ -37,8 +36,7 @@ char *strcat(char *dst, const char *src) {
     while (*d) {
         d++;
     }
-    while ((*d++ = *src++))
-        ;
+    while ((*d++ = *src++));
     return dst;
 }
 
