@@ -62,10 +62,13 @@ __am_asm_trap:
     csrw mstatus, t1
 
     # 调用C语言中断处理函数
+    # 函数参数：a0–a7 (x10–x17)
+    # 函数返回值：a0–a1 (x10–x11)
     # 通过a0 - a7 寄存器来传递函数参数
     mv a0, sp
     call __am_irq_handle
-
+    
+    # __am_irq_handle 返回时，a0中保存了新的上下文指针
     # 将栈顶指针切换到新的上下文结构体
     mv sp, a0
 
