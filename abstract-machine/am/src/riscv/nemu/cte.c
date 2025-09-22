@@ -29,6 +29,7 @@ Context *__am_irq_handle(Context *c) {
                 ev.event = EVENT_YIELD;  // 事件类型为EVENT_YIELD
                 ev.cause = c->mcause;
                 ev.ref = c->mepc;  // 事件引用为mepc寄存器的值
+                c->mepc += 4;  // 将mepc寄存器的值增加4，指向下一条指令
                 break;
             default: ev.event = EVENT_ERROR; break;
         }
@@ -53,7 +54,17 @@ bool cte_init(Context *(*handler)(Event, Context *)) {
     return true;
 }
 
-Context *kcontext(Area kstack, void (*entry)(void *), void *arg) { return NULL; }
+Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
+    Context *c = (Context *)kstack.end - 1;  // 在栈顶分配一个Context结构体
+    memset(c, 0, sizeof(Context));            // 将Context结构体的所有成员变量初始化为0
+
+    c->gpr[2] = (uintptr_t)kstack.end;  // 设置栈指针寄存器（x2或sp）指向栈顶
+    c->gpr[10] = (uintptr_t)arg;        // 设置第一个函数参数寄存器（x10或a0）为传入的参数arg
+    c->mepc = (uintptr_t)entry;         // 设置程序计数器寄存器（mepc）为函数入口地址entry
+    c->mstatus = 0x1800;        // 设置机器状态寄存器（mstatus），启用中断并设置特权级
+    c->mcause = CAUSE_MACHINE_ECALL; // 设置异常原因寄存器（mcause）为机器模式下的环境调用
+    return c;                           // 返回初始化好的Context结构体指针
+}
 
 void yield() {
 #ifdef __riscv_e
