@@ -15,6 +15,7 @@ void init_difftest() {
     }
     difftest_regs[NPC_BITS] = core->rootp->cpu__DOT__pc;
     difftest_init(difftest_regs, memory.get_memory().data());
+    Log("Difftest initialized");
 }
 
 void checkregs() {

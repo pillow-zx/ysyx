@@ -77,7 +77,7 @@ ARG ?= --image=$(IMG) --log=$(LOG_FILE) --elf=$(ELF) --batch
 # Run targets
 run: $(BIN)
 	@echo "Running simulation with args: $(ARG)"
-	$(BIN) $(ARG)
+	$(BIN) $(ARG) < /dev/tty
 	@echo "Simulation completed."
 
 # Clean targets

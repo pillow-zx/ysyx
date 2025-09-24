@@ -72,6 +72,9 @@ void npc_start() {
             return;
         }
         std::vector<std::string> commands = get_commands("(npc) > ");
+        for (const auto &vec : commands) {
+            std::cout << vec << std::endl;
+        }
         if (commands.empty()) {
             continue; // Skip if no commands are entered
         }

@@ -8,4 +8,5 @@ void init_device() {
     init_timer();
 
     init_alarm();
+    Log("Device initialized");
 }

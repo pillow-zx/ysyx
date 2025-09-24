@@ -1,12 +1,14 @@
 #include <monitor.h>
+#include <cassert>
+#include <iostream>
 #include <sstream>
 #include <bitset>
 
-static std::string get_string(std::string prompt = "(npc) > ") {
-    std::string str;
-    std::cout << prompt;
-    std::getline(std::cin, str);
-    return str;
+static std::string get_string(const std::string prompt = "(npc) > ") {
+    std::cout << prompt << std::flush;
+    std::string command;
+    std::getline(std::cin, command);
+    return command;
 }
 
 static std::vector<std::string> split_string(const std::string &str, char delimiter) {

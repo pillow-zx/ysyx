@@ -22,7 +22,7 @@ extern Elf32_Sym *ftrace_file_symtab;
 extern char *ftrace_file_strtab;
 extern int ftrace_file_symtab_num;
 
-#define CALL_FUNC_TIMES 64
+#define CALL_FUNC_TIMES 512
 
 class Traces {
   private:
@@ -76,6 +76,7 @@ class Traces {
             throw std::runtime_error("Capstone initialization failed");
         }
         itrace_enable = true;
+        Log("Instruction trace initialized, output file: %s", filename.c_str());
     }
 
     void itrace_handle(uint32_t pc, uint32_t inst) {
@@ -152,6 +153,7 @@ class Traces {
         fclose(fp);
         fp = nullptr;
         ftrace_enable = true;
+        Log("Function trace initialized, ELF file: %s", filename.c_str());
     }
 
     void ftrace_handle(uint32_t inst) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <difftest.h>
+#include "macro.h"
 
 const std::vector<std::string> regs = {"$0", "ra", "sp", "gp", "tp",  "t0",  "t1", "t2", "s0", "s1", "a0",
                                        "a1", "a2", "a3", "a4", "a5",  "a6",  "a7", "s2", "s3", "s4", "s5",
@@ -41,6 +42,7 @@ class Cpu {
         core->eval(); // Evaluate the model again after reset
 
         core->rst_n = 1; // Set reset to high
+        Log("cpu initialized");
     }
 
     static void cpu_exec_once() {
@@ -48,7 +50,7 @@ class Cpu {
         core->eval();  // Evaluate the model
 
         MyTrace.itrace_handle(core->rootp->cpu__DOT__pc, core->rootp->cpu__DOT__inst);
-        MyTrace.ftrace_handle(core->rootp->cpu__DOT__inst);
+        // MyTrace.ftrace_handle(core->rootp->cpu__DOT__inst);
 
         // difftest_step(); // Call difftest step to check registers
 

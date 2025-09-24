@@ -4,6 +4,7 @@
 #include <cpu.h>
 
 extern Cpu cpu;
+extern bool FORCE_INTERACTIVE;
 
 /* init functions */
 void npc_init(int argc, char *argv[]); // Function to initialize the NPC

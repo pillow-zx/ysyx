@@ -6,4 +6,5 @@ int main(int argc, char *argv[]) {
     npc_init(argc, argv);
 
     npc_start();
+
 }

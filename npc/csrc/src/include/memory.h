@@ -2,6 +2,7 @@
 
 #include <cpu.h>
 #include <array>
+#include "macro.h"
 
 class Memory {
 private:
@@ -56,6 +57,7 @@ public:
         if (!load_program(filename)) {
             return false;
         }
+        Log("Memory initialized with program image.");
         return true;
     }
 

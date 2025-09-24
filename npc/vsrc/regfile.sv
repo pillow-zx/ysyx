@@ -1,19 +1,19 @@
-// 32位寄存器文件模块
 /* verilator lint_off DECLFILENAME*/
 module regfile #(
-    ADDR_WIDTH = 5,
-    DATA_WIDTH = 32
+    ADDR_WIDTH = 5,  //  地址宽度：5为可寻址32个寄存器
+    DATA_WIDTH = 32  //  数据宽度：32位
 ) (
-    input  wire                    clk,
-    input  wire [ADDR_WIDTH - 1:0] raddr1,
-    output wire [DATA_WIDTH - 1:0] rdata1,
-    input  wire [ADDR_WIDTH - 1:0] raddr2,
-    output wire [DATA_WIDTH - 1:0] rdata2,
-    input  wire                    we,      // 写使能信号
-    input  wire [ADDR_WIDTH - 1:0] waddr,
-    input  wire [DATA_WIDTH - 1:0] wdata
+    input  logic                    clk,
+    input  logic [ADDR_WIDTH - 1:0] raddr1,
+    output logic [DATA_WIDTH - 1:0] rdata1,
+    input  logic [ADDR_WIDTH - 1:0] raddr2,
+    output logic [DATA_WIDTH - 1:0] rdata2,
+    input  logic                    we,      // 写使能信号
+    input  logic [ADDR_WIDTH - 1:0] waddr,
+    input  logic [DATA_WIDTH - 1:0] wdata
 );
     reg [DATA_WIDTH - 1:0] regfile[(1 << ADDR_WIDTH) - 1 : 0];
+
 
     always @(posedge clk) begin
         if (we && waddr != 0) begin
